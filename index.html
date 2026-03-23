@@ -1,0 +1,642 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Rising Phoenix Games</title>
+  <link rel="stylesheet" href="shared.css" />
+  <style>
+    /* ── PAGE SHELL ───────────────────────────────────────────── */
+    html, body { height: 100%; }
+    body {
+      display: flex;
+      flex-direction: column;
+      /* Background lives here directly — no flash of white, no dependency on shared.css load order */
+      background:
+        radial-gradient(ellipse 90% 55% at 15% 8%,  rgba(90,48,12,0.55) 0%, transparent 58%),
+        radial-gradient(ellipse 70% 65% at 85% 90%, rgba(50,25,6,0.6)   0%, transparent 55%),
+        radial-gradient(ellipse 60% 40% at 50% 50%, rgba(30,18,5,0.4)   0%, transparent 70%),
+        linear-gradient(160deg, #1c1106 0%, #0f0c07 45%, #13100a 100%);
+      background-attachment: fixed;
+    }
+
+    #app {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      z-index: 1;
+    }
+
+    /* ── HEADER ───────────────────────────────────────────────── */
+    .hub-header {
+      padding: 0;
+      background: linear-gradient(180deg, #1e1508 0%, #120e06 100%);
+      border-bottom: 2px solid var(--gold);
+      box-shadow: 0 4px 24px rgba(0,0,0,0.7), 0 1px 0 rgba(200,149,42,0.12) inset;
+      position: relative;
+      overflow: hidden;
+      flex-shrink: 0;
+    }
+    /* Subtle column rule pattern */
+    .hub-header::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: repeating-linear-gradient(
+        90deg,
+        transparent 0px, transparent 56px,
+        rgba(200,149,42,0.035) 56px, rgba(200,149,42,0.035) 57px
+      );
+      pointer-events: none;
+    }
+
+    .hub-header-inner {
+      padding: 18px 24px 16px;
+      position: relative;
+    }
+
+    .hub-branding {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      margin-bottom: 6px;
+    }
+
+    .phoenix-mark {
+      flex-shrink: 0;
+      width: 48px;
+      height: 48px;
+      filter: drop-shadow(0 0 8px rgba(200,149,42,0.4));
+    }
+
+    .hub-title-block { flex: 1; min-width: 0; }
+
+    h1.hub-title {
+      font-family: var(--font-display);
+      font-size: clamp(20px, 4vw, 32px);
+      font-weight: 700;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      margin: 0 0 2px 0;
+      background: linear-gradient(135deg, var(--gold-light) 0%, var(--gold) 45%, #a07020 80%, var(--gold-light) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      line-height: 1.1;
+    }
+
+    .hub-tagline {
+      font-family: var(--font-body);
+      font-style: italic;
+      font-size: 13px;
+      color: #c4a46a;           /* warm gold-tan — clearly readable */
+      letter-spacing: 1.5px;
+      margin: 0;
+      opacity: 0.85;
+    }
+
+    .hub-meta {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-top: 10px;
+    }
+    .hub-badge {
+      font-family: var(--font-ui);
+      font-size: 10px;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      padding: 4px 10px;
+      border-radius: 999px;
+      background: rgba(200,149,42,0.1);
+      border: 1px solid rgba(200,149,42,0.28);
+      color: #c0a060;           /* warm gold — clearly readable against dark bg */
+    }
+    .hub-badge.live {
+      background: rgba(60,160,60,0.12);
+      border-color: rgba(100,200,80,0.3);
+      color: #8adc6a;
+    }
+
+    /* ── MAIN CONTENT ─────────────────────────────────────────── */
+    .hub-main {
+      flex: 1;
+      padding: 24px;
+      max-width: 1200px;
+      width: 100%;
+      margin: 0 auto;
+    }
+
+    /* Section label */
+    .section-label {
+      font-family: var(--font-ui);
+      font-size: 11px;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      color: var(--gold-light);  /* brighter for section clarity */
+      margin: 0 0 16px 0;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .section-label::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: linear-gradient(90deg, var(--border), transparent);
+    }
+
+    /* ── GAME GRID ────────────────────────────────────────────── */
+    .game-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 18px;
+      margin-bottom: 32px;
+    }
+
+    /* ── GAME CARD ────────────────────────────────────────────── */
+    .game-card {
+      background: linear-gradient(160deg, var(--surface) 0%, var(--bg-warm) 100%);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-xl);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      transition: border-color 0.2s, box-shadow 0.2s, transform 0.2s;
+      animation: rpg-fadein 0.4s ease both;
+      text-decoration: none;
+      color: inherit;
+      position: relative;
+    }
+    .game-card:hover {
+      border-color: rgba(240,208,128,0.7);
+      box-shadow:
+        0 8px 32px rgba(0,0,0,0.6),
+        0 0 0 1px rgba(200,149,42,0.3),
+        0 0 18px 2px rgba(200,149,42,0.25),
+        0 0 48px 8px rgba(180,120,20,0.15);
+      transform: translateY(-3px);
+    }
+    .game-card:nth-child(1) { animation-delay: 0.05s; }
+    .game-card:nth-child(2) { animation-delay: 0.10s; }
+    .game-card:nth-child(3) { animation-delay: 0.15s; }
+    .game-card:nth-child(4) { animation-delay: 0.20s; }
+    .game-card:nth-child(5) { animation-delay: 0.25s; }
+    .game-card:nth-child(6) { animation-delay: 0.30s; }
+    .game-card:nth-child(7) { animation-delay: 0.35s; }
+
+    /* Card thumbnail */
+    .card-thumb {
+      aspect-ratio: 16 / 8;
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      border-bottom: 1px solid var(--border);
+    }
+
+    /* Each game gets its own thumb color scheme */
+    .thumb-fox    { background: radial-gradient(ellipse at 60% 40%, rgba(180,100,20,0.5), rgba(10,8,3,0.9)), linear-gradient(135deg, #2a1a08, #0f0c07); }
+    .thumb-ttt    { background: radial-gradient(ellipse at 40% 60%, rgba(180,30,30,0.4), rgba(5,5,15,0.9)),  linear-gradient(135deg, #1a0808, #050510); }
+    .thumb-slide  { background: radial-gradient(ellipse at 55% 45%, rgba(20,80,120,0.5), rgba(5,8,15,0.9)),  linear-gradient(135deg, #081018, #050810); }
+    .thumb-c4     { background: radial-gradient(ellipse at 45% 55%, rgba(20,120,40,0.4), rgba(5,10,5,0.9)),  linear-gradient(135deg, #081208, #050805); }
+    .thumb-color  { background: radial-gradient(ellipse at 50% 50%, rgba(120,20,120,0.4), rgba(8,5,12,0.9)), linear-gradient(135deg, #100818, #080510); }
+    .thumb-hues   { background: radial-gradient(ellipse at 50% 50%, rgba(180,140,20,0.4), rgba(10,8,3,0.9)), linear-gradient(135deg, #1a1808, #0c0a05); }
+
+    /* Thumb illustration — CSS-only iconic art */
+    .thumb-art {
+      position: relative;
+      z-index: 1;
+      pointer-events: none;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+    }
+    .thumb-emoji {
+      font-size: 42px;
+      filter: drop-shadow(0 2px 8px rgba(0,0,0,0.7));
+      line-height: 1;
+    }
+    .thumb-label {
+      font-family: var(--font-ui);
+      font-size: 10px;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: rgba(200,149,42,0.5);
+      position: absolute;
+      bottom: 8px;
+      right: 10px;
+    }
+
+    /* Card body */
+    .card-body {
+      padding: 16px 18px;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .card-title {
+      font-family: var(--font-ui);
+      font-size: 15px;
+      font-weight: 700;
+      letter-spacing: 1px;
+      color: #f2e0a0;            /* near-white gold — maximum legibility */
+      margin: 0;
+      line-height: 1.3;
+    }
+
+    .card-desc {
+      font-family: var(--font-body);
+      font-style: italic;
+      font-size: 13px;
+      color: #b8986a;           /* warm readable — not invisible */
+      margin: 0;
+      line-height: 1.5;
+      flex: 1;
+    }
+
+    .card-tags {
+      display: flex;
+      gap: 5px;
+      flex-wrap: wrap;
+      margin-top: 2px;
+    }
+    /* Base tag — warm parchment text, always readable on dark card */
+    .tag {
+      font-family: var(--font-ui);
+      font-size: 9px;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      padding: 2px 8px;
+      border-radius: 999px;
+      background: rgba(200,149,42,0.08);
+      border: 1px solid rgba(200,149,42,0.22);
+      color: #c8a878;           /* warm readable tan — the fallback for all plain tags */
+    }
+    .tag.strategy { background: rgba(180,120,20,0.12); border-color: rgba(180,120,20,0.35); color: #d4a84a; }
+    .tag.puzzle   { background: rgba(60,140,200,0.1);  border-color: rgba(60,140,200,0.35); color: #7ec0f0; }
+    .tag.party    { background: rgba(160,80,160,0.1);  border-color: rgba(160,80,160,0.35); color: #d080d8; }
+    .tag.utility  { background: rgba(80,160,80,0.1);   border-color: rgba(80,160,80,0.35);  color: #88d870; }
+    .tag.classic  { background: rgba(200,149,42,0.12); border-color: rgba(200,149,42,0.38); color: #f0c850; }
+    .tag.ai       { background: rgba(200,60,60,0.1);   border-color: rgba(200,60,60,0.35);  color: #f09090; }
+
+    /* Card footer / play button */
+    .card-foot {
+      padding: 10px 18px 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+    }
+
+    .card-status {
+      font-family: var(--font-ui);
+      font-size: 9px;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      color: rgba(180,150,90,0.6);
+    }
+    .card-status.ready { color: #7aaa5a; }
+    .card-status.soon  { color: var(--text-dim); }
+
+    /* "Play" pill on card */
+    .play-pill {
+      font-family: var(--font-ui);
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      color: #f0d080;            /* explicit bright gold — always readable */
+      background: linear-gradient(180deg, #382a14 0%, #221808 100%);
+      border: 1px solid #c8952a;
+      border-bottom-color: #7a5510;
+      padding: 6px 14px;
+      border-radius: var(--radius-sm);
+      transition: all 0.15s;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.5), inset 0 1px 0 rgba(240,208,128,0.12);
+      display: inline-block;
+    }
+    .game-card:hover .play-pill {
+      background: linear-gradient(180deg, #3a2c14, #241a09);
+      border-color: var(--gold-light);
+      box-shadow: 0 2px 12px var(--gold-glow);
+    }
+
+    /* Disabled / coming soon card */
+    .game-card.soon {
+      opacity: 0.55;
+      pointer-events: none;
+    }
+    .game-card.soon .play-pill {
+      background: rgba(255,255,255,0.04);
+      border-color: rgba(255,255,255,0.1);
+      color: var(--text-dim);
+    }
+
+    /* ── ABOUT PANEL ──────────────────────────────────────────── */
+    .about-panel {
+      background: linear-gradient(160deg, var(--surface) 0%, var(--bg-warm) 100%);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 20px 24px;
+      margin-bottom: 24px;
+    }
+    .about-panel p {
+      font-family: var(--font-body);
+      font-style: italic;
+      font-size: 14px;
+      color: #c8a878;          /* warm readable tan — no longer invisible */
+      line-height: 1.8;
+      margin: 0;
+    }
+    .about-panel strong {
+      color: var(--gold-light);
+      font-style: normal;
+    }
+
+    /* ── FOOTER ───────────────────────────────────────────────── */
+    .hub-footer {
+      padding: 10px 24px 16px;
+      border-top: 1px solid rgba(200,149,42,0.15);
+      font-family: var(--font-body);
+      font-style: italic;
+      font-size: 11px;
+      color: rgba(180,150,90,0.65);   /* readable, not invisible */
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 8px;
+      flex-shrink: 0;
+    }
+
+    /* ── RESPONSIVE ───────────────────────────────────────────── */
+    @media (max-width: 600px) {
+      .hub-main { padding: 16px; }
+      .game-grid { grid-template-columns: 1fr; gap: 14px; }
+      .hub-branding { gap: 12px; }
+      h1.hub-title { font-size: 20px; }
+    }
+  </style>
+</head>
+<body class="rpg-bg">
+<div id="app">
+
+  <!-- ── HEADER ─────────────────────────────────────────────── -->
+  <header class="hub-header">
+    <div class="hub-header-inner">
+      <div class="hub-branding">
+
+        <!-- Phoenix SVG mark -->
+        <svg class="phoenix-mark" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 160" aria-hidden="true">
+          <defs>
+            <linearGradient id="pg" x1="0" x2="1" y1="0" y2="1">
+              <stop offset="0" stop-color="#f0d080"/>
+              <stop offset="0.5" stop-color="#c8952a"/>
+              <stop offset="1" stop-color="#8b1a1a"/>
+            </linearGradient>
+          </defs>
+          <rect width="160" height="160" rx="28" fill="rgba(0,0,0,0.5)"/>
+          <rect width="160" height="160" rx="28" fill="none" stroke="rgba(200,149,42,0.4)" stroke-width="2"/>
+          <g transform="translate(80,88)">
+            <path d="M0-52 C-26-52 -44-34 -42-10 C-24-8 -8-26 -8-26 C-18 4 -42 16 -34 38 C-20 32 -6 16 -2 4 C0 12 4 32 22 38 C18 24 8 8 14-14 C20 2 42 18 46 4 C42-8 24-20 14-24 C22-36 20-52 0-52Z" fill="url(#pg)"/>
+            <path d="M0-18 C-6-8 -8 4 0 12 C8 4 6-8 0-18Z" fill="rgba(0,0,0,0.3)"/>
+          </g>
+        </svg>
+
+        <div class="hub-title-block">
+          <h1 class="hub-title">Rising Phoenix Games</h1>
+          <p class="hub-tagline">A curated cabinet of games, puzzles &amp; curiosities</p>
+        </div>
+      </div>
+
+      <div class="hub-meta">
+        <span class="hub-badge live">● Live</span>
+        <span class="hub-badge">Free to Play</span>
+        <span class="hub-badge">No Sign-in</span>
+        <span class="hub-badge">Works Offline</span>
+        <span class="hub-badge">Crafted by John Ryszka II</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- ── MAIN ───────────────────────────────────────────────── -->
+  <main class="hub-main">
+
+    <!-- About -->
+    <div class="about-panel">
+      <p>
+        A personal collection of <strong>hand-crafted games and tools</strong> — built with care, no frameworks, no trackers, no ads.
+        Each title runs entirely in your browser. Bookmark this page, share it freely, or save any game file for offline play.
+        New titles are added when they're ready.
+      </p>
+    </div>
+
+    <!-- Games section -->
+    <h2 class="section-label">Games</h2>
+    <div class="game-grid">
+
+      <!-- Fox & Geese -->
+      <a class="game-card" href="fox-geese.html">
+        <div class="card-thumb thumb-fox">
+          <div class="thumb-art">
+            <span class="thumb-emoji">🦊</span>
+            <span class="thumb-emoji">🪿</span>
+          </div>
+          <span class="thumb-label">Strategy</span>
+        </div>
+        <div class="card-body">
+          <h3 class="card-title">Fox &amp; Geese</h3>
+          <p class="card-desc">An ancient Norse hunt played on a 33-point cross. One fox. Thirteen geese. An asymmetric battle of wits across a candlelit board.</p>
+          <div class="card-tags">
+            <span class="tag strategy">Strategy</span>
+            <span class="tag classic">Historical</span>
+            <span class="tag">2 Players</span>
+          </div>
+        </div>
+        <div class="card-foot">
+          <span class="card-status ready">● Ready to Play</span>
+          <span class="play-pill">Play →</span>
+        </div>
+      </a>
+
+      <!-- Tic Tac Toe -->
+      <a class="game-card" href="tictactoe.html">
+        <div class="card-thumb thumb-ttt">
+          <div class="thumb-art">
+            <span class="thumb-emoji" style="color:#f43f5e;filter:drop-shadow(0 0 8px rgba(244,63,94,0.6))">✕</span>
+            <span class="thumb-emoji" style="font-size:28px;color:rgba(200,149,42,0.4)">✦</span>
+            <span class="thumb-emoji" style="color:#fde047;filter:drop-shadow(0 0 8px rgba(253,224,71,0.6))">○</span>
+          </div>
+          <span class="thumb-label">Classic</span>
+        </div>
+        <div class="card-body">
+          <h3 class="card-title">Tic-Tac-Toe</h3>
+          <p class="card-desc">The eternal duel of marks. Three in a row wins — but a perfect opponent never loses. Challenge the AI or pass the board to a friend.</p>
+          <div class="card-tags">
+            <span class="tag classic">Classic</span>
+            <span class="tag ai">vs AI</span>
+            <span class="tag">2 Players</span>
+          </div>
+        </div>
+        <div class="card-foot">
+          <span class="card-status ready">● Ready to Play</span>
+          <span class="play-pill">Play →</span>
+        </div>
+      </a>
+
+      <!-- Sliding Puzzle -->
+      <a class="game-card" href="sliding-puzzle.html">
+        <div class="card-thumb thumb-slide">
+          <div class="thumb-art">
+            <!-- 4×4 tile grid with one empty slot, bottom-right -->
+            <div style="display:grid;grid-template-columns:repeat(4,28px);grid-template-rows:repeat(4,28px);gap:3px;">
+              <div style="background:linear-gradient(135deg,#3a6080,#1a3050);border-radius:3px;box-shadow:inset 0 1px 0 rgba(255,255,255,0.15)"></div>
+              <div style="background:linear-gradient(135deg,#3a6080,#1a3050);border-radius:3px;box-shadow:inset 0 1px 0 rgba(255,255,255,0.15)"></div>
+              <div style="background:linear-gradient(135deg,#3a6080,#1a3050);border-radius:3px;box-shadow:inset 0 1px 0 rgba(255,255,255,0.15)"></div>
+              <div style="background:linear-gradient(135deg,#2a5070,#0a2040);border-radius:3px;box-shadow:inset 0 1px 0 rgba(255,255,255,0.15)"></div>
+              <div style="background:linear-gradient(135deg,#2a5070,#0a2040);border-radius:3px;box-shadow:inset 0 1px 0 rgba(255,255,255,0.15)"></div>
+              <div style="background:linear-gradient(135deg,#4a78a0,#2a5070);border-radius:3px;box-shadow:inset 0 1px 0 rgba(255,255,255,0.2)"></div>
+              <div style="background:linear-gradient(135deg,#3a6080,#1a3050);border-radius:3px;box-shadow:inset 0 1px 0 rgba(255,255,255,0.15)"></div>
+              <div style="background:linear-gradient(135deg,#2a5070,#0a2040);border-radius:3px;box-shadow:inset 0 1px 0 rgba(255,255,255,0.15)"></div>
+              <div style="background:linear-gradient(135deg,#2a5070,#0a2040);border-radius:3px;box-shadow:inset 0 1px 0 rgba(255,255,255,0.15)"></div>
+              <div style="background:linear-gradient(135deg,#3a6080,#1a3050);border-radius:3px;box-shadow:inset 0 1px 0 rgba(255,255,255,0.15)"></div>
+              <div style="background:linear-gradient(135deg,#4a78a0,#2a5070);border-radius:3px;box-shadow:inset 0 1px 0 rgba(255,255,255,0.2)"></div>
+              <div style="background:linear-gradient(135deg,#3a6080,#1a3050);border-radius:3px;box-shadow:inset 0 1px 0 rgba(255,255,255,0.15)"></div>
+              <div style="background:linear-gradient(135deg,#3a6080,#1a3050);border-radius:3px;box-shadow:inset 0 1px 0 rgba(255,255,255,0.15)"></div>
+              <div style="background:linear-gradient(135deg,#2a5070,#0a2040);border-radius:3px;box-shadow:inset 0 1px 0 rgba(255,255,255,0.15)"></div>
+              <div style="background:linear-gradient(135deg,#3a6080,#1a3050);border-radius:3px;box-shadow:inset 0 1px 0 rgba(255,255,255,0.15)"></div>
+              <!-- Empty slot — bottom right -->
+              <div style="background:rgba(10,30,50,0.4);border-radius:3px;border:1px dashed rgba(100,160,200,0.25)"></div>
+            </div>
+          </div>
+          <span class="thumb-label">Puzzle</span>
+        </div>
+        <div class="card-body">
+          <h3 class="card-title">Glass Puzzle</h3>
+          <p class="card-desc">Reassemble a shattered masterpiece. Fifteen tiles, one empty space, and the patience of a master glassworker. Restore what was broken.</p>
+          <div class="card-tags">
+            <span class="tag puzzle">Puzzle</span>
+            <span class="tag">Solo</span>
+          </div>
+        </div>
+        <div class="card-foot">
+          <span class="card-status ready">● Ready to Play</span>
+          <span class="play-pill">Play →</span>
+        </div>
+      </a>
+
+      <!-- Connect Four -->
+      <a class="game-card" href="connect-four.html">
+        <div class="card-thumb thumb-c4">
+          <div class="thumb-art" style="flex-direction:column;gap:5px;">
+            <!-- Two rows hinting at the grid, bottom row has 4 in a row -->
+            <div style="display:flex;gap:8px;opacity:0.5;">
+              <div style="width:22px;height:22px;border-radius:50%;background:linear-gradient(135deg,#ff6060,#cc2020);box-shadow:0 0 8px rgba(220,40,40,0.5)"></div>
+              <div style="width:22px;height:22px;border-radius:50%;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.12)"></div>
+              <div style="width:22px;height:22px;border-radius:50%;background:linear-gradient(135deg,#ffee50,#ccaa10);box-shadow:0 0 8px rgba(220,180,20,0.5)"></div>
+              <div style="width:22px;height:22px;border-radius:50%;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.12)"></div>
+            </div>
+            <!-- The winning 4 in a row -->
+            <div style="display:flex;gap:8px;">
+              <div style="width:26px;height:26px;border-radius:50%;background:linear-gradient(135deg,#ffee50,#ccaa10);box-shadow:0 0 12px rgba(220,180,20,0.7)"></div>
+              <div style="width:26px;height:26px;border-radius:50%;background:linear-gradient(135deg,#ffee50,#ccaa10);box-shadow:0 0 12px rgba(220,180,20,0.7)"></div>
+              <div style="width:26px;height:26px;border-radius:50%;background:linear-gradient(135deg,#ffee50,#ccaa10);box-shadow:0 0 12px rgba(220,180,20,0.7)"></div>
+              <div style="width:26px;height:26px;border-radius:50%;background:linear-gradient(135deg,#ffee50,#ccaa10);box-shadow:0 0 12px rgba(220,180,20,0.7)"></div>
+            </div>
+          </div>
+          <span class="thumb-label">Strategy</span>
+        </div>
+        <div class="card-body">
+          <h3 class="card-title">Connect Four</h3>
+          <p class="card-desc">Drop your disc. Build your line. Block your opponent before they build theirs. Four in a row — vertical, horizontal, or diagonal — wins the round.</p>
+          <div class="card-tags">
+            <span class="tag strategy">Strategy</span>
+            <span class="tag classic">Classic</span>
+            <span class="tag">2 Players</span>
+          </div>
+        </div>
+        <div class="card-foot">
+          <span class="card-status ready">● Ready to Play</span>
+          <span class="play-pill">Play →</span>
+        </div>
+      </a>
+
+      <!-- Hues & Cues -->
+      <a class="game-card soon" href="hues-cues.html">
+        <div class="card-thumb thumb-hues">
+          <div class="thumb-art">
+            <span class="thumb-emoji">🎨</span>
+            <span class="thumb-emoji">🗣️</span>
+            <span class="thumb-emoji">📍</span>
+          </div>
+          <span class="thumb-label">Party</span>
+        </div>
+        <div class="card-body">
+          <h3 class="card-title">Hues &amp; Cues</h3>
+          <p class="card-desc">Name a colour with a single word. Your friends place their tokens where they think you mean. Score by proximity — the spectrum is your board.</p>
+          <div class="card-tags">
+            <span class="tag party">Party</span>
+            <span class="tag">3–8 Players</span>
+            <span class="tag">Pass &amp; Play</span>
+          </div>
+        </div>
+        <div class="card-foot">
+          <span class="card-status soon">◌ Coming Soon</span>
+          <span class="play-pill">Soon</span>
+        </div>
+      </a>
+
+    </div>
+
+    <!-- Tools section -->
+    <h2 class="section-label">Tools</h2>
+    <div class="game-grid">
+
+      <!-- Color Picker -->
+      <a class="game-card" href="color-picker.html">
+        <div class="card-thumb thumb-color">
+          <div class="thumb-art">
+            <!-- Mini hue spectrum bar -->
+            <div style="width:160px;height:24px;border-radius:12px;background:linear-gradient(90deg,hsl(0,80%,55%),hsl(60,80%,55%),hsl(120,80%,55%),hsl(180,80%,55%),hsl(240,80%,55%),hsl(300,80%,55%),hsl(360,80%,55%));box-shadow:0 0 16px rgba(200,100,200,0.4);border:1px solid rgba(255,255,255,0.15)"></div>
+          </div>
+          <span class="thumb-label">Utility</span>
+        </div>
+        <div class="card-body">
+          <h3 class="card-title">The Alchemist's Palette</h3>
+          <p class="card-desc">Pick any colour from the full spectrum. Get instant HEX, RGB, and HSL values. Save favourites, explore complements. Ripples follow your cursor.</p>
+          <div class="card-tags">
+            <span class="tag utility">Utility</span>
+            <span class="tag">Hex · RGB · HSL</span>
+            <span class="tag">Favourites</span>
+          </div>
+        </div>
+        <div class="card-foot">
+          <span class="card-status ready">● Ready to Use</span>
+          <span class="play-pill">Open →</span>
+        </div>
+      </a>
+
+    </div>
+
+  </main>
+
+  <!-- ── FOOTER ──────────────────────────────────────────────── -->
+  <footer class="hub-footer">
+    <span>© <span id="year"></span> Rising Phoenix Gallery · Michigan City, IN</span>
+    <span>Crafted by John Ryszka II · <a href="https://www.risingphxgallery.com" style="color:var(--gold);text-decoration:none;">RisingPhxGallery.com</a></span>
+  </footer>
+
+</div>
+
+<script>
+  document.getElementById('year').textContent = new Date().getFullYear();
+</script>
+</body>
+</html>
