@@ -1,0 +1,2474 @@
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Fox & Geese — The Ancient Hunt</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700;900&family=Cinzel+Decorative:wght@400;700&family=IM+Fell+English:ital@0;1&display=swap" rel="stylesheet">
+  <style>
+:root{
+  --bg:#0f1115;
+  --panel:#171a21;
+  --text:#e6e6e6;
+  --muted:#9aa3ad;
+  --accent:#4da3ff;
+  --accent2:#ff7a59;
+  --good:#30d158;
+  --warn:#ffd60a;
+  --danger:#ff453a;
+  --line:#5e6a78;
+  --point:#c8d1db;
+  --highlight:#a0d911;
+
+  /* Parchment/medieval palette */
+  --parch-light: #f5e9c9;
+  --parch-mid:   #d9c89a;
+  --parch-dark:  #b89a5c;
+  --parch-ink:   #2a1e0e;
+  --parch-shadow: rgba(30,18,5,0.55);
+  --crimson:     #8b1a1a;
+  --gold:        #c8952a;
+  --gold-light:  #f0d080;
+  --gold-glow:   rgba(200,149,42,0.35);
+
+  --board-wood-top:#caa46b;
+  --board-wood-mid:#a87c41;
+  --board-wood-grain:#b88a4c;
+
+  --piece-goose-fill:#e0e0e0;
+  --piece-goose-stroke:#555555;
+  --piece-fox-fill:#b02a1f;
+  --piece-fox-stroke:#3a0b08;
+  --piece-stroke-opacity:0;
+
+  --board-line-color:#5e6a78;
+  --board-line-width:4;
+  --point-fill:#dfe7f1;
+  --point-stroke:#9fb0c6;
+
+  --board-container-bg:transparent;
+  --move-history-bg:#1a1208;
+}
+
+*{box-sizing:border-box}
+html,body{height:100%;margin:0}
+
+body{
+  font-family:'IM Fell English', Georgia, 'Times New Roman', serif;
+  background: #0f0c07;
+  color:var(--text);
+  overflow-x:hidden;
+  position:relative;
+}
+
+/* === AMBIENT BACKGROUND === */
+body::before {
+  content:'';
+  position:fixed;
+  inset:0;
+  background:
+    radial-gradient(ellipse 80% 60% at 20% 10%, rgba(80,40,10,0.45) 0%, transparent 60%),
+    radial-gradient(ellipse 60% 70% at 80% 80%, rgba(40,20,5,0.5) 0%, transparent 55%),
+    radial-gradient(ellipse 100% 100% at 50% 50%, rgba(25,15,5,0.6) 0%, transparent 70%),
+    linear-gradient(160deg, #1a1005 0%, #0f0c07 40%, #100d08 100%);
+  pointer-events:none;
+  z-index:0;
+}
+
+/* Subtle noise grain overlay */
+body::after {
+  content:'';
+  position:fixed;
+  inset:0;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+  pointer-events:none;
+  z-index:0;
+  opacity:0.6;
+}
+
+#app{
+  display:flex;
+  flex-direction:column;
+  min-height:100vh;
+  position:relative;
+  z-index:1;
+}
+
+/* === HEADER === */
+header{
+  padding:0;
+  background: linear-gradient(180deg, #1e1508 0%, #120e06 100%);
+  border-bottom: 2px solid var(--gold);
+  box-shadow: 0 4px 24px rgba(0,0,0,0.7), 0 1px 0 rgba(200,149,42,0.15) inset;
+  position:relative;
+  overflow:hidden;
+}
+
+header::before {
+  content:'';
+  position:absolute;
+  inset:0;
+  background: repeating-linear-gradient(
+    90deg,
+    transparent 0px,
+    transparent 48px,
+    rgba(200,149,42,0.04) 48px,
+    rgba(200,149,42,0.04) 49px
+  );
+  pointer-events:none;
+}
+
+.header-inner {
+  padding: 14px 20px 12px;
+}
+
+h1{
+  margin:0 0 4px 0;
+  font-family:'Cinzel Decorative', 'Cinzel', serif;
+  font-size:clamp(18px, 3vw, 28px);
+  font-weight:700;
+  letter-spacing:3px;
+  text-transform:uppercase;
+  background: linear-gradient(135deg, var(--gold-light) 0%, var(--gold) 40%, #a07020 80%, var(--gold-light) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  text-shadow: none;
+  line-height:1.1;
+}
+
+.title-sub {
+  font-family:'IM Fell English', serif;
+  font-style:italic;
+  font-size:12px;
+  color:var(--parch-dark);
+  letter-spacing:2px;
+  margin-bottom:12px;
+  opacity:0.7;
+}
+
+.controls{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:12px;
+  flex-wrap:wrap;
+}
+
+.toggles {
+  display:flex;
+  flex-wrap:wrap;
+  gap:4px 0;
+}
+
+.toggles label{
+  margin-right:14px;
+  font-family:'IM Fell English', serif;
+  font-size:13px;
+  color:#c4a97a;
+  cursor:pointer;
+  display:inline-flex;
+  align-items:center;
+  gap:5px;
+}
+.toggles input[type=checkbox]{
+  accent-color: var(--gold);
+  width:13px;height:13px;
+}
+
+.buttons{
+  display:flex;
+  gap:6px;
+  flex-wrap:wrap;
+}
+
+/* === BUTTONS === */
+button{
+  font-family:'Cinzel', serif;
+  font-size:11px;
+  letter-spacing:1px;
+  text-transform:uppercase;
+  font-weight:600;
+  background: linear-gradient(180deg, #2a2010 0%, #1a1508 100%);
+  color: var(--gold-light);
+  border: 1px solid var(--gold);
+  border-bottom-color: #7a5510;
+  padding: 7px 14px;
+  border-radius:3px;
+  cursor:pointer;
+  position:relative;
+  transition: all 0.15s ease;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.5), inset 0 1px 0 rgba(240,208,128,0.12);
+}
+button:hover{
+  background: linear-gradient(180deg, #3a2c14 0%, #241a09 100%);
+  color: var(--gold-light);
+  border-color: var(--gold-light);
+  box-shadow: 0 2px 12px var(--gold-glow), inset 0 1px 0 rgba(240,208,128,0.2);
+  transform: translateY(-1px);
+}
+button:active{ transform:translateY(0); }
+
+button.primary{
+  background: linear-gradient(180deg, #6b2020 0%, #3d1010 100%);
+  border-color: #c04040;
+  color: #ffcaca;
+}
+button.primary:hover{
+  background: linear-gradient(180deg, #8b2828 0%, #4d1616 100%);
+  box-shadow: 0 2px 14px rgba(180,40,40,0.4);
+}
+
+.icon-btn{
+  padding:6px 10px;
+  min-width:32px;
+}
+button.hidden{display:none}
+
+/* === STATUS BAR === */
+.statusbar{
+  display:flex;
+  gap:16px;
+  align-items:center;
+  margin-top:10px;
+  padding: 7px 12px;
+  background: rgba(0,0,0,0.35);
+  border: 1px solid rgba(200,149,42,0.2);
+  border-radius:3px;
+  position:relative;
+}
+
+.statusbar::before {
+  content: '⚜';
+  position:absolute;
+  left:8px;
+  font-size:10px;
+  color: var(--gold);
+  opacity:0.5;
+}
+
+#turnIndicator{
+  font-family:'Cinzel', serif;
+  font-size:13px;
+  letter-spacing:1.5px;
+  color: var(--gold-light);
+  padding-left:16px;
+}
+
+#resultIndicator{
+  font-family:'Cinzel Decorative', serif;
+  font-size:14px;
+  font-weight:700;
+  letter-spacing:2px;
+  color: var(--gold-light);
+  text-shadow: 0 0 20px var(--gold-glow);
+  animation: result-pulse 1.5s ease-in-out infinite alternate;
+}
+@keyframes result-pulse {
+  from { opacity:0.85; text-shadow: 0 0 10px var(--gold-glow); }
+  to   { opacity:1; text-shadow: 0 0 28px rgba(200,149,42,0.6); }
+}
+
+/* === MAIN LAYOUT: single column — board on top, chronicle below === */
+main{
+  display:flex;
+  flex-direction:column;
+  gap:14px;
+  padding:14px 18px 0;
+  flex:1;
+}
+
+/* === BOARD CONTAINER — fills full width, square via aspect-ratio === */
+#boardContainer{
+  background: var(--board-container-bg);
+  border: 2px solid rgba(200,149,42,0.25);
+  border-radius:8px;
+  position:relative;
+  width:100%;
+  /* Square board that grows to fill all available width */
+  aspect-ratio: 1 / 1;
+  max-height: calc(100vh - 260px); /* never overflow viewport */
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  box-shadow:
+    0 0 0 1px rgba(0,0,0,0.8),
+    0 8px 40px rgba(0,0,0,0.7),
+    inset 0 0 60px rgba(0,0,0,0.3);
+  overflow:hidden;
+}
+
+/* Ambient glow under the board */
+#boardContainer::after {
+  content:'';
+  position:absolute;
+  bottom:-20px;
+  left:10%;right:10%;
+  height:40px;
+  background: radial-gradient(ellipse, rgba(200,149,42,0.18) 0%, transparent 70%);
+  border-radius:50%;
+  pointer-events:none;
+  z-index:-1;
+}
+
+#board{
+  width:100%;
+  height:100%;
+  display:block;
+  border-radius:6px;
+  filter: drop-shadow(0 4px 20px rgba(0,0,0,0.6));
+}
+
+/* === SVG BOARD ELEMENTS === */
+.board-line{
+  stroke:var(--board-line-color);
+  stroke-width:var(--board-line-width);
+  stroke-linecap:round;
+}
+.board-point{
+  fill:var(--point-fill);
+  stroke:var(--point-stroke);
+  stroke-width:2;
+}
+.board-point.inactive{
+  fill:#aeb8c5;
+  opacity:.85;
+}
+.board-point.hot{
+  fill:var(--highlight);
+  stroke:#5a7a1a;
+  stroke-width:3;
+}
+.piece-goose{
+  fill:var(--piece-goose-fill);
+  stroke:var(--piece-goose-stroke);
+  stroke-width:3;
+  stroke-opacity:var(--piece-stroke-opacity);
+  filter:drop-shadow(0 1px 1px rgba(0,0,0,.4));
+}
+.piece-fox{
+  fill:var(--piece-fox-fill);
+  stroke:var(--piece-fox-stroke);
+  stroke-width:3;
+  stroke-opacity:var(--piece-stroke-opacity);
+  filter:drop-shadow(0 1px 1px rgba(0,0,0,.6));
+}
+.capture-marker{
+  fill:none;
+  stroke:var(--danger);
+  stroke-width:3;
+  stroke-dasharray:6 6;
+}
+.selection{
+  fill:rgba(255,122,89,0.12);
+  stroke: #ff9a6a;
+  stroke-width:4;
+  filter: drop-shadow(0 0 8px rgba(255,122,89,0.6));
+}
+.legal-move{
+  fill: rgba(120,210,80,0.25);
+  stroke: #8ee86a;
+  stroke-width:2.5;
+  opacity:.95;
+  cursor:pointer;
+  filter: drop-shadow(0 0 6px rgba(100,220,60,0.5));
+  transition: opacity 0.1s;
+}
+.legal-move:hover {
+  fill: rgba(140,230,100,0.5);
+}
+
+/* Last move */
+.last-move {
+  fill: none;
+  stroke: var(--accent);
+  stroke-width: 3;
+  stroke-dasharray: 4 4;
+  opacity: 0.9;
+}
+.last-move-from { stroke: var(--accent2); opacity: 0.7; }
+.last-move-to { stroke: var(--good); opacity: 0.85; }
+
+/* === CHRONICLE PANEL — horizontal strip below the board === */
+#moveHistoryPanel{
+  background: linear-gradient(160deg, #1a1208 0%, #120d06 100%);
+  border: 1px solid rgba(200,149,42,0.3);
+  border-radius:6px;
+  box-shadow: inset 0 0 30px rgba(0,0,0,0.4), 0 4px 20px rgba(0,0,0,0.5);
+  position:relative;
+  display:flex;
+  flex-direction:column;
+  /* Fixed compact height — scrolls internally */
+  height: 130px;
+  flex-shrink: 0;
+}
+
+.history-header {
+  padding: 7px 14px 5px;
+  border-bottom:1px solid rgba(200,149,42,0.2);
+  flex-shrink:0;
+  display:flex;
+  align-items:center;
+  gap:10px;
+}
+
+#moveHistoryPanel h2{
+  margin:0;
+  font-family:'Cinzel', serif;
+  font-size:11px;
+  letter-spacing:2.5px;
+  text-transform:uppercase;
+  color: var(--gold);
+  white-space:nowrap;
+}
+
+/* Scrollable chronicle — horizontal flow so moves tile left-to-right */
+.history-scroll {
+  overflow-y:auto;
+  overflow-x:hidden;
+  flex:1;
+  padding: 6px 14px 8px;
+  position:relative;
+  scroll-behavior:smooth;
+}
+
+/* Custom scrollbar */
+.history-scroll::-webkit-scrollbar { width:3px; }
+.history-scroll::-webkit-scrollbar-track { background:transparent; }
+.history-scroll::-webkit-scrollbar-thumb { background:rgba(200,149,42,0.3); border-radius:2px; }
+.history-scroll::-webkit-scrollbar-thumb:hover { background:rgba(200,149,42,0.5); }
+
+/* Move list: horizontal wrapping pills */
+#moveHistory{
+  margin:0;
+  padding:0;
+  display:flex;
+  flex-wrap:wrap;
+  gap:3px 6px;
+  list-style:none;
+  align-content:flex-start;
+  counter-reset: move-counter;
+}
+#moveHistory li{
+  font-family:'IM Fell English', serif;
+  font-size:12px;
+  color:#c4a97a;
+  padding: 2px 7px;
+  border-radius:3px;
+  background: rgba(200,149,42,0.06);
+  border: 1px solid rgba(200,149,42,0.12);
+  line-height:1.5;
+  white-space:nowrap;
+  position:relative;
+  counter-increment: move-counter;
+  transition: background 0.1s;
+}
+#moveHistory li:last-child {
+  background: rgba(200,149,42,0.16);
+  border-color: rgba(200,149,42,0.35);
+  color: var(--gold-light);
+}
+/* Move number badge before each pill */
+#moveHistory li::before {
+  content: counter(move-counter);
+  font-size:9px;
+  color: rgba(200,149,42,0.45);
+  font-family:'Cinzel', serif;
+  margin-right:4px;
+  vertical-align:middle;
+}
+
+/* === FOOTER === */
+footer{
+  padding:6px 18px 10px;
+  border-top:1px solid rgba(200,149,42,0.1);
+}
+footer p {
+  margin:0;
+  font-family:'IM Fell English', serif;
+  font-style:italic;
+  font-size:10px;
+  color:rgba(180,150,90,0.35);
+  letter-spacing:0.5px;
+}
+
+/* === APPEARANCE DRAWER === */
+#appearanceDrawer{
+  position:fixed;
+  right:-420px;
+  top:0;
+  height:100%;
+  width:380px;
+  background: linear-gradient(160deg, #1a1208, #0f0c07);
+  border-left: 1px solid rgba(200,149,42,0.3);
+  box-shadow:-8px 0 32px rgba(0,0,0,.7);
+  transition:right .25s ease;
+  z-index:50;
+  display:flex;
+  flex-direction:column;
+}
+#appearanceDrawer.open{ right:0; }
+#appearanceDrawer .drawer-header{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding:14px 16px;
+  background: rgba(0,0,0,0.3);
+  border-bottom:1px solid rgba(200,149,42,0.25);
+}
+#appearanceDrawer .drawer-header h2{
+  margin:0;
+  font-family:'Cinzel', serif;
+  font-size:16px;
+  letter-spacing:2px;
+  color: var(--gold-light);
+}
+#appearanceDrawer .drawer-content{
+  padding:14px;
+  overflow:auto;
+  display:flex;
+  flex-direction:column;
+  gap:16px;
+}
+#appearanceDrawer section h3{
+  margin:.25rem 0 .5rem 0;
+  font-family:'Cinzel', serif;
+  font-size:12px;
+  letter-spacing:2px;
+  text-transform:uppercase;
+  color: var(--gold);
+  border-bottom:1px solid rgba(200,149,42,0.2);
+  padding-bottom:4px;
+}
+#appearanceDrawer .row{
+  display:grid;
+  grid-template-columns: 1fr 1fr;
+  gap:8px;
+  align-items:center;
+  margin:6px 0;
+  font-size:13px;
+  color: #c4a97a;
+}
+#appearanceDrawer select,
+#appearanceDrawer input[type=range] {
+  background: #1a1208;
+  border:1px solid rgba(200,149,42,0.3);
+  color: #c4a97a;
+  padding:4px 6px;
+  border-radius:3px;
+  font-family:'IM Fell English', serif;
+}
+#appearanceDrawer .drawer-actions{
+  display:flex;
+  gap:8px;
+  margin-top:8px;
+  justify-content:flex-end;
+}
+
+/* Preset colour scheme tiles */
+.preset-tile {
+  border-radius:5px;
+  padding:8px 10px;
+  cursor:pointer;
+  border:2px solid transparent;
+  transition: border-color 0.15s, transform 0.1s, box-shadow 0.15s;
+  position:relative;
+  overflow:hidden;
+}
+.preset-tile:hover {
+  transform:translateY(-2px);
+  box-shadow:0 4px 16px rgba(0,0,0,0.6);
+}
+.preset-tile.active {
+  border-color: rgba(240,208,128,0.8);
+  box-shadow:0 0 0 1px rgba(240,208,128,0.3), 0 4px 16px rgba(0,0,0,0.5);
+}
+.preset-tile-name {
+  font-family:'Cinzel',serif;
+  font-size:10px;
+  letter-spacing:1.5px;
+  text-transform:uppercase;
+  margin-bottom:4px;
+  font-weight:600;
+}
+.preset-tile-desc {
+  font-family:'IM Fell English',serif;
+  font-style:italic;
+  font-size:10px;
+  opacity:0.7;
+  line-height:1.3;
+}
+.preset-swatches {
+  display:flex;
+  gap:3px;
+  margin-top:6px;
+}
+.preset-swatch {
+  width:14px;height:14px;
+  border-radius:50%;
+  border:1px solid rgba(0,0,0,0.3);
+}
+
+/* Board wooden background and nature border (rendered in SVG) */
+.wood-rect{
+  stroke:#2d1b0c;
+  stroke-width:12;
+  fill:url(#woodFill);
+  rx:24; ry:24;
+}
+.wood-inlay{
+  fill:none;
+  stroke:rgba(255,255,255,.12);
+  stroke-width:2;
+}
+
+/* Nature themed border (vines/leaves/rope) */
+.vine-stem{
+  fill:none;
+  stroke:#4a8f4a;
+  stroke-width:4;
+  stroke-linecap:round;
+}
+.leaf{
+  fill:#67b567;
+  stroke:#2d6b2d;
+  stroke-width:1.5;
+}
+.rope{
+  fill:none;
+  stroke:#caa46b;
+  stroke-width:6;
+  stroke-linecap:round;
+  stroke-dasharray:2 10;
+}
+
+/* File/Rank labels */
+.coord{
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+  font-size:20px;
+  fill:#f3e8d0;
+  opacity:.9;
+  paint-order: stroke;
+  stroke: rgba(0,0,0,.45);
+  stroke-width: 2px;
+}
+
+/* Emoji piece styling */
+.piece-group { pointer-events: all; }
+.piece-emoji {
+  font-family: system-ui, "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji";
+  /* subtle shadow for readability */
+  filter: drop-shadow(0 1px 1px rgba(0,0,0,0.6));
+  user-select: none;
+  -webkit-user-select: none;
+  pointer-events: none; /* events handled by the group/circle */
+}
+
+/* Keep existing piece visual effects applied to the group */
+.piece-goose { filter: drop-shadow(0 1px 1px rgba(0,0,0,.4)); }
+.piece-fox   { filter: drop-shadow(0 1px 1px rgba(0,0,0,.6)); }
+
+/* Animation helpers */
+#board.animating {
+  pointer-events: none;
+}
+
+.anim-piece,
+.anim-capture {
+  transform-box: fill-box;
+  transform-origin: center;
+  will-change: transform, opacity;
+  pointer-events: none;
+}
+
+/* Bounce landing */
+@keyframes bounce-landing {
+  0%   { transform: scale(1); }
+  50%  { transform: scale(1.06); }
+  100% { transform: scale(1); }
+}
+
+/* Capture pop+fade up */
+@keyframes pop-fade-up {
+  0%   { transform: translateY(0) scale(1); opacity: 1; }
+  20%  { transform: translateY(-2px) scale(1.1); opacity: 1; }
+  100% { transform: translateY(-8px) scale(1.12); opacity: 0; }
+}
+
+/* ── Piece idle breathing ── */
+/* Each piece gets a randomised animation-delay set in JS */
+@keyframes piece-breathe {
+  0%,100% { transform: translate(0px,  0px)  scale(1.000); }
+  20%      { transform: translate(0.4px,-0.5px) scale(1.012); }
+  45%      { transform: translate(-0.3px, 0.4px) scale(0.993); }
+  70%      { transform: translate(0.5px, 0.3px)  scale(1.008); }
+}
+
+/* Shimmer flash — a thin diagonal white stripe that sweeps across */
+@keyframes piece-flash {
+  0%,89%  { opacity: 0; transform: translateX(-120%) rotate(30deg); }
+  90%     { opacity: 0; }
+  92%     { opacity: 0.55; transform: translateX(0%)    rotate(30deg); }
+  96%     { opacity: 0.0; transform: translateX(120%)   rotate(30deg); }
+  100%    { opacity: 0; transform: translateX(120%) rotate(30deg); }
+}
+
+/* Applied to piece-group elements; JS injects inline animation-delay */
+.piece-group.breathing {
+  animation: piece-breathe var(--breathe-dur, 4.2s) ease-in-out infinite;
+  animation-delay: var(--breathe-delay, 0s);
+  transform-box: fill-box;
+  transform-origin: center;
+}
+
+/* Flash overlay rect clipped to its piece circle — created in JS */
+.piece-flash-overlay {
+  pointer-events: none;
+  animation: piece-flash var(--flash-period, 9s) ease-in-out infinite;
+  animation-delay: var(--flash-delay, 0s);
+}
+</style>
+  <meta name="description" content="Fox and Geese — The Ancient Hunt. 33-point cross board, historically accurate." />
+</head>
+<body>
+  <div id="app">
+    <header>
+      <div class="header-inner">
+        <h1>Fox &amp; Geese</h1>
+        <div class="title-sub">The Ancient Hunt &mdash; 33-point Cross Board</div>
+        <div class="controls">
+          <div class="toggles">
+            <label title="If on, geese can only move towards the fox's side (downwards). Default: off">
+              <input type="checkbox" id="forwardOnlyGeese" />
+              Forward-only Geese
+            </label>
+            <label title="If on, fox must capture when able. Default: off">
+              <input type="checkbox" id="mandatoryCapture" />
+              Mandatory Capture
+            </label>
+            <label title="If on, the fox MUST continue capturing as long as captures are available (multi-jump required). Default: off — fox freely chooses when to stop.">
+              <input type="checkbox" id="mandatoryMultiCapture" />
+              Force Multi-Capture
+            </label>
+          </div>
+          <div class="buttons">
+            <button id="appearanceBtn" title="Customize board, pieces, and background">&#9881; Appearance</button>
+            <button id="restartBtn" title="Restart a fresh game">&#8635; New Game</button>
+            <button id="undoBtn" title="Undo last move">&#8617; Undo</button>
+            <button id="endFoxTurnBtn" class="hidden" title="Stop the fox's capture chain here (only available when Force Multi-Capture is on)">End Fox Turn</button>
+          </div>
+        </div>
+        <div class="statusbar">
+          <div id="turnIndicator">Turn: Geese</div>
+          <div id="resultIndicator"></div>
+        </div>
+      </div>
+    </header>
+
+    <main>
+      <div id="boardContainer">
+        <svg id="board" viewBox="0 0 700 700" preserveAspectRatio="xMidYMid meet" aria-label="Fox and Geese board" role="img"></svg>
+      </div>
+      <aside id="moveHistoryPanel">
+        <div class="history-header">
+          <h2>&#10022; Chronicle of Moves</h2>
+        </div>
+        <div class="history-scroll" id="historyScroll">
+          <ol id="moveHistory"></ol>
+        </div>
+      </aside>
+    </main>
+
+    <footer>
+      <p>
+        33-point cross &middot; Orthogonal only &middot; 1 Fox &middot; 13 Geese &middot; Geese move first &middot; Fox wins by reducing Geese to 4 &middot; Geese win by trapping the Fox
+      </p>
+    </footer>
+  </div>
+
+  <!-- Appearance / Settings Drawer -->
+  <div id="appearanceDrawer" aria-hidden="true">
+    <div class="drawer-header">
+      <h2>Appearance Settings</h2>
+      <button id="closeAppearanceBtn" class="icon-btn" title="Close">✕</button>
+    </div>
+    <div class="drawer-content">
+      <!-- PRESET SCHEMES -->
+      <section>
+        <h3>Colour Scheme</h3>
+        <p style="font-size:11px;color:rgba(200,149,42,0.55);margin:0 0 8px;font-family:'IM Fell English',serif;font-style:italic;">Click a scheme to apply it instantly</p>
+        <div id="presetGrid" style="display:grid;grid-template-columns:1fr 1fr;gap:8px;"></div>
+      </section>
+
+      <section>
+        <h3>Board Details</h3>
+        <div class="row">
+          <label>Wood Tone</label>
+          <select id="boardWoodTone">
+            <option value="maple">Maple (light)</option>
+            <option value="oak">Oak (medium)</option>
+            <option value="walnut">Walnut (dark)</option>
+          </select>
+        </div>
+        <div class="row">
+          <label>Edge Border</label>
+          <select id="borderStyle">
+            <option value="vines">Leafy Vines</option>
+            <option value="rope">Braided Rope</option>
+            <option value="plain">Plain</option>
+          </select>
+        </div>
+        <div class="row">
+          <label>Show File/Rank</label>
+          <input type="checkbox" id="showCoords" checked />
+        </div>
+      </section>
+
+      <section>
+        <h3>Connection Lines</h3>
+        <div class="row">
+          <label>Line Color</label>
+          <input type="color" id="lineColor" value="#8a7050" />
+        </div>
+        <div class="row">
+          <label>Line Width</label>
+          <input type="range" id="lineWidth" min="2" max="8" step="1" value="4" />
+          <span id="lineWidthVal">4</span>
+        </div>
+      </section>
+
+      <section>
+        <h3>Points</h3>
+        <div class="row">
+          <label>Point Fill</label>
+          <input type="color" id="pointFill" value="#dfe7f1" />
+        </div>
+        <div class="row">
+          <label>Point Stroke</label>
+          <input type="color" id="pointStroke" value="#9fb0c6" />
+        </div>
+      </section>
+
+      <section>
+        <h3>Pieces</h3>
+        <div class="row">
+          <label>Token Outline</label>
+          <select id="pieceStrokeOpacity">
+            <option value="1">Full</option>
+            <option value="0.4">Light</option>
+            <option value="0.12">Faint</option>
+            <option value="0">None</option>
+          </select>
+        </div>
+        <div class="row">
+          <label>Geese Stroke Colour</label>
+          <input type="color" id="geeseStroke" value="#555555" />
+        </div>
+        <div class="row">
+          <label>Fox Stroke Colour</label>
+          <input type="color" id="foxStroke" value="#3a0b08" />
+        </div>
+      </section>
+
+      <!-- Hidden inputs kept for internal data model compatibility -->
+      <div style="display:none">
+        <input type="color" id="bgColor" value="#0f0c07" />
+        <input id="boardBgColor" type="color" value="#0f0c07" />
+        <input id="historyBgColor" type="color" value="#1a1208" />
+        <select id="bgPreset"><option value="warm-wood" selected>warm-wood</option></select>
+      </div>
+
+      <div class="drawer-actions">
+        <button id="resetAppearanceBtn">Reset to Defaults</button>
+        <button id="applyAppearanceBtn" class="primary">Apply Changes</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+// Fox and Geese — Historically accurate 33-point cross
+// Geometry: 7x7 grid; valid points follow the 33-hole cross (orthogonal).
+const svgNS = "http://www.w3.org/2000/svg";
+
+// Board configuration
+const N = 7;
+// Scale pixels; board viewBox 0..700
+const CELL = 100;
+const RADIUS_POINT = 10;
+const RADIUS_MOVE = 12;
+
+// @tweakable Emoji font size scale relative to CELL
+const EMOJI_SCALE = 0.58;
+// @tweakable Invisible hit-circle radius scale relative to CELL
+const HIT_RADIUS_SCALE = 0.35;
+// @tweakable Vertical alignment tweak for emoji centering (fraction of CELL; positive moves down)
+const EMOJI_DY_SCALE = 0.04;
+
+// Emoji preference and fallback
+let useEmoji = true;
+
+function supportsEmoji() {
+  // Lightweight heuristic: most modern browsers support color emoji.
+  // We'll try drawing to a canvas and check if any pixels were affected.
+  try {
+    const canvas = document.createElement("canvas");
+    canvas.width = canvas.height = 32;
+    const ctx = canvas.getContext("2d");
+    ctx.fillStyle = "#000";
+    ctx.textBaseline = "top";
+    ctx.font = "28px system-ui, Apple Color Emoji, Segoe UI Emoji, Noto Color Emoji";
+    ctx.clearRect(0,0,32,32);
+    ctx.fillText("🦊", 0, 0);
+    const pixels = ctx.getImageData(0, 0, 32, 32).data;
+    let nonZero = 0;
+    for (let i = 3; i < pixels.length; i += 4) { // alpha channel
+      if (pixels[i] !== 0) { nonZero = 1; break; }
+    }
+    return nonZero === 1;
+  } catch {
+    return true; // default optimistic
+  }
+}
+
+// Appearance defaults and persistence
+// ── COLOUR PRESETS ──────────────────────────────────────────
+// Four historically-inspired schemes. Each fully defines every
+// appearance variable so selecting one is always consistent.
+const COLOUR_PRESETS = [
+  {
+    id: "tavern-oak",
+    name: "Tavern Oak",
+    desc: "Candlelit medieval inn — warm amber & deep shadow",
+    // Background
+    bgColor: "#0f0c07",
+    bgStyle: "radial-gradient(ellipse 80% 60% at 20% 10%, rgba(80,40,10,0.45) 0%, transparent 60%), radial-gradient(ellipse 60% 70% at 80% 80%, rgba(40,20,5,0.5) 0%, transparent 55%), linear-gradient(160deg, #1a1005 0%, #0f0c07 40%, #100d08 100%)",
+    // Board
+    boardWoodTone: "oak",
+    borderStyle: "vines",
+    showCoords: true,
+    // Lines & points
+    lineColor: "#8a7050",
+    lineWidth: 4,
+    pointFill: "#dfe7f1",
+    pointStroke: "#9fb0c6",
+    // Pieces (fallback)
+    geeseStroke: "#555555",
+    foxStroke: "#3a0b08",
+    // Panels
+    boardBgColor: "#0f0c07",
+    historyBgColor: "#1a1208",
+    // Swatch preview colours
+    swatches: ["#c8952a","#caa46b","#dfe7f1","#0f0c07"],
+  },
+  {
+    id: "ivory-and-ebony",
+    name: "Ivory & Ebony",
+    desc: "Norse bone-carved board — stark ivory on black walnut",
+    bgColor: "#0a0a0a",
+    bgStyle: "radial-gradient(ellipse 70% 50% at 50% 0%, rgba(60,50,30,0.4) 0%, transparent 55%), linear-gradient(180deg, #111008 0%, #080808 100%)",
+    boardWoodTone: "walnut",
+    borderStyle: "rope",
+    showCoords: true,
+    lineColor: "#c8b890",
+    lineWidth: 3,
+    pointFill: "#f4ead0",
+    pointStroke: "#c8b890",
+    geeseStroke: "#8a7a50",
+    foxStroke: "#1a0a0a",
+    boardBgColor: "#0a0a0a",
+    historyBgColor: "#100e08",
+    swatches: ["#f4ead0","#c8b890","#3a2a10","#0a0a0a"],
+  },
+  {
+    id: "forest-glade",
+    name: "Forest Glade",
+    desc: "Carved beneath the greenwood — moss, bark, and dappled light",
+    bgColor: "#080e08",
+    bgStyle: "radial-gradient(ellipse 90% 60% at 30% 20%, rgba(20,50,20,0.55) 0%, transparent 60%), radial-gradient(ellipse 70% 80% at 70% 90%, rgba(10,30,10,0.5) 0%, transparent 55%), linear-gradient(160deg, #0a120a 0%, #080e08 100%)",
+    boardWoodTone: "maple",
+    borderStyle: "vines",
+    showCoords: true,
+    lineColor: "#5a7840",
+    lineWidth: 4,
+    pointFill: "#d8e8c0",
+    pointStroke: "#8aaa60",
+    geeseStroke: "#3a5a20",
+    foxStroke: "#5a2a10",
+    boardBgColor: "#080e08",
+    historyBgColor: "#0a1208",
+    swatches: ["#d8e8c0","#8aaa60","#caa46b","#080e08"],
+  },
+  {
+    id: "royal-midnight",
+    name: "Royal Midnight",
+    desc: "Court game by torchlight — deep indigo, gold, and crimson",
+    bgColor: "#08080f",
+    bgStyle: "radial-gradient(ellipse 80% 55% at 25% 15%, rgba(30,20,70,0.55) 0%, transparent 55%), radial-gradient(ellipse 60% 70% at 75% 85%, rgba(80,10,20,0.35) 0%, transparent 50%), linear-gradient(160deg, #0c0a18 0%, #08080f 100%)",
+    boardWoodTone: "walnut",
+    borderStyle: "rope",
+    showCoords: true,
+    lineColor: "#6858a8",
+    lineWidth: 4,
+    pointFill: "#e8daf8",
+    pointStroke: "#9880c8",
+    geeseStroke: "#504080",
+    foxStroke: "#600818",
+    boardBgColor: "#08080f",
+    historyBgColor: "#0c0a18",
+    swatches: ["#e8daf8","#9880c8","#c8952a","#08080f"],
+  },
+];
+
+const DEFAULT_APPEARANCE = {
+  bgPreset: "warm-wood",    // kept for legacy localStorage compat
+  bgColor: "#0f0c07",
+  bgStyle: "",              // set by preset; empty = use bgColor
+  boardWoodTone: "oak",
+  borderStyle: "vines",
+  showCoords: true,
+  lineColor: "#8a7050",
+  lineWidth: 4,
+  pointFill: "#dfe7f1",
+  pointStroke: "#9fb0c6",
+  geeseStroke: "#555555",
+  foxStroke: "#3a0b08",
+  pieceStrokeOpacity: 0,
+  boardBgColor: "#0f0c07",
+  historyBgColor: "#1a1208",
+  activePreset: "tavern-oak",  // tracks which preset tile is highlighted
+};
+
+let appearance = loadAppearance();
+
+// State
+let state = null;
+let history = [];
+let selectedId = null;
+let legalMoves = []; // array of {to, kind:'step'|'jump', captured?: [ids]}
+let foxCaptureChainActive = false;
+let foxChainFrom = null; // point id where the fox currently is within a chain
+let lastMove = null; // { piece: 'F'|'G', from: id, to: id, captured: number }
+let isAnimating = false; // block inputs during animations
+// Track fox multi-capture chain notation sequence (array of pointIds)
+/* @tweakable whether to compress fox multi-captures into a single history line */
+let foxChainSeq = null;
+
+const ui = {
+  svg: document.getElementById("board"),
+  turnIndicator: document.getElementById("turnIndicator"),
+  resultIndicator: document.getElementById("resultIndicator"),
+  moveHistory: document.getElementById("moveHistory"),
+  restartBtn: document.getElementById("restartBtn"),
+  undoBtn: document.getElementById("undoBtn"),
+  endFoxTurnBtn: document.getElementById("endFoxTurnBtn"),
+  forwardOnlyGeese: document.getElementById("forwardOnlyGeese"),
+  mandatoryCapture: document.getElementById("mandatoryCapture"),
+  mandatoryMultiCapture: document.getElementById("mandatoryMultiCapture"),
+  // Appearance drawer
+  appearanceBtn: document.getElementById("appearanceBtn"),
+  appearanceDrawer: document.getElementById("appearanceDrawer"),
+  closeAppearanceBtn: document.getElementById("closeAppearanceBtn"),
+  applyAppearanceBtn: document.getElementById("applyAppearanceBtn"),
+  resetAppearanceBtn: document.getElementById("resetAppearanceBtn"),
+  // Appearance inputs
+  bgPreset: document.getElementById("bgPreset"),
+  bgColor: document.getElementById("bgColor"),
+  boardWoodTone: document.getElementById("boardWoodTone"),
+  borderStyle: document.getElementById("borderStyle"),
+  showCoords: document.getElementById("showCoords"),
+  lineColor: document.getElementById("lineColor"),
+  lineWidth: document.getElementById("lineWidth"),
+  lineWidthVal: document.getElementById("lineWidthVal"),
+  pointFill: document.getElementById("pointFill"),
+  pointStroke: document.getElementById("pointStroke"),
+  // Removed geeseFill and foxFill inputs
+  geeseStroke: document.getElementById("geeseStroke"),
+  foxStroke: document.getElementById("foxStroke"),
+  pieceStrokeOpacity: document.getElementById("pieceStrokeOpacity"),
+  // New color pickers
+  boardBgColor: document.getElementById("boardBgColor"),
+  historyBgColor: document.getElementById("historyBgColor"),
+};
+
+function validCell(r, c) {
+  return (r >= 0 && r < N && c >= 0 && c < N) &&
+    ((r >= 2 && r <= 4) || (c >= 2 && c <= 4));
+}
+
+function pointId(r, c) { return `${r},${c}`; }
+function parseId(id) { const [r, c] = id.split(",").map(Number); return { r, c }; }
+
+function allPoints() {
+  const pts = [];
+  for (let r = 0; r < N; r++) {
+    for (let c = 0; c < N; c++) {
+      if (validCell(r, c)) {
+        pts.push(pointId(r, c));
+      }
+    }
+  }
+  return pts;
+}
+
+// Adjacency (orthogonal only)
+function neighbors(id) {
+  const { r, c } = parseId(id);
+  const dirs = [
+    { dr: -1, dc: 0 }, // up
+    { dr: 1, dc: 0 },  // down
+    { dr: 0, dc: -1 }, // left
+    { dr: 0, dc: 1 },  // right
+  ];
+  const ns = [];
+  for (const d of dirs) {
+    const nr = r + d.dr, nc = c + d.dc;
+    if (validCell(nr, nc)) ns.push(pointId(nr, nc));
+  }
+  return ns;
+}
+
+// Jump destination given from->over->to, colinear and adjacent
+function jumpOver(fromId, overId) {
+  const a = parseId(fromId);
+  const b = parseId(overId);
+  const dr = b.r - a.r;
+  const dc = b.c - a.c;
+  if (Math.abs(dr) + Math.abs(dc) !== 1) return null;
+  const toR = b.r + dr;
+  const toC = b.c + dc;
+  if (!validCell(toR, toC)) return null;
+  return pointId(toR, toC);
+}
+
+// Coordinates to pixels
+function toXY(id) {
+  const { r, c } = parseId(id);
+  return { x: c * CELL + CELL / 2, y: r * CELL + CELL / 2 };
+}
+
+// Display helpers for algebraic notation (A–G files, 1–7 ranks)
+const FILES = ["A","B","C","D","E","F","G"];
+function idxToFile(c) { return FILES[c]; }               // 0..6 => "A".."G"
+/* @tweakable rank numbering offset; 0 means ranks are 1–7 for rows 0–6 */
+const RANK_OFFSET = 1;
+function idxToRank(r) { return String(r + RANK_OFFSET); } // 0..6 => "1".."7"
+function rcToNotation(r, c) { return `${idxToFile(c)}${idxToRank(r)}`; }
+function pointIdToNotation(pointId) {
+  const { r, c } = parseId(pointId);
+  return rcToNotation(r, c);
+}
+
+/* @tweakable arrow symbol used for non-capture moves in history */
+const HISTORY_ARROW = "→";
+/* @tweakable capture symbol used for captures and chains in history */
+const HISTORY_CAPTURE = "×";
+/* @tweakable show emoji icons in history entries */
+const HISTORY_USE_EMOJI = true;
+
+function pieceIcon(pieceType) {
+  // Accept 'F'|'G' or 'fox'|'goose'
+  const fox = pieceType === "F" || pieceType === "fox";
+  const goose = pieceType === "G" || pieceType === "goose";
+  if (!HISTORY_USE_EMOJI) return fox ? "F" : goose ? "G" : "";
+  return fox ? "🦊" : goose ? "🪿" : "";
+}
+
+// Unified builder for move history lines
+function historyEntry({ pieceType, fromId, toId, isCapture, chain = [] }) {
+  const icon = pieceIcon(pieceType);
+  if (chain && chain.length > 0) {
+    // chain includes the full path in order, e.g., [C4, E4, E6] -> "🦊 C4×E4×E6"
+    const seq = chain.map(pointIdToNotation).join(HISTORY_CAPTURE);
+    return `${icon} ${seq}`;
+  } else if (fromId && toId) {
+    const fromN = pointIdToNotation(fromId);
+    const toN   = pointIdToNotation(toId);
+    return `${icon} ${fromN}${isCapture ? HISTORY_CAPTURE : HISTORY_ARROW}${toN}`;
+  }
+  return ""; // fallback
+}
+
+// Initial piece placement
+function initialState() {
+  const pts = allPoints();
+  const pieces = {};
+  let foxPos = pointId(3, 3);
+  for (const id of pts) {
+    const { r } = parseId(id);
+    if (r <= 2) pieces[id] = "G";
+  }
+  delete pieces[foxPos];
+  pieces[foxPos] = "F";
+  return {
+    pieces,
+    turn: "G",
+    geeseCount: Object.values(pieces).filter(v => v === "G").length,
+    settings: {
+      forwardOnlyGeese: false,
+      mandatoryCapture: false,
+      mandatoryMultiCapture: false,
+    },
+    result: null,
+  };
+}
+
+function saveSettingsFromUI(st) {
+  st.settings.forwardOnlyGeese = ui.forwardOnlyGeese.checked;
+  st.settings.mandatoryCapture = ui.mandatoryCapture.checked;
+  st.settings.mandatoryMultiCapture = ui.mandatoryMultiCapture.checked;
+  return st;
+}
+
+function restoreUIFromSettings(st) {
+  ui.forwardOnlyGeese.checked = st.settings.forwardOnlyGeese;
+  ui.mandatoryCapture.checked = st.settings.mandatoryCapture;
+  ui.mandatoryMultiCapture.checked = st.settings.mandatoryMultiCapture;
+}
+
+function deepCopyState(st) {
+  return {
+    pieces: { ...st.pieces },
+    turn: st.turn,
+    geeseCount: st.geeseCount,
+    settings: { ...st.settings },
+    result: st.result,
+  };
+}
+
+function pushHistory(note) {
+  history.push({ state: deepCopyState(state), note });
+  renderHistory();
+}
+
+function undo() {
+  if (history.length === 0) return;
+  const last = history.pop();
+  state = deepCopyState(last.state);
+  selectedId = null;
+  legalMoves = [];
+  foxCaptureChainActive = false;
+  foxChainFrom = null;
+  lastMove = null;
+  updateUI();
+  renderBoard();
+  playClick();
+}
+
+function updateUI() {
+  ui.turnIndicator.textContent = state.result ? "Game Over" : `Turn: ${state.turn === "G" ? "Geese" : "Fox"}`;
+  ui.resultIndicator.textContent = state.result || "";
+  // Show "End Fox Turn" when a chain is active AND the player is NOT forced to continue.
+  // Hidden when mandatoryMultiCapture forces the chain, or when no chain is active.
+  ui.endFoxTurnBtn.classList.toggle("hidden", !(foxCaptureChainActive && !state.settings.mandatoryMultiCapture));
+}
+
+function renderHistory() {
+  ui.moveHistory.innerHTML = "";
+  history.forEach((h) => {
+    const li = document.createElement("li");
+    li.textContent = h.note;
+    ui.moveHistory.appendChild(li);
+  });
+  // Scroll newest entry into view
+  const scroll = document.getElementById("historyScroll");
+  if (scroll) scroll.scrollTop = scroll.scrollHeight;
+}
+
+// SVG construction: draw lines connecting orthogonal neighbors without duplicates
+function renderBoard() {
+  const svg = ui.svg;
+  while (svg.firstChild) svg.removeChild(svg.firstChild);
+
+  // Determine emoji availability once (first render) - already set in init(), guard retained for safety
+  if (useEmoji === undefined) {
+    useEmoji = supportsEmoji();
+  }
+
+  // Defs for wood grain and board effects
+  const defs = document.createElementNS(svgNS, "defs");
+
+  // Inner shadow filter for board depth
+  const filterShadow = document.createElementNS(svgNS, "filter");
+  filterShadow.setAttribute("id", "innerShadow");
+  filterShadow.setAttribute("x", "-20%"); filterShadow.setAttribute("y", "-20%");
+  filterShadow.setAttribute("width", "140%"); filterShadow.setAttribute("height", "140%");
+  const feShadow = document.createElementNS(svgNS, "feDropShadow");
+  feShadow.setAttribute("dx", "0"); feShadow.setAttribute("dy", "0");
+  feShadow.setAttribute("stdDeviation", "8");
+  feShadow.setAttribute("flood-color", "rgba(0,0,0,0.7)");
+  filterShadow.appendChild(feShadow);
+  defs.appendChild(filterShadow);
+
+  // Glow filter for pieces
+  const filterGlow = document.createElementNS(svgNS, "filter");
+  filterGlow.setAttribute("id", "pieceGlow");
+  const feBlur = document.createElementNS(svgNS, "feGaussianBlur");
+  feBlur.setAttribute("in", "SourceGraphic"); feBlur.setAttribute("stdDeviation", "3");
+  feBlur.setAttribute("result", "blur");
+  const feMerge = document.createElementNS(svgNS, "feMerge");
+  const feMN1 = document.createElementNS(svgNS, "feMergeNode");
+  feMN1.setAttribute("in", "blur");
+  const feMN2 = document.createElementNS(svgNS, "feMergeNode");
+  feMN2.setAttribute("in", "SourceGraphic");
+  feMerge.appendChild(feMN1); feMerge.appendChild(feMN2);
+  filterGlow.appendChild(feBlur); filterGlow.appendChild(feMerge);
+  defs.appendChild(filterGlow);
+
+  const woodGrad = document.createElementNS(svgNS, "linearGradient");
+  woodGrad.setAttribute("id", "woodFill");
+  woodGrad.setAttribute("x1", "0%");
+  woodGrad.setAttribute("x2", "0%");
+  woodGrad.setAttribute("y1", "0%");
+  woodGrad.setAttribute("y2", "100%");
+  const g1 = document.createElementNS(svgNS, "stop");
+  g1.setAttribute("offset", "0%");
+  g1.setAttribute("stop-color", getWoodColors().top);
+  const g2 = document.createElementNS(svgNS, "stop");
+  g2.setAttribute("offset", "50%");
+  g2.setAttribute("stop-color", getWoodColors().mid);
+  const g3 = document.createElementNS(svgNS, "stop");
+  g3.setAttribute("offset", "100%");
+  g3.setAttribute("stop-color", getWoodColors().bot);
+  woodGrad.appendChild(g1); woodGrad.appendChild(g2); woodGrad.appendChild(g3);
+
+  // Subtle wood grain overlay (stripes)
+  const pattern = document.createElementNS(svgNS, "pattern");
+  pattern.setAttribute("id", "grain");
+  pattern.setAttribute("patternUnits", "userSpaceOnUse");
+  pattern.setAttribute("width", "12");
+  pattern.setAttribute("height", "12");
+  const grainRect = document.createElementNS(svgNS, "rect");
+  grainRect.setAttribute("x", "0"); grainRect.setAttribute("y", "0");
+  grainRect.setAttribute("width", "12"); grainRect.setAttribute("height", "12");
+  grainRect.setAttribute("fill", "transparent");
+  const grainPath = document.createElementNS(svgNS, "path");
+  grainPath.setAttribute("d", "M0 2 H12 M0 10 H12");
+  grainPath.setAttribute("stroke", hexWithAlpha(getWoodColors().grain, 0.18));
+  grainPath.setAttribute("stroke-width", "1");
+  pattern.appendChild(grainRect);
+  pattern.appendChild(grainPath);
+
+  // Radial vignette for board edges
+  const vignette = document.createElementNS(svgNS, "radialGradient");
+  vignette.setAttribute("id", "boardVignette");
+  vignette.setAttribute("cx", "50%"); vignette.setAttribute("cy", "50%");
+  vignette.setAttribute("r", "60%");
+  const v1 = document.createElementNS(svgNS, "stop");
+  v1.setAttribute("offset", "50%"); v1.setAttribute("stop-color", "transparent");
+  const v2 = document.createElementNS(svgNS, "stop");
+  v2.setAttribute("offset", "100%"); v2.setAttribute("stop-color", "rgba(0,0,0,0.55)");
+  vignette.appendChild(v1); vignette.appendChild(v2);
+
+  defs.appendChild(woodGrad);
+  defs.appendChild(pattern);
+  defs.appendChild(vignette);
+  svg.appendChild(defs);
+
+  // Board background rect with rounded corners, wood gradient
+  const woodRect = document.createElementNS(svgNS, "rect");
+  woodRect.setAttribute("x", "16");
+  woodRect.setAttribute("y", "16");
+  woodRect.setAttribute("width", "668");
+  woodRect.setAttribute("height", "668");
+  woodRect.setAttribute("class", "wood-rect");
+  woodRect.setAttribute("fill", "url(#woodFill)");
+  svg.appendChild(woodRect);
+
+  // Grain overlay
+  const grainOverlay = document.createElementNS(svgNS, "rect");
+  grainOverlay.setAttribute("x", "16");
+  grainOverlay.setAttribute("y", "16");
+  grainOverlay.setAttribute("width", "668");
+  grainOverlay.setAttribute("height", "668");
+  grainOverlay.setAttribute("fill", "url(#grain)");
+  grainOverlay.setAttribute("opacity", "0.4");
+  svg.appendChild(grainOverlay);
+
+  // Vignette overlay - darkens edges for depth
+  const vigOverlay = document.createElementNS(svgNS, "rect");
+  vigOverlay.setAttribute("x", "16");
+  vigOverlay.setAttribute("y", "16");
+  vigOverlay.setAttribute("width", "668");
+  vigOverlay.setAttribute("height", "668");
+  vigOverlay.setAttribute("fill", "url(#boardVignette)");
+  vigOverlay.setAttribute("rx", "22"); vigOverlay.setAttribute("ry", "22");
+  svg.appendChild(vigOverlay);
+
+  // Decorative corner diamonds
+  const corners = [{x:50,y:50},{x:650,y:50},{x:50,y:650},{x:650,y:650}];
+  for (const c of corners) {
+    const diamond = document.createElementNS(svgNS, "polygon");
+    const s = 10;
+    diamond.setAttribute("points", `${c.x},${c.y-s} ${c.x+s},${c.y} ${c.x},${c.y+s} ${c.x-s},${c.y}`);
+    diamond.setAttribute("fill", "rgba(200,149,42,0.5)");
+    diamond.setAttribute("stroke", "rgba(240,208,128,0.3)");
+    diamond.setAttribute("stroke-width", "1");
+    svg.appendChild(diamond);
+  }
+
+  // Inlay lines
+  const inlay = document.createElementNS(svgNS, "rect");
+  inlay.setAttribute("x", "30");
+  inlay.setAttribute("y", "30");
+  inlay.setAttribute("width", "640");
+  inlay.setAttribute("height", "640");
+  inlay.setAttribute("class", "wood-inlay");
+  svg.appendChild(inlay);
+
+  // Nature border
+  if (appearance.borderStyle !== "plain") {
+    renderNatureBorder(svg, appearance.borderStyle);
+  }
+
+  // Background rect to catch clicks
+  const bg = document.createElementNS(svgNS, "rect");
+  bg.setAttribute("x", "0"); bg.setAttribute("y", "0");
+  bg.setAttribute("width", "700"); bg.setAttribute("height", "700");
+  bg.setAttribute("fill", "transparent");
+  svg.appendChild(bg);
+
+  const pts = allPoints();
+
+  // Draw connecting lines (use right/down to avoid duplicates)
+  for (const id of pts) {
+    const { r, c } = parseId(id);
+    const here = toXY(id);
+    if (validCell(r, c + 1)) {
+      const nb = toXY(pointId(r, c + 1));
+      const line = document.createElementNS(svgNS, "line");
+      line.setAttribute("x1", here.x); line.setAttribute("y1", here.y);
+      line.setAttribute("x2", nb.x);   line.setAttribute("y2", nb.y);
+      line.setAttribute("class", "board-line");
+      svg.appendChild(line);
+    }
+    if (validCell(r + 1, c)) {
+      const nb = toXY(pointId(r + 1, c));
+      const line = document.createElementNS(svgNS, "line");
+      line.setAttribute("x1", here.x); line.setAttribute("y1", here.y);
+      line.setAttribute("x2", nb.x);   line.setAttribute("y2", nb.y);
+      line.setAttribute("class", "board-line");
+      svg.appendChild(line);
+    }
+  }
+
+  // Draw points
+  for (const id of pts) {
+    const xy = toXY(id);
+    const point = document.createElementNS(svgNS, "circle");
+    point.setAttribute("cx", xy.x);
+    point.setAttribute("cy", xy.y);
+    point.setAttribute("r", RADIUS_POINT);
+    point.setAttribute("class", "board-point");
+    if (!state.pieces[id]) {
+      point.classList.add("inactive");
+    }
+    point.dataset.pointId = id;
+    point.addEventListener("click", () => onPointClicked(id));
+    svg.appendChild(point);
+  }
+
+  // Legal move pips
+  for (const m of legalMoves) {
+    const xy = toXY(m.to);
+    const dot = document.createElementNS(svgNS, "circle");
+    dot.setAttribute("cx", xy.x);
+    dot.setAttribute("cy", xy.y);
+    dot.setAttribute("r", RADIUS_MOVE);
+    dot.setAttribute("class", "legal-move");
+    dot.addEventListener("click", (e) => {
+      e.stopPropagation();
+      onMoveChosen(m);
+    });
+    svg.appendChild(dot);
+  }
+
+  // Selection ring
+  if (selectedId) {
+    const xy = toXY(selectedId);
+    const sel = document.createElementNS(svgNS, "circle");
+    sel.setAttribute("cx", xy.x);
+    sel.setAttribute("cy", xy.y);
+    sel.setAttribute("r", RADIUS_MOVE + 6);
+    sel.setAttribute("class", "selection");
+    svg.appendChild(sel);
+  }
+
+  // Pieces
+  for (const [id, who] of Object.entries(state.pieces)) {
+    if (useEmoji) {
+      const group = createEmojiPieceGroup(who, id);
+      svg.appendChild(group);
+    } else {
+      // Fallback: original shapes
+      const xy = toXY(id);
+      if (who === "G") {
+        const goose = document.createElementNS(svgNS, "circle");
+        goose.setAttribute("cx", xy.x);
+        goose.setAttribute("cy", xy.y);
+        goose.setAttribute("r", 20);
+        goose.setAttribute("class", "piece-goose");
+        goose.dataset.pieceId = id;
+        goose.dataset.type = "G";
+        goose.addEventListener("click", (e) => {
+          e.stopPropagation();
+          onPieceClicked(id);
+        });
+        svg.appendChild(goose);
+      } else if (who === "F") {
+        const size = 26;
+        const points = trianglePoints(xy.x, xy.y, size);
+        const fox = document.createElementNS(svgNS, "polygon");
+        fox.setAttribute("points", points);
+        fox.setAttribute("class", "piece-fox");
+        fox.dataset.pieceId = id;
+        fox.dataset.type = "F";
+        fox.addEventListener("click", (e) => {
+          e.stopPropagation();
+          onPieceClicked(id);
+        });
+        svg.appendChild(fox);
+      }
+    }
+  }
+
+  // Last move markers
+  if (lastMove) {
+    const fromXY = toXY(lastMove.from);
+    const toXYp = toXY(lastMove.to);
+    const cFrom = document.createElementNS(svgNS, "circle");
+    cFrom.setAttribute("cx", fromXY.x);
+    cFrom.setAttribute("cy", fromXY.y);
+    cFrom.setAttribute("r", 24);
+    cFrom.setAttribute("class", "last-move last-move-from");
+    svg.appendChild(cFrom);
+
+    const cTo = document.createElementNS(svgNS, "circle");
+    cTo.setAttribute("cx", toXYp.x);
+    cTo.setAttribute("cy", toXYp.y);
+    cTo.setAttribute("r", 24);
+    cTo.setAttribute("class", "last-move last-move-to");
+    svg.appendChild(cTo);
+  }
+
+  // File/Rank identifiers
+  if (appearance.showCoords) {
+    renderCoords(svg);
+  }
+}
+
+// Per-piece breathing params (stable per id, so pieces keep their rhythm across re-renders)
+const _breatheParams = {};
+function getPieceBreathParams(id) {
+  if (!_breatheParams[id]) {
+    _breatheParams[id] = {
+      dur:   (3.6 + Math.random() * 2.2).toFixed(2),   // 3.6–5.8 s
+      delay: -(Math.random() * 5).toFixed(2),            // negative = start mid-cycle
+      flashPeriod: (7 + Math.random() * 8).toFixed(1),  // 7–15 s between flashes
+      flashDelay:  -(Math.random() * 12).toFixed(1),     // stagger flashes
+    };
+  }
+  return _breatheParams[id];
+}
+
+function createEmojiPieceGroup(type, id) {
+  const xy = toXY(id);
+  const g = document.createElementNS(svgNS, "g");
+  g.setAttribute("class", `piece-group ${type === "G" ? "piece-goose" : "piece-fox"} breathing`);
+  g.dataset.pieceId = id;
+  g.dataset.type = type;
+  g.setAttribute("role", "img");
+  g.setAttribute("aria-label", `${type === "G" ? "Goose" : "Fox"} at ${id}`);
+
+  // Breathing animation params — stable per piece id
+  const bp = getPieceBreathParams(id);
+  g.style.setProperty("--breathe-dur",   bp.dur + "s");
+  g.style.setProperty("--breathe-delay", bp.delay + "s");
+
+  // Generous invisible hit area
+  const hit = document.createElementNS(svgNS, "circle");
+  hit.setAttribute("cx", xy.x);
+  hit.setAttribute("cy", xy.y);
+  hit.setAttribute("r", String(CELL * HIT_RADIUS_SCALE));
+  hit.setAttribute("fill", "transparent");
+  hit.setAttribute("pointer-events", "all");
+  g.appendChild(hit);
+
+  // Emoji text
+  const t = document.createElementNS(svgNS, "text");
+  t.setAttribute("x", xy.x);
+  const dy = CELL * EMOJI_DY_SCALE;
+  t.setAttribute("y", xy.y + dy);
+  t.setAttribute("text-anchor", "middle");
+  t.setAttribute("dominant-baseline", "central");
+  t.setAttribute("class", "piece-emoji");
+  t.setAttribute("font-size", String(Math.round(CELL * EMOJI_SCALE)));
+  t.textContent = type === "G" ? "🪿" : "🦊";
+  g.appendChild(t);
+
+  // Shimmer flash: a clipped diagonal stripe that sweeps across occasionally
+  const clipId = "pc-" + id.replace(",","-");
+  const defs = ui.svg.querySelector("defs");
+  if (defs && !document.getElementById(clipId)) {
+    const clipPath = document.createElementNS(svgNS, "clipPath");
+    clipPath.setAttribute("id", clipId);
+    const clipCirc = document.createElementNS(svgNS, "circle");
+    clipCirc.setAttribute("cx", xy.x);
+    clipCirc.setAttribute("cy", xy.y);
+    clipCirc.setAttribute("r", String(Math.round(CELL * HIT_RADIUS_SCALE)));
+    clipPath.appendChild(clipCirc);
+    defs.appendChild(clipPath);
+  }
+  const flash = document.createElementNS(svgNS, "rect");
+  flash.setAttribute("x",  String(xy.x - CELL * 0.55));
+  flash.setAttribute("y",  String(xy.y - CELL * 0.55));
+  flash.setAttribute("width",  String(CELL * 0.18));
+  flash.setAttribute("height", String(CELL * 1.1));
+  flash.setAttribute("fill", "rgba(255,255,255,0.7)");
+  flash.setAttribute("clip-path", `url(#${clipId})`);
+  flash.setAttribute("class", "piece-flash-overlay");
+  flash.style.setProperty("--flash-period", bp.flashPeriod + "s");
+  flash.style.setProperty("--flash-delay",  bp.flashDelay  + "s");
+  g.appendChild(flash);
+
+  g.addEventListener("click", (e) => {
+    e.stopPropagation();
+    onPieceClicked(id);
+  });
+
+  return g;
+}
+
+function trianglePoints(cx, cy, size) {
+  const h = size;
+  const w = size * 1.15;
+  const p1 = `${cx},${cy - h}`;
+  const p2 = `${cx - w / 2},${cy + h * 0.6}`;
+  const p3 = `${cx + w / 2},${cy + h * 0.6}`;
+  return `${p1} ${p2} ${p3}`;
+}
+
+function isFox(id) { return state.pieces[id] === "F"; }
+function isGoose(id) { return state.pieces[id] === "G"; }
+
+// Selection and turn validation
+function onPieceClicked(id) {
+  if (state.result) return;
+  if (isAnimating) return;
+  const who = state.pieces[id];
+  if (!who) return;
+
+  if (foxCaptureChainActive) {
+    if (who !== "F" || id !== foxChainFrom) return;
+  }
+  if (state.turn === "G" && who !== "G") return;
+  if (state.turn === "F" && who !== "F") return;
+
+  selectedId = id;
+  computeLegalMoves();
+  renderBoard();
+  playClick();
+}
+
+function onPointClicked(id) {
+  if (state.result) return;
+  if (isAnimating) return;
+  if (foxCaptureChainActive && state.settings.mandatoryMultiCapture) return;
+  if (!state.pieces[id]) {
+    selectedId = null;
+    legalMoves = [];
+    renderBoard();
+  }
+}
+
+function computeLegalMoves() {
+  legalMoves = [];
+  if (!selectedId) return;
+
+  const who = state.pieces[selectedId];
+
+  if (who === "F") {
+    for (const nb of neighbors(selectedId)) {
+      if (!state.pieces[nb]) legalMoves.push({ to: nb, kind: "step" });
+    }
+    const jumps = foxAllCaptureDestinations(selectedId, state.pieces);
+    for (const j of jumps) legalMoves.push(j);
+
+    if (state.settings.mandatoryCapture) {
+      const captures = legalMoves.filter(m => m.kind === "jump");
+      if (captures.length > 0) legalMoves = captures;
+    }
+    if (foxCaptureChainActive) {
+      legalMoves = legalMoves.filter(m => m.kind === "jump");
+    }
+
+  } else if (who === "G") {
+    const forwardOnly = state.settings.forwardOnlyGeese;
+    const from = parseId(selectedId);
+    for (const nb of neighbors(selectedId)) {
+      if (state.pieces[nb]) continue;
+      if (forwardOnly) {
+        const to = parseId(nb);
+        if (to.r >= from.r) {
+          legalMoves.push({ to: nb, kind: "step" });
+        }
+      } else {
+        legalMoves.push({ to: nb, kind: "step" });
+      }
+    }
+  }
+}
+
+// Returns every single-hop capture the fox can make from fromId.
+// Each result is ONE jump: { to, kind:"jump", captured:[gooseId] }.
+// This lets the fox stop after any individual capture rather than
+// being forced into the longest chain. The "Force Multi-Capture"
+// checkbox is the only way to require continuation.
+function foxAllCaptureDestinations(fromId, pieces) {
+  const results = [];
+  for (const nb of neighbors(fromId)) {
+    if (pieces[nb] === "G") {
+      const dest = jumpOver(fromId, nb);
+      if (dest && !pieces[dest]) {
+        results.push({ to: dest, kind: "jump", captured: [nb] });
+      }
+    }
+  }
+  return results;
+}
+
+// Used only by evaluateVictory to check whether the fox has any move at all.
+function foxHasAnyCapture(fromId, pieces) {
+  return foxAllCaptureDestinations(fromId, pieces).length > 0;
+}
+
+async function onMoveChosen(move) {
+  if (!selectedId) return;
+  if (isAnimating) return;
+  const fromId = selectedId;
+  const who = state.pieces[fromId];
+
+  if (who === "F" && move.kind === "jump") {
+    ui.svg.classList.add("animating");
+    isAnimating = true;
+
+    const capturedIds = Array.isArray(move.captured) ? move.captured.slice() : [];
+    const animations = [];
+    animations.push(animateSlideBounce("F", fromId, move.to));
+    if (capturedIds.length) {
+      animations.push(animateCaptures(capturedIds));
+    }
+
+    await Promise.all(animations);
+
+    // Track the full chain path for history notation
+    if (!foxChainSeq) foxChainSeq = [fromId];
+    applyFoxJump(fromId, move);
+    foxChainSeq.push(move.to);
+
+    selectedId = move.to;
+    foxChainFrom = selectedId;
+    const further = foxAllCaptureDestinations(selectedId, state.pieces);
+    const canContinue = further.length > 0;
+
+    isAnimating = false;
+    ui.svg.classList.remove("animating");
+
+    if (canContinue) {
+      // More jumps exist. Keep it the fox's turn so the player can choose to
+      // take another goose OR stop. The "End Fox Turn" button ends the turn.
+      // mandatoryMultiCapture hides that button, forcing continuation.
+      foxCaptureChainActive = true;
+      legalMoves = further;
+      renderBoard();
+      updateUI();
+      return;
+    } else {
+      // No further jumps possible — end the turn.
+      foxCaptureChainActive = false;
+      const note = historyEntry({
+        pieceType: "F",
+        isCapture: true,
+        chain: foxChainSeq.slice(),
+      });
+      const chainFrom = foxChainSeq[0];
+      const chainTo = foxChainSeq[foxChainSeq.length - 1];
+      finalizeTurn(note, { piece: "F", from: chainFrom, to: chainTo, captured: foxChainSeq.length - 1 });
+      foxChainSeq = null;
+      return;
+    }
+  }
+
+  if (move.kind === "step") {
+    ui.svg.classList.add("animating");
+    isAnimating = true;
+    await animateSlideBounce(who, fromId, move.to);
+    applyStep(fromId, move.to);
+    isAnimating = false;
+    ui.svg.classList.remove("animating");
+
+    const note = historyEntry({
+      pieceType: who === "F" ? "F" : "G",
+      fromId,
+      toId: move.to,
+      isCapture: false,
+    });
+    finalizeTurn(note, { piece: who, from: fromId, to: move.to, captured: 0 });
+    return;
+  }
+}
+
+function applyStep(fromId, toId) {
+  const who = state.pieces[fromId];
+  delete state.pieces[fromId];
+  state.pieces[toId] = who;
+  selectedId = null;
+  legalMoves = [];
+  foxCaptureChainActive = false;
+  foxChainFrom = null;
+}
+
+function applyFoxJump(fromId, move) {
+  delete state.pieces[fromId];
+  for (const gid of move.captured) {
+    if (state.pieces[gid] === "G") {
+      delete state.pieces[gid];
+      state.geeseCount--;
+    }
+  }
+  state.pieces[move.to] = "F";
+  playCapture();
+}
+
+// Replace formatMoveNote with a wrapper using historyEntry to ensure consistency
+function formatMoveNote(who, fromId, move) {
+  const isCapture = move.kind === "jump";
+  return historyEntry({
+    pieceType: who === "F" ? "F" : "G",
+    fromId,
+    toId: move.to,
+    isCapture,
+  });
+}
+
+function finalizeTurn(note, last) {
+  pushHistory(note);
+  lastMove = last || null;
+
+  foxCaptureChainActive = false;
+  foxChainFrom = null;
+  selectedId = null;
+  legalMoves = [];
+  foxChainSeq = null;
+
+  evaluateVictory();
+
+  if (!state.result) {
+    state.turn = state.turn === "G" ? "F" : "G";
+  }
+  updateUI();
+  renderBoard();
+}
+
+function evaluateVictory() {
+  const foxId = Object.entries(state.pieces).find(([, v]) => v === "F")?.[0];
+  if (!foxId) {
+    state.result = "Geese win";
+    return;
+  }
+  const foxSteps = neighbors(foxId).filter(n => !state.pieces[n]).length;
+  const foxHasJump = foxHasAnyCapture(foxId, state.pieces);
+  if (foxSteps === 0 && !foxHasJump) {
+    state.result = "Geese win";
+    return;
+  }
+  if (state.geeseCount <= 4) {
+    state.result = "Fox wins";
+  }
+}
+
+function endFoxTurnManually() {
+  if (isAnimating) return;
+  if (!foxCaptureChainActive || state.settings.mandatoryMultiCapture) return;
+
+  // Record the chain so far as a single consolidated history entry.
+  if (foxChainSeq && foxChainSeq.length > 1) {
+    const note = historyEntry({
+      pieceType: "F",
+      isCapture: true,
+      chain: foxChainSeq.slice(),
+    });
+    const chainFrom = foxChainSeq[0];
+    const chainTo = foxChainSeq[foxChainSeq.length - 1];
+    // finalizeTurn handles switching turn, UI, etc.
+    finalizeTurn(note, { piece: "F", from: chainFrom, to: chainTo, captured: foxChainSeq.length - 1 });
+    return;
+  }
+
+  // If somehow no chain sequence accumulated (edge case), just end turn quietly.
+  foxCaptureChainActive = false;
+  const from = foxChainFrom;
+  lastMove = { piece: "F", from: from, to: from, captured: 0 };
+  selectedId = null;
+  legalMoves = [];
+  foxChainFrom = null;
+  foxChainSeq = null;
+  evaluateVictory();
+  if (!state.result) state.turn = "G";
+  updateUI();
+  renderBoard();
+}
+
+function onRestart() {
+  if (isAnimating) return;
+  state = initialState();
+  saveSettingsFromUI(state);
+  history = [];
+  selectedId = null;
+  legalMoves = [];
+  foxCaptureChainActive = false;
+  foxChainFrom = null;
+  foxChainSeq = null;
+  lastMove = null;
+  updateUI();
+  renderBoard();
+  // Start-of-game entry: center must display as D4
+  const centerNote = `Start: ${pieceIcon("F")} ${pointIdToNotation(pointId(3,3))}`;
+  pushHistory(centerNote);
+  renderHistory();
+}
+
+function applySettingsChanged() {
+  saveSettingsFromUI(state);
+  if (foxCaptureChainActive && foxChainFrom && isFox(foxChainFrom)) {
+    selectedId = foxChainFrom;
+    computeLegalMoves();
+    renderBoard();
+    updateUI();
+  }
+}
+
+// Interaction: selecting a piece sets legal moves
+function onBoardClick() {
+  if (isAnimating) return;
+  if (foxCaptureChainActive && state.settings.mandatoryMultiCapture) return;
+  selectedId = null;
+  legalMoves = [];
+  renderBoard();
+}
+
+// Audio feedback (basic WebAudio)
+let audioCtx;
+function getAudio() {
+  if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  return audioCtx;
+}
+function playClick() {
+  const ctx = getAudio();
+  const o = ctx.createOscillator();
+  const g = ctx.createGain();
+  o.type = "sine";
+  o.frequency.value = 440;
+  g.gain.setValueAtTime(0.0001, ctx.currentTime);
+  g.gain.exponentialRampToValueAtTime(0.05, ctx.currentTime + 0.01);
+  g.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.08);
+  o.connect(g).connect(ctx.destination);
+  o.start();
+  o.stop(ctx.currentTime + 0.09);
+}
+function playCapture() {
+  const ctx = getAudio();
+  const o = ctx.createOscillator();
+  const g = ctx.createGain();
+  o.type = "square";
+  o.frequency.setValueAtTime(220, ctx.currentTime);
+  o.frequency.exponentialRampToValueAtTime(880, ctx.currentTime + 0.12);
+  g.gain.setValueAtTime(0.0001, ctx.currentTime);
+  g.gain.exponentialRampToValueAtTime(0.06, ctx.currentTime + 0.01);
+  g.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.15);
+  o.connect(g).connect(ctx.destination);
+  o.start();
+  o.stop(ctx.currentTime + 0.16);
+}
+
+// Animation utilities
+
+function getPieceElementAt(id, type) {
+  // Select the group in emoji mode; fallback to shape element otherwise
+  const selector = type
+    ? `[data-piece-id="${id}"][data-type="${type}"]`
+    : `[data-piece-id="${id}"]`;
+  return ui.svg.querySelector(selector);
+}
+
+function createOverlayPiece(type, id) {
+  const xy = toXY(id);
+  const g = document.createElementNS(svgNS, "g");
+  g.setAttribute("class", "anim-piece");
+
+  if (useEmoji) {
+    // Overlay group with emoji text, matching size and dy
+    const t = document.createElementNS(svgNS, "text");
+    t.setAttribute("x", xy.x);
+    t.setAttribute("y", xy.y + CELL * EMOJI_DY_SCALE);
+    t.setAttribute("text-anchor", "middle");
+    t.setAttribute("dominant-baseline", "central");
+    t.setAttribute("class", "piece-emoji");
+    t.setAttribute("font-size", String(Math.round(CELL * EMOJI_SCALE)));
+    t.textContent = type === "G" ? "🪿" : "🦊";
+    g.appendChild(t);
+  } else {
+    // Fallback original shapes
+    if (type === "G") {
+      const goose = document.createElementNS(svgNS, "circle");
+      goose.setAttribute("cx", xy.x);
+      goose.setAttribute("cy", xy.y);
+      goose.setAttribute("r", 20);
+      goose.setAttribute("class", "piece-goose");
+      g.appendChild(goose);
+    } else {
+      const size = 26;
+      const pts = trianglePoints(xy.x, xy.y, size);
+      const fox = document.createElementNS(svgNS, "polygon");
+      fox.setAttribute("points", pts);
+      fox.setAttribute("class", "piece-fox");
+      g.appendChild(fox);
+    }
+  }
+
+  ui.svg.appendChild(g);
+  return g;
+}
+
+function animateSlideBounce(type, fromId, toId, durationMs = 300) {
+  return new Promise((resolve) => {
+    const pieceEl = getPieceElementAt(fromId, type);
+    const fromXY = toXY(fromId);
+    const toXYp = toXY(toId);
+
+    // Fallback: if piece not found (shouldn't happen), resolve immediately
+    if (!pieceEl) {
+      resolve();
+      return;
+    }
+
+    // Create overlay, hide original
+    const overlay = createOverlayPiece(type, fromId);
+    pieceEl.style.opacity = "0";
+
+    const dx = toXYp.x - fromXY.x;
+    const dy = toXYp.y - fromXY.y;
+    const slideMs = Math.max(120, durationMs);
+    const bounceMs = 160;
+
+    // One continuous animation sequence prevents the token from briefly snapping
+    // back to its origin between the slide and bounce phases.
+    const animation = overlay.animate([
+      { transform: 'translate(0px, 0px) scale(1)', offset: 0, easing: 'ease-out' },
+      { transform: `translate(${dx}px, ${dy}px) scale(1)`, offset: slideMs / (slideMs + bounceMs), easing: 'ease-out' },
+      { transform: `translate(${dx}px, ${dy}px) scale(1.07)`, offset: (slideMs + bounceMs * 0.5) / (slideMs + bounceMs), easing: 'ease-in-out' },
+      { transform: `translate(${dx}px, ${dy}px) scale(1)`, offset: 1, easing: 'ease-in-out' }
+    ], {
+      duration: slideMs + bounceMs,
+      fill: 'forwards'
+    });
+
+    animation.addEventListener('finish', () => {
+      overlay.remove();
+      resolve();
+    }, { once: true });
+  });
+}
+
+function animateCaptures(geeseIds, totalMs = 340) {
+  // Animate each captured goose with pop+fade and upward drift
+  const promises = [];
+  for (const gid of geeseIds) {
+    const gooseEl = getPieceElementAt(gid, "G");
+    if (!gooseEl) continue;
+
+    const xy = toXY(gid);
+
+    // Create overlay at exact position
+    const g = document.createElementNS(svgNS, "g");
+    g.setAttribute("class", "anim-capture");
+
+    if (useEmoji) {
+      const t = document.createElementNS(svgNS, "text");
+      t.setAttribute("x", xy.x);
+      t.setAttribute("y", xy.y + CELL * EMOJI_DY_SCALE);
+      t.setAttribute("text-anchor", "middle");
+      t.setAttribute("dominant-baseline", "central");
+      t.setAttribute("class", "piece-emoji");
+      t.setAttribute("font-size", String(Math.round(CELL * EMOJI_SCALE)));
+      t.textContent = "🪿";
+      g.appendChild(t);
+    } else {
+      const circ = document.createElementNS(svgNS, "circle");
+      circ.setAttribute("cx", xy.x);
+      circ.setAttribute("cy", xy.y);
+      circ.setAttribute("r", 20);
+      circ.setAttribute("class", "piece-goose");
+      g.appendChild(circ);
+    }
+    ui.svg.appendChild(g);
+
+    // Hide the real goose during animation
+    gooseEl.style.opacity = "0";
+
+    const p = new Promise((resolve) => {
+      g.style.animation = `pop-fade-up ${totalMs}ms ease-out forwards`;
+      const onEnd = () => {
+        g.removeEventListener("animationend", onEnd);
+        g.remove();
+        resolve();
+      };
+      g.addEventListener("animationend", onEnd);
+    });
+
+    promises.push(p);
+  }
+
+  // Play capture SFX slightly delayed to align with visual
+  setTimeout(() => {
+    playCapture();
+  }, 60);
+
+  return Promise.all(promises);
+}
+
+// Appearance helpers
+function getWoodColors() {
+  switch (appearance.boardWoodTone) {
+    case "maple":
+      return { top: "#f4e1b5", mid: "#e6c98a", bot: "#d9b26a", grain: "#caa46b" };
+    case "walnut":
+      return { top: "#6b4a2e", mid: "#5a3f28", bot: "#4a3422", grain: "#815b39" };
+    case "oak":
+    default:
+      return { top: "#e1c48d", mid: "#caa46b", bot: "#a87c41", grain: "#b88a4c" };
+  }
+}
+
+function hexWithAlpha(hex, alpha) {
+  // hex like #rrggbb
+  const c = hex.replace("#","");
+  const r = parseInt(c.slice(0,2),16);
+  const g = parseInt(c.slice(2,4),16);
+  const b = parseInt(c.slice(4,6),16);
+  return `rgba(${r},${g},${b},${alpha})`;
+}
+
+function renderNatureBorder(svg, style) {
+  if (style === "vines") {
+    // Four stems with leaves around the inlay
+    const stems = [
+      // top
+      { d: "M40 60 C 180 30, 520 30, 660 60" },
+      // bottom
+      { d: "M40 640 C 180 670, 520 670, 660 640" },
+      // left
+      { d: "M60 40 C 30 180, 30 520, 60 660" },
+      // right
+      { d: "M640 40 C 670 180, 670 520, 640 660" },
+    ];
+    for (const s of stems) {
+      const p = document.createElementNS(svgNS, "path");
+      p.setAttribute("d", s.d);
+      p.setAttribute("class", "vine-stem");
+      svg.appendChild(p);
+    }
+    // Leaves along top and bottom
+    const leaves = [
+      { x: 140, y: 58, rot: -10 }, { x: 260, y: 50, rot: 8 }, { x: 440, y: 50, rot: -6 }, { x: 560, y: 58, rot: 12 },
+      { x: 140, y: 642, rot: 190 }, { x: 260, y: 650, rot: 168 }, { x: 440, y: 650, rot: 186 }, { x: 560, y: 642, rot: 172 },
+    ];
+    for (const l of leaves) {
+      svg.appendChild(makeLeaf(l.x, l.y, l.rot));
+    }
+  } else if (style === "rope") {
+    // Simple rope-like dashed border just outside inlay
+    const rect = document.createElementNS(svgNS, "rect");
+    rect.setAttribute("x","26"); rect.setAttribute("y","26");
+    rect.setAttribute("width","648"); rect.setAttribute("height","648");
+    rect.setAttribute("class","rope");
+    svg.appendChild(rect);
+  }
+}
+
+function makeLeaf(cx, cy, rot=0) {
+  const g = document.createElementNS(svgNS, "g");
+  g.setAttribute("transform", `translate(${cx},${cy}) rotate(${rot})`);
+  const leaf = document.createElementNS(svgNS, "path");
+  // Simple leaf shape
+  leaf.setAttribute("d", "M0 0 C 14 -8, 24 -2, 28 0 C 24 2, 14 8, 0 0 Z");
+  leaf.setAttribute("class","leaf");
+  g.appendChild(leaf);
+  return g;
+}
+
+function renderCoords(svg) {
+  const files = "A,B,C,D,E,F,G".split(",");
+  const ranks = "1,2,3,4,5,6,7".split(",");
+
+  // Top and bottom files centered on columns
+  for (let c = 0; c < 7; c++) {
+    const x = c * CELL + CELL/2;
+    const top = document.createElementNS(svgNS, "text");
+    top.setAttribute("x", x); top.setAttribute("y", 20);
+    top.setAttribute("text-anchor", "middle");
+    top.setAttribute("class", "coord");
+    top.textContent = files[c];
+    svg.appendChild(top);
+
+    const bottom = document.createElementNS(svgNS, "text");
+    bottom.setAttribute("x", x); bottom.setAttribute("y", 690);
+    bottom.setAttribute("text-anchor", "middle");
+    bottom.setAttribute("class", "coord");
+    bottom.textContent = files[c];
+    svg.appendChild(bottom);
+  }
+  // Left and right ranks centered on rows
+  for (let r = 0; r < 7; r++) {
+    const y = r * CELL + CELL/2 + 8; // +8 for optical vertical centering
+    const left = document.createElementNS(svgNS, "text");
+    left.setAttribute("x", 12); left.setAttribute("y", y);
+    left.setAttribute("text-anchor", "start");
+    left.setAttribute("class", "coord");
+    left.textContent = ranks[r];
+    svg.appendChild(left);
+
+    const right = document.createElementNS(svgNS, "text");
+    right.setAttribute("x", 688); right.setAttribute("y", y);
+    right.setAttribute("text-anchor", "end");
+    right.setAttribute("class", "coord");
+    right.textContent = ranks[r];
+    svg.appendChild(right);
+  }
+}
+
+// Apply a full colour preset by id
+function applyPreset(presetId) {
+  const preset = COLOUR_PRESETS.find(p => p.id === presetId);
+  if (!preset) return;
+  appearance.activePreset  = presetId;
+  appearance.bgColor       = preset.bgColor;
+  appearance.bgStyle       = preset.bgStyle;
+  appearance.boardWoodTone = preset.boardWoodTone;
+  appearance.borderStyle   = preset.borderStyle;
+  appearance.showCoords    = preset.showCoords;
+  appearance.lineColor     = preset.lineColor;
+  appearance.lineWidth     = preset.lineWidth;
+  appearance.pointFill     = preset.pointFill;
+  appearance.pointStroke   = preset.pointStroke;
+  appearance.geeseStroke   = preset.geeseStroke;
+  appearance.foxStroke     = preset.foxStroke;
+  appearance.boardBgColor  = preset.boardBgColor;
+  appearance.historyBgColor= preset.historyBgColor;
+  saveAppearance();
+  applyAppearanceToCSS();
+  populateAppearanceInputs();
+  renderBoard();
+  refreshPresetTiles();
+}
+
+// Apply dynamic CSS variables to reflect appearance
+function applyAppearanceToCSS() {
+  document.documentElement.style.setProperty("--board-line-color", appearance.lineColor);
+  document.documentElement.style.setProperty("--board-line-width", appearance.lineWidth);
+  document.documentElement.style.setProperty("--point-fill", appearance.pointFill);
+  document.documentElement.style.setProperty("--point-stroke", appearance.pointStroke);
+  document.documentElement.style.setProperty("--piece-goose-stroke", appearance.geeseStroke);
+  document.documentElement.style.setProperty("--piece-fox-stroke", appearance.foxStroke);
+  document.documentElement.style.setProperty("--piece-stroke-opacity", appearance.pieceStrokeOpacity ?? 1);
+  document.documentElement.style.setProperty("--board-container-bg", appearance.boardBgColor);
+  document.documentElement.style.setProperty("--move-history-bg", appearance.historyBgColor);
+  // Page background — use full bgStyle if available, else fall back to bgColor
+  document.body.style.background = appearance.bgStyle || appearance.bgColor;
+}
+
+// Drawer controls
+function openAppearance() {
+  buildPresetTiles();    // build/rebuild tile grid
+  populateAppearanceInputs();
+  ui.appearanceDrawer.classList.add("open");
+  ui.appearanceDrawer.setAttribute("aria-hidden","false");
+}
+function closeAppearance() {
+  ui.appearanceDrawer.classList.remove("open");
+  ui.appearanceDrawer.setAttribute("aria-hidden","true");
+}
+
+function populateAppearanceInputs() {
+  // Hidden compat inputs
+  if (ui.bgPreset)      ui.bgPreset.value = appearance.bgPreset || "warm-wood";
+  if (ui.bgColor)       ui.bgColor.value = appearance.bgColor;
+  if (ui.boardBgColor)  ui.boardBgColor.value = appearance.boardBgColor;
+  if (ui.historyBgColor) ui.historyBgColor.value = appearance.historyBgColor;
+  // Visible inputs
+  ui.boardWoodTone.value = appearance.boardWoodTone;
+  ui.borderStyle.value   = appearance.borderStyle;
+  ui.showCoords.checked  = appearance.showCoords;
+  ui.lineColor.value     = appearance.lineColor;
+  ui.lineWidth.value     = appearance.lineWidth;
+  ui.lineWidthVal.textContent = String(appearance.lineWidth);
+  ui.pointFill.value     = appearance.pointFill;
+  ui.pointStroke.value   = appearance.pointStroke;
+  ui.geeseStroke.value = appearance.geeseStroke;
+  ui.foxStroke.value   = appearance.foxStroke;
+  // Snap dropdown to closest value
+  const opVal = parseFloat(appearance.pieceStrokeOpacity ?? 1);
+  const opts = ui.pieceStrokeOpacity.options;
+  let bestIdx = 0, bestDiff = Infinity;
+  for (let i = 0; i < opts.length; i++) {
+    const d = Math.abs(parseFloat(opts[i].value) - opVal);
+    if (d < bestDiff) { bestDiff = d; bestIdx = i; }
+  }
+  ui.pieceStrokeOpacity.selectedIndex = bestIdx;
+  refreshPresetTiles();
+}
+
+function refreshPresetTiles() {
+  const grid = document.getElementById("presetGrid");
+  if (!grid) return;
+  grid.querySelectorAll(".preset-tile").forEach(tile => {
+    tile.classList.toggle("active", tile.dataset.presetId === appearance.activePreset);
+  });
+}
+
+function buildPresetTiles() {
+  const grid = document.getElementById("presetGrid");
+  if (!grid) return;
+  grid.innerHTML = "";
+  for (const p of COLOUR_PRESETS) {
+    const tile = document.createElement("div");
+    tile.className = "preset-tile" + (p.id === appearance.activePreset ? " active" : "");
+    tile.dataset.presetId = p.id;
+    tile.style.background = p.bgStyle || p.bgColor;
+    tile.style.border = "2px solid " + (p.swatches[0] + "55");
+    tile.innerHTML =
+      '<div class="preset-tile-name" style="color:' + p.swatches[0] + '">' + p.name + '</div>' +
+      '<div class="preset-tile-desc" style="color:' + p.swatches[1] + '">' + p.desc + '</div>' +
+      '<div class="preset-swatches">' +
+        p.swatches.map(c => '<div class="preset-swatch" style="background:' + c + '"></div>').join("") +
+      '</div>';
+    tile.addEventListener("click", () => applyPreset(p.id));
+    grid.appendChild(tile);
+  }
+}
+
+function readAppearanceFromInputs() {
+  // When user tweaks individual controls (not via preset tile),
+  // update appearance values but leave bgStyle/activePreset alone
+  // so the preset highlight stays meaningful.
+  appearance.boardWoodTone = ui.boardWoodTone.value;
+  appearance.borderStyle   = ui.borderStyle.value;
+  appearance.showCoords    = ui.showCoords.checked;
+  appearance.lineColor     = ui.lineColor.value;
+  appearance.lineWidth     = parseInt(ui.lineWidth.value, 10);
+  appearance.pointFill     = ui.pointFill.value;
+  appearance.pointStroke   = ui.pointStroke.value;
+  appearance.geeseStroke        = ui.geeseStroke.value;
+  appearance.foxStroke          = ui.foxStroke.value;
+  appearance.pieceStrokeOpacity = parseFloat(ui.pieceStrokeOpacity.value);
+}
+
+function resetAppearance() {
+  appearance = { ...DEFAULT_APPEARANCE };
+  saveAppearance();
+  applyAppearanceToCSS();
+  populateAppearanceInputs();
+  renderBoard();
+}
+
+function saveAppearance() {
+  try { localStorage.setItem("fng-appearance", JSON.stringify(appearance)); } catch {}
+}
+function loadAppearance() {
+  try {
+    const raw = localStorage.getItem("fng-appearance");
+    if (!raw) return { ...DEFAULT_APPEARANCE };
+    const parsed = JSON.parse(raw);
+    // Gracefully ignore removed keys (geeseFill, foxFill) and merge new defaults
+    return { ...DEFAULT_APPEARANCE, ...parsed };
+  } catch {
+    return { ...DEFAULT_APPEARANCE };
+  }
+}
+
+// Turn/selection helpers
+function onPieceSelected(id) {
+  selectedId = id;
+  computeLegalMoves();
+  renderBoard();
+}
+
+// Bindings
+ui.restartBtn.addEventListener("click", onRestart);
+ui.undoBtn.addEventListener("click", undo);
+ui.endFoxTurnBtn.addEventListener("click", endFoxTurnManually);
+ui.forwardOnlyGeese.addEventListener("change", applySettingsChanged);
+ui.mandatoryCapture.addEventListener("change", applySettingsChanged);
+ui.mandatoryMultiCapture.addEventListener("change", applySettingsChanged);
+ui.svg.addEventListener("click", onBoardClick);
+
+// Appearance bindings
+ui.appearanceBtn.addEventListener("click", openAppearance);
+ui.closeAppearanceBtn.addEventListener("click", closeAppearance);
+ui.applyAppearanceBtn.addEventListener("click", () => {
+  readAppearanceFromInputs();
+  saveAppearance();
+  applyAppearanceToCSS();
+  closeAppearance();
+  renderBoard();
+});
+ui.resetAppearanceBtn.addEventListener("click", resetAppearance);
+ui.lineWidth.addEventListener("input", () => {
+  ui.lineWidthVal.textContent = String(ui.lineWidth.value);
+});
+
+// Live update on new color inputs
+ui.boardBgColor.addEventListener("input", () => {
+  appearance.boardBgColor = ui.boardBgColor.value;
+  saveAppearance();
+  applyAppearanceToCSS();
+});
+ui.historyBgColor.addEventListener("input", () => {
+  appearance.historyBgColor = ui.historyBgColor.value;
+  saveAppearance();
+  applyAppearanceToCSS();
+});
+
+// Initialize
+(function init() {
+  // choose emoji usage once at startup
+  useEmoji = supportsEmoji();
+  // Ensure activePreset exists (legacy saves may lack it)
+  if (!appearance.activePreset) appearance.activePreset = "tavern-oak";
+  state = initialState();
+  restoreUIFromSettings(state);
+  applyAppearanceToCSS();
+  updateUI();
+  renderBoard();
+  renderHistory();
+  populateAppearanceInputs();
+
+  // Ensure initial history entry exists on first load, too
+  history = [];
+  const centerNote = "Start: " + pieceIcon("F") + " " + pointIdToNotation(pointId(3,3));
+  pushHistory(centerNote);
+})();
+</script>
+  <script>
+    // Small quality-of-life shortcuts
+    window.addEventListener('keydown', (e) => {
+      const isInput = ['INPUT','TEXTAREA','SELECT'].includes(document.activeElement?.tagName);
+      if (isInput) return;
+      if (e.key === 'u') document.getElementById('undoBtn')?.click();
+      if (e.key === 'r') document.getElementById('restartBtn')?.click();
+      if (e.key === 'e') document.getElementById('endFoxTurnBtn')?.click();
+      if (e.key === 'p') document.getElementById('appearanceBtn')?.click();
+    });
+  </script>
+</body>
+</html>
