@@ -1,0 +1,1360 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>2048 · Rising Phoenix Games</title>
+  <link rel="stylesheet" href="shared.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700&family=Cinzel:wght@400;600;700;900&family=IM+Fell+English:ital@0;1&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; }
+    html, body { margin: 0; min-height: 100%; }
+
+    :root {
+      --grid-size: 4;
+      --cell-gap: 12px;
+      --board-pad: 12px;
+      --board-bg: rgba(18, 12, 5, 0.94);
+      --cell-empty: rgba(255,255,255,0.05);
+      --message-width: 88%;
+    }
+
+    body {
+      font-family: var(--font-body);
+      color: var(--text);
+      background:
+        radial-gradient(ellipse 90% 55% at 15% 8%, rgba(90,48,12,0.55) 0%, transparent 58%),
+        radial-gradient(ellipse 70% 65% at 85% 90%, rgba(50,25,6,0.60) 0%, transparent 55%),
+        radial-gradient(ellipse 60% 40% at 50% 50%, rgba(30,18,5,0.40) 0%, transparent 70%),
+        linear-gradient(160deg, #1c1106 0%, #0f0c07 45%, #13100a 100%);
+      background-attachment: fixed;
+    }
+
+    #app {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      z-index: 1;
+    }
+
+    .site-header {
+      padding: 0;
+      background: linear-gradient(180deg, #1e1508 0%, #120e06 100%);
+      border-bottom: 2px solid var(--gold);
+      box-shadow: 0 4px 24px rgba(0,0,0,0.7), 0 1px 0 rgba(200,149,42,0.15) inset;
+      position: relative;
+      overflow: hidden;
+      flex-shrink: 0;
+    }
+    .site-header::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: repeating-linear-gradient(
+        90deg,
+        transparent 0px,
+        transparent 48px,
+        rgba(200,149,42,0.04) 48px,
+        rgba(200,149,42,0.04) 49px
+      );
+      pointer-events: none;
+    }
+
+    .header-inner {
+      position: relative;
+      padding: 14px 20px 12px;
+    }
+
+    .header-row {
+      display: flex;
+      align-items: center;
+      margin-bottom: 6px;
+    }
+
+    .rpg-back {
+      display: inline-block;
+      font-family: var(--font-ui);
+      font-size: 0.78rem;
+      letter-spacing: 0.08em;
+      color: var(--gold);
+      text-decoration: none;
+      padding: 0.55rem 1.1rem 0.55rem 2rem;
+      border: 1px solid rgba(200,149,42,0.25);
+      border-radius: 3px;
+      background: linear-gradient(180deg, #2a2010 0%, #1a1508 100%);
+      position: relative;
+      transition: border-color 0.2s, box-shadow 0.2s, color 0.2s;
+      margin: 0;
+      flex: 0 0 auto;
+      z-index: 2;
+    }
+    .rpg-back::before {
+      content: '\2190';
+      position: absolute;
+      left: 0.7rem;
+    }
+    .rpg-back:hover {
+      border-color: var(--gold-light);
+      box-shadow: 0 0 18px 2px var(--gold-glow);
+      color: var(--gold-light);
+    }
+
+    .header-center {
+      flex: 1 1 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.85rem;
+      min-width: 0;
+    }
+
+    .header-spacer {
+      visibility: hidden;
+      pointer-events: none;
+    }
+
+    .phoenix-mark {
+      width: 52px;
+      height: 52px;
+      object-fit: contain;
+      flex-shrink: 0;
+      filter: drop-shadow(0 0 10px rgba(200,149,42,0.5));
+    }
+
+    .title-block {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      min-width: 0;
+    }
+
+    .game-title {
+      margin: 0;
+      font-family: var(--font-display);
+      font-size: clamp(1.05rem, 3.6vw, 1.9rem);
+      font-weight: 700;
+      letter-spacing: 0.05em;
+      line-height: 1.1;
+      background: linear-gradient(135deg, var(--gold-light) 0%, var(--gold) 40%, #a07020 80%, var(--gold-light) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .game-subtitle {
+      margin: 0.2rem 0 0;
+      font-style: italic;
+      color: #c8a878;
+      font-size: 0.82rem;
+      letter-spacing: 0.05em;
+    }
+
+    .main-wrap {
+      width: 100%;
+      max-width: 1120px;
+      margin: 0 auto;
+      padding: 22px 16px 36px;
+      display: grid;
+      grid-template-columns: minmax(320px, 1.15fr) minmax(270px, 0.85fr);
+      gap: 20px;
+      flex: 1;
+    }
+
+    .panel {
+      background: linear-gradient(160deg, var(--surface) 0%, var(--bg-warm) 100%);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      box-shadow: inset 0 0 30px rgba(0,0,0,0.35), 0 10px 34px rgba(0,0,0,0.45);
+      overflow: hidden;
+      position: relative;
+    }
+
+    .panel-header {
+      padding: 14px 16px 10px;
+      border-bottom: 1px solid rgba(200,149,42,0.14);
+      background: linear-gradient(180deg, rgba(255,255,255,0.03) 0%, rgba(255,255,255,0) 100%);
+    }
+
+    .panel-label {
+      font-family: var(--font-ui);
+      font-size: 0.7rem;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: var(--gold);
+      margin: 0 0 0.25rem;
+    }
+
+    .status-bar {
+      margin: 0;
+      min-height: 2.4rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      padding: 8px 16px 8px 28px;
+      background: rgba(0,0,0,0.32);
+      border: 1px solid rgba(200,149,42,0.18);
+      border-radius: 8px;
+      font-family: var(--font-ui);
+      font-size: 0.8rem;
+      letter-spacing: 0.08em;
+      color: var(--gold-light);
+      position: relative;
+      text-align: center;
+    }
+    .status-bar::before {
+      content: '⚜';
+      position: absolute;
+      left: 10px;
+      font-size: 10px;
+      color: var(--gold);
+      opacity: 0.7;
+    }
+
+    .board-panel {
+      display: flex;
+      flex-direction: column;
+      min-height: 650px;
+    }
+
+    .board-area {
+      padding: 18px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 18px;
+      flex: 1;
+    }
+
+    .score-row {
+      width: min(100%, 680px);
+      display: flex;
+      gap: 10px;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      align-items: stretch;
+    }
+
+    .score-group {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .score-card {
+      min-width: 116px;
+      padding: 10px 12px;
+      border-radius: 12px;
+      background: linear-gradient(180deg, rgba(255,255,255,0.04) 0%, rgba(0,0,0,0.14) 100%);
+      border: 1px solid rgba(200,149,42,0.18);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.03);
+      text-align: center;
+    }
+
+    .score-label {
+      font-family: var(--font-ui);
+      font-size: 0.64rem;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: var(--gold);
+      margin-bottom: 4px;
+    }
+
+    .score-value {
+      font-family: var(--font-display);
+      color: var(--gold-light);
+      font-size: clamp(1.1rem, 3vw, 1.6rem);
+      line-height: 1;
+    }
+
+    .controls {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .rpg-btn {
+      min-width: 120px;
+      justify-content: center;
+    }
+
+    .input-pad {
+      width: min(100%, 680px);
+      display: grid;
+      grid-template-columns: repeat(3, minmax(64px, 1fr));
+      gap: 10px;
+      margin-top: 2px;
+    }
+
+    .dir-btn {
+      min-height: 64px;
+      font-size: 1.35rem;
+      letter-spacing: 0;
+      padding: 0;
+    }
+
+    .dir-btn.blank {
+      visibility: hidden;
+      pointer-events: none;
+    }
+
+    .board-frame {
+      width: min(100%, 680px);
+      aspect-ratio: 1 / 1;
+      position: relative;
+      padding: 14px;
+      border-radius: 18px;
+      background:
+        radial-gradient(circle at 50% 45%, rgba(70,40,10,0.28) 0%, rgba(20,12,4,0.96) 70%),
+        linear-gradient(160deg, #201407 0%, #100b04 100%);
+      border: 1px solid rgba(200,149,42,0.3);
+      box-shadow:
+        inset 0 1px 0 rgba(240,208,128,0.08),
+        inset 0 0 40px rgba(0,0,0,0.45),
+        0 0 0 1px rgba(0,0,0,0.55),
+        0 16px 40px rgba(0,0,0,0.45);
+      overflow: hidden;
+      touch-action: none;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+    .board-frame::before,
+    .board-frame::after {
+      content: '◆';
+      position: absolute;
+      color: rgba(200,149,42,0.35);
+      font-size: 11px;
+      line-height: 1;
+      z-index: 5;
+    }
+    .board-frame::before { top: 8px; left: 10px; }
+    .board-frame::after  { right: 10px; bottom: 8px; }
+
+    .board-base {
+      position: absolute;
+      inset: 14px;
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      grid-template-rows: repeat(4, 1fr);
+      gap: var(--cell-gap);
+      padding: var(--board-pad);
+      z-index: 1;
+    }
+
+    .base-cell {
+      border-radius: 14px;
+      background:
+        linear-gradient(160deg, rgba(255,255,255,0.055) 0%, rgba(255,255,255,0.025) 100%),
+        rgba(0,0,0,0.25);
+      border: 1px solid rgba(200,149,42,0.10);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.03), inset 0 -12px 24px rgba(0,0,0,0.18);
+    }
+
+    .tiles-layer {
+      position: absolute;
+      inset: 14px;
+      padding: var(--board-pad);
+      z-index: 3;
+    }
+
+    .tile {
+      position: absolute;
+      border-radius: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: var(--font-display);
+      font-weight: 700;
+      letter-spacing: 0.02em;
+      text-align: center;
+      transition:
+        transform 0.16s ease,
+        left 0.16s ease,
+        top 0.16s ease,
+        opacity 0.16s ease;
+      box-shadow:
+        inset 0 1px 0 rgba(255,255,255,0.12),
+        inset 0 -16px 24px rgba(0,0,0,0.15),
+        0 10px 20px rgba(0,0,0,0.25);
+      overflow: hidden;
+    }
+    .tile::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(135deg, rgba(255,255,255,0.18) 0%, transparent 40%, transparent 60%, rgba(255,255,255,0.08) 100%);
+      pointer-events: none;
+    }
+    .tile.new {
+      animation: spawnPop 0.18s ease;
+    }
+    .tile.merge {
+      animation: mergePulse 0.22s ease;
+    }
+    .tile-value {
+      position: relative;
+      z-index: 1;
+      line-height: 1;
+      text-shadow: 0 1px 2px rgba(0,0,0,0.25);
+      white-space: nowrap;
+    }
+
+    @keyframes spawnPop {
+      0%   { transform: scale(0.18); opacity: 0; }
+      75%  { transform: scale(1.08); opacity: 1; }
+      100% { transform: scale(1); opacity: 1; }
+    }
+    @keyframes mergePulse {
+      0%   { transform: scale(0.95); }
+      55%  { transform: scale(1.14); }
+      100% { transform: scale(1); }
+    }
+
+    .message-overlay {
+      position: absolute;
+      inset: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      pointer-events: none;
+      z-index: 6;
+      overflow: hidden;
+    }
+
+    .victory-message {
+      width: var(--message-width);
+      max-width: calc(100% - 28px);
+      padding: 18px 20px;
+      text-align: center;
+      border-radius: 18px;
+      border: 1px solid rgba(240,208,128,0.65);
+      background:
+        radial-gradient(circle at 50% 50%, rgba(240,208,128,0.18) 0%, rgba(30,18,5,0.94) 70%),
+        linear-gradient(160deg, rgba(45,28,8,0.95) 0%, rgba(18,12,5,0.95) 100%);
+      box-shadow:
+        0 0 18px rgba(200,149,42,0.28),
+        0 0 48px rgba(180,120,20,0.14),
+        inset 0 1px 0 rgba(255,255,255,0.08);
+      opacity: 0;
+      transform: scale(0.18);
+    }
+
+    .victory-message.show {
+      animation: victoryBloom 1.75s ease forwards;
+    }
+
+    .victory-title {
+      font-family: var(--font-display);
+      font-size: clamp(1rem, 3.4vw, 2rem);
+      line-height: 1.05;
+      letter-spacing: 0.06em;
+      margin: 0 0 8px;
+      background: linear-gradient(135deg, #fff4bf 0%, #f0d080 38%, #c8952a 70%, #fff4bf 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .victory-sub {
+      margin: 0;
+      color: #d8c090;
+      font-size: clamp(0.86rem, 2.1vw, 1.05rem);
+      letter-spacing: 0.03em;
+      font-style: italic;
+    }
+
+    @keyframes victoryBloom {
+      0%   { opacity: 0; transform: scale(0.18); }
+      42.8% { opacity: 1; transform: scale(1); }
+      100% { opacity: 1; transform: scale(1); }
+    }
+
+    .confetti-canvas {
+      position: fixed;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 30;
+    }
+
+    .info-panel {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .info-body {
+      padding: 16px 16px 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+      flex: 1;
+    }
+
+    .info-copy {
+      color: #d2bc92;
+      font-size: 1rem;
+      line-height: 1.55;
+      margin: 0;
+    }
+
+    .hint-card {
+      padding: 14px 14px 12px;
+      border-radius: 12px;
+      border: 1px solid rgba(200,149,42,0.16);
+      background: linear-gradient(180deg, rgba(255,255,255,0.03), rgba(0,0,0,0.10));
+    }
+
+    .hint-title {
+      margin: 0 0 8px;
+      font-family: var(--font-ui);
+      font-size: 0.68rem;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: var(--gold);
+    }
+
+    .hint-list {
+      margin: 0;
+      padding-left: 1.1rem;
+      color: #d3bd94;
+      line-height: 1.5;
+    }
+
+    .key-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(54px, 72px));
+      gap: 8px;
+      justify-content: center;
+    }
+
+    .key {
+      height: 48px;
+      border-radius: 10px;
+      border: 1px solid rgba(200,149,42,0.18);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: var(--font-ui);
+      color: var(--gold-light);
+      background: linear-gradient(180deg, rgba(255,255,255,0.05), rgba(0,0,0,0.14));
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.03);
+      font-size: 1rem;
+    }
+    .key.blank {
+      visibility: hidden;
+    }
+
+    .legend {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 8px;
+    }
+
+    .legend-item {
+      padding: 10px 12px;
+      border-radius: 10px;
+      border: 1px solid rgba(200,149,42,0.14);
+      background: rgba(0,0,0,0.14);
+    }
+
+    .legend-k {
+      font-family: var(--font-ui);
+      font-size: 0.62rem;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--gold);
+      margin-bottom: 4px;
+    }
+
+    .legend-v {
+      color: #dbc79e;
+      font-size: 0.95rem;
+    }
+
+    .rpg-footer {
+      padding: 12px 20px 16px;
+      border-top: 1px solid rgba(200,149,42,0.15);
+      color: rgba(200,170,100,0.62);
+      font-style: italic;
+      text-align: center;
+      font-size: 0.82rem;
+    }
+
+    @media (max-width: 930px) {
+      .main-wrap {
+        grid-template-columns: 1fr;
+      }
+      .board-panel {
+        min-height: auto;
+      }
+      .score-row {
+        justify-content: center;
+      }
+      .controls {
+        width: 100%;
+      }
+    }
+
+    @media (max-width: 640px) {
+      :root {
+        --cell-gap: 9px;
+        --board-pad: 9px;
+      }
+      .header-row {
+        display: grid;
+        grid-template-columns: auto 1fr auto;
+        gap: 8px;
+        align-items: center;
+      }
+      .header-center {
+        min-width: 0;
+        gap: 0.55rem;
+      }
+      .game-title {
+        letter-spacing: 0.03em;
+        font-size: clamp(0.95rem, 5vw, 1.45rem);
+      }
+      .game-subtitle {
+        font-size: 0.72rem;
+      }
+      .rpg-back {
+        padding: 0.5rem 0.8rem 0.5rem 1.7rem;
+        font-size: 0.72rem;
+      }
+      .score-card {
+        min-width: 94px;
+      }
+      .board-area {
+        padding: 14px;
+      }
+      .controls .rpg-btn {
+        min-width: 104px;
+        flex: 1 1 0;
+      }
+      .victory-message {
+        padding: 14px 14px;
+      }
+    }
+  </style>
+</head>
+<body>
+<canvas class="confetti-canvas" id="confetti-canvas"></canvas>
+
+<div id="app">
+  <header class="site-header">
+    <div class="header-inner">
+      <div class="header-row">
+        <a href="index.html" class="rpg-back">Hub</a>
+
+        <div class="header-center">
+          <img class="phoenix-mark" src="data:image/png;base64,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" alt="Rising Phoenix logo">
+          <div class="title-block">
+            <h1 class="game-title">2048</h1>
+            <p class="game-subtitle">Fuse embered tiles until the phoenix ascends</p>
+          </div>
+        </div>
+
+        <a href="index.html" class="rpg-back header-spacer" aria-hidden="true">Hub</a>
+      </div>
+
+      <div class="status-bar" id="status-bar">Combine matching tiles to forge the 2048 flame.</div>
+    </div>
+  </header>
+
+  <main class="main-wrap">
+    <section class="panel board-panel">
+      <div class="panel-header">
+        <div class="panel-label">Game Board</div>
+      </div>
+
+      <div class="board-area">
+        <div class="score-row">
+          <div class="score-group">
+            <div class="score-card">
+              <div class="score-label">Score</div>
+              <div class="score-value" id="score">0</div>
+            </div>
+            <div class="score-card">
+              <div class="score-label">Best</div>
+              <div class="score-value" id="best">0</div>
+            </div>
+          </div>
+
+          <div class="controls">
+            <button class="rpg-btn" id="new-game-btn" type="button">New Game</button>
+            <button class="rpg-btn" id="undo-btn" type="button">Undo</button>
+          </div>
+        </div>
+
+        <div class="board-frame" id="board-frame" aria-label="2048 board" role="application" tabindex="0">
+          <div class="board-base" id="board-base"></div>
+          <div class="tiles-layer" id="tiles-layer"></div>
+          <div class="message-overlay">
+            <div class="victory-message" id="victory-message" aria-hidden="true">
+              <h2 class="victory-title">The Phoenix Ascends</h2>
+              <p class="victory-sub">You have forged the 2048 ember.</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="input-pad" aria-label="Directional controls">
+          <button class="rpg-btn dir-btn blank" type="button" tabindex="-1" aria-hidden="true"></button>
+          <button class="rpg-btn dir-btn" type="button" data-direction="up" aria-label="Move up">↑</button>
+          <button class="rpg-btn dir-btn blank" type="button" tabindex="-1" aria-hidden="true"></button>
+          <button class="rpg-btn dir-btn" type="button" data-direction="left" aria-label="Move left">←</button>
+          <button class="rpg-btn dir-btn" type="button" data-direction="down" aria-label="Move down">↓</button>
+          <button class="rpg-btn dir-btn" type="button" data-direction="right" aria-label="Move right">→</button>
+        </div>
+      </div>
+    </section>
+
+    <aside class="panel info-panel">
+      <div class="panel-header">
+        <div class="panel-label">Chronicle</div>
+      </div>
+
+      <div class="info-body">
+        <p class="info-copy">Slide the board with arrow keys, WASD, or a swipe gesture. Matching tiles merge into a stronger value. Every move spawns a new ember, so inefficient turns accumulate pressure quickly.</p>
+
+        <div class="legend">
+          <div class="legend-item">
+            <div class="legend-k">Goal</div>
+            <div class="legend-v">Create a 2048 tile</div>
+          </div>
+          <div class="legend-item">
+            <div class="legend-k">Undo</div>
+            <div class="legend-v">One move back</div>
+          </div>
+          <div class="legend-item">
+            <div class="legend-k">Continue</div>
+            <div class="legend-v">Play after victory</div>
+          </div>
+          <div class="legend-item">
+            <div class="legend-k">Loss</div>
+            <div class="legend-v">No legal moves remain</div>
+          </div>
+        </div>
+
+        <div class="hint-card">
+          <h3 class="hint-title">Practical Strategy</h3>
+          <ul class="hint-list">
+            <li>Anchor your largest tile in one corner.</li>
+            <li>Avoid moving against that corner unless recovery is obvious.</li>
+            <li>Prefer long chains along one edge instead of scattered merges.</li>
+          </ul>
+        </div>
+
+        <div class="hint-card">
+          <h3 class="hint-title">Controls</h3>
+          <div class="key-grid" aria-hidden="true">
+            <div class="key blank"></div>
+            <div class="key">↑</div>
+            <div class="key blank"></div>
+            <div class="key">←</div>
+            <div class="key">↓</div>
+            <div class="key">→</div>
+          </div>
+        </div>
+
+        <div class="hint-card">
+          <h3 class="hint-title">Touch Support</h3>
+          <p class="info-copy" style="margin:0; font-size:0.98rem;">On phones and tablets, drag across the puzzle in the direction you want the board to shift. The puzzle ignores very small gestures to reduce accidental moves.</p>
+        </div>
+      </div>
+    </aside>
+  </main>
+
+  <footer class="rpg-footer">
+    © <span id="year"></span> Rising Phoenix Gallery · Michigan City, IN · Crafted by John Ryszka II
+  </footer>
+</div>
+
+<script>
+  const SIZE = 4;
+  const STORAGE_KEY_BEST = 'rpg-2048-best';
+  const STORAGE_KEY_STATE = 'rpg-2048-state';
+
+  const boardBase = document.getElementById('board-base');
+  const tilesLayer = document.getElementById('tiles-layer');
+  const boardFrame = document.getElementById('board-frame');
+  const scoreEl = document.getElementById('score');
+  const bestEl = document.getElementById('best');
+  const statusBar = document.getElementById('status-bar');
+  const victoryMessage = document.getElementById('victory-message');
+  const confettiCanvas = document.getElementById('confetti-canvas');
+  const confettiCtx = confettiCanvas.getContext('2d');
+
+  let board = createEmptyBoard();
+  let score = 0;
+  let best = Number(localStorage.getItem(STORAGE_KEY_BEST) || 0);
+  let previousState = null;
+  let hasWon = false;
+  let isAnimating = false;
+  let showGameOver = false;
+  let touchStart = null;
+  let pointerStart = null;
+  let wheelGesture = { dx: 0, dy: 0, lockUntil: 0 };
+  let confettiParticles = [];
+  let confettiRaf = null;
+  let victoryTimeout = null;
+  let tilePixelSize = 0;
+
+  const TILE_STYLES = {
+    2:    { bg: 'linear-gradient(160deg, #f0e2b4 0%, #ddc88f 100%)', color: '#3c2b11' },
+    4:    { bg: 'linear-gradient(160deg, #efdaa0 0%, #d1b468 100%)', color: '#3a2a10' },
+    8:    { bg: 'linear-gradient(160deg, #d99a49 0%, #b56d1e 100%)', color: '#fff4dc' },
+    16:   { bg: 'linear-gradient(160deg, #cb6c2c 0%, #9b4216 100%)', color: '#fff1df' },
+    32:   { bg: 'linear-gradient(160deg, #b93d29 0%, #7b1f14 100%)', color: '#fff1e9' },
+    64:   { bg: 'linear-gradient(160deg, #9f2149 0%, #66102d 100%)', color: '#fff0fa' },
+    128:  { bg: 'linear-gradient(160deg, #6d3ea8 0%, #41206d 100%)', color: '#faf3ff' },
+    256:  { bg: 'linear-gradient(160deg, #3d57b9 0%, #21316f 100%)', color: '#f4f7ff' },
+    512:  { bg: 'linear-gradient(160deg, #2b7d8b 0%, #154652 100%)', color: '#f0ffff' },
+    1024: { bg: 'linear-gradient(160deg, #24945f 0%, #0f5937 100%)', color: '#f3fff8' },
+    2048: { bg: 'linear-gradient(160deg, #f5d86c 0%, #c99b14 100%)', color: '#2a1c05' },
+    4096: { bg: 'linear-gradient(160deg, #fff0a8 0%, #e0b835 100%)', color: '#271801' },
+    8192: { bg: 'linear-gradient(160deg, #fff4d0 0%, #f0c443 100%)', color: '#211400' }
+  };
+
+  document.getElementById('year').textContent = new Date().getFullYear();
+  bestEl.textContent = formatScore(best);
+  buildBoardBase();
+  resizeBoardMetrics();
+  window.addEventListener('resize', resizeBoardMetrics);
+
+  document.getElementById('new-game-btn').addEventListener('click', () => startNewGame(true));
+  document.getElementById('undo-btn').addEventListener('click', undoMove);
+  document.querySelectorAll('[data-direction]').forEach((button) => {
+    button.addEventListener('click', () => {
+      boardFrame.focus({ preventScroll: true });
+      makeMove(button.dataset.direction);
+    });
+  });
+
+  window.addEventListener('keydown', handleKeydown, { passive: false });
+  boardFrame.addEventListener('touchstart', handleTouchStart, { passive: true });
+  boardFrame.addEventListener('touchmove', handleTouchMove, { passive: false });
+  boardFrame.addEventListener('touchend', handleTouchEnd, { passive: true });
+  boardFrame.addEventListener('pointerdown', handlePointerDown);
+  boardFrame.addEventListener('pointerup', handlePointerUp);
+  boardFrame.addEventListener('pointercancel', clearPointerGesture);
+  boardFrame.addEventListener('wheel', handleWheelGesture, { passive: false });
+
+  restoreSavedGame();
+
+  function createEmptyBoard() {
+    return Array.from({ length: SIZE }, () => Array(SIZE).fill(0));
+  }
+
+  function buildBoardBase() {
+    boardBase.innerHTML = '';
+    for (let i = 0; i < SIZE * SIZE; i++) {
+      const cell = document.createElement('div');
+      cell.className = 'base-cell';
+      boardBase.appendChild(cell);
+    }
+  }
+
+  function resizeBoardMetrics() {
+    const style = getComputedStyle(boardFrame);
+    const frameRect = boardFrame.getBoundingClientRect();
+    const gap = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--cell-gap')) || 12;
+    const pad = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--board-pad')) || 12;
+    const outerInset = 28; // board inset from frame due to .tiles-layer and .board-base
+    const layerSize = frameRect.width - outerInset;
+    tilePixelSize = (layerSize - (pad * 2) - (gap * (SIZE - 1))) / SIZE;
+    renderBoard();
+  }
+
+  function startNewGame(force = false) {
+    if (!force && !confirmResetNeeded()) return;
+    board = createEmptyBoard();
+    score = 0;
+    previousState = null;
+    hasWon = false;
+    showGameOver = false;
+    clearVictoryMessage();
+    addRandomTile();
+    addRandomTile();
+    updateStatus('Combine matching tiles to forge the 2048 flame.');
+    saveState();
+    renderBoard();
+  }
+
+  function confirmResetNeeded() {
+    return true;
+  }
+
+  function restoreSavedGame() {
+    try {
+      const saved = JSON.parse(localStorage.getItem(STORAGE_KEY_STATE) || 'null');
+      if (saved && Array.isArray(saved.board) && saved.board.length === SIZE) {
+        board = saved.board.map(row => row.slice());
+        score = Number(saved.score || 0);
+        hasWon = Boolean(saved.hasWon);
+        showGameOver = Boolean(saved.showGameOver);
+        updateStatus(hasWon ? 'Victory attained. Continue refining the flame.' : showGameOver ? 'The embers have gone cold. Start anew.' : 'Continue your ascent toward 2048.');
+        renderBoard();
+        scoreEl.textContent = formatScore(score);
+        bestEl.textContent = formatScore(best);
+        return;
+      }
+    } catch (error) {
+      console.warn('Could not restore saved game.', error);
+    }
+    startNewGame(true);
+  }
+
+  function saveState() {
+    best = Math.max(best, score);
+    localStorage.setItem(STORAGE_KEY_BEST, String(best));
+    bestEl.textContent = formatScore(best);
+    localStorage.setItem(STORAGE_KEY_STATE, JSON.stringify({
+      board,
+      score,
+      hasWon,
+      showGameOver
+    }));
+    scoreEl.textContent = formatScore(score);
+  }
+
+  function cloneGameState() {
+    return {
+      board: board.map(row => row.slice()),
+      score,
+      hasWon,
+      showGameOver
+    };
+  }
+
+  function undoMove() {
+    if (!previousState || isAnimating) return;
+    board = previousState.board.map(row => row.slice());
+    score = previousState.score;
+    hasWon = previousState.hasWon;
+    showGameOver = previousState.showGameOver;
+    previousState = null;
+    clearVictoryMessage();
+    updateStatus(hasWon ? 'Victory attained. Continue refining the flame.' : 'Previous move restored.');
+    saveState();
+    renderBoard();
+  }
+
+  function handleKeydown(event) {
+    const key = event.key.toLowerCase();
+    const map = {
+      arrowup: 'up', w: 'up',
+      arrowdown: 'down', s: 'down',
+      arrowleft: 'left', a: 'left',
+      arrowright: 'right', d: 'right'
+    };
+    if (!map[key]) return;
+    event.preventDefault();
+    makeMove(map[key]);
+  }
+
+  function handleTouchStart(event) {
+    const touch = event.changedTouches[0];
+    touchStart = { x: touch.clientX, y: touch.clientY };
+  }
+
+  function handleTouchMove(event) {
+    if (!touchStart) return;
+    event.preventDefault();
+  }
+
+  function handleTouchEnd(event) {
+    if (!touchStart) return;
+    const touch = event.changedTouches[0];
+    const dx = touch.clientX - touchStart.x;
+    const dy = touch.clientY - touchStart.y;
+    const absX = Math.abs(dx);
+    const absY = Math.abs(dy);
+    const threshold = 28;
+    if (Math.max(absX, absY) < threshold) {
+      touchStart = null;
+      return;
+    }
+    touchStart = null;
+    resolveDirectionalGesture(dx, dy, threshold);
+  }
+
+  function handlePointerDown(event) {
+    if (event.pointerType === 'mouse' && event.button !== 0) return;
+    pointerStart = { x: event.clientX, y: event.clientY, id: event.pointerId };
+    boardFrame.focus({ preventScroll: true });
+  }
+
+  function handlePointerUp(event) {
+    if (!pointerStart || (pointerStart.id !== undefined && event.pointerId !== pointerStart.id)) return;
+    const dx = event.clientX - pointerStart.x;
+    const dy = event.clientY - pointerStart.y;
+    pointerStart = null;
+    resolveDirectionalGesture(dx, dy, 24);
+  }
+
+  function clearPointerGesture() {
+    pointerStart = null;
+  }
+
+  function handleWheelGesture(event) {
+    const now = performance.now();
+    if (now < wheelGesture.lockUntil) {
+      event.preventDefault();
+      return;
+    }
+
+    wheelGesture.dx += event.deltaX;
+    wheelGesture.dy += event.deltaY;
+
+    const absX = Math.abs(wheelGesture.dx);
+    const absY = Math.abs(wheelGesture.dy);
+    const threshold = 42;
+
+    if (Math.max(absX, absY) >= threshold) {
+      event.preventDefault();
+      const direction = absX > absY
+        ? (wheelGesture.dx > 0 ? 'right' : 'left')
+        : (wheelGesture.dy > 0 ? 'down' : 'up');
+      wheelGesture.dx = 0;
+      wheelGesture.dy = 0;
+      wheelGesture.lockUntil = now + 180;
+      boardFrame.focus({ preventScroll: true });
+      makeMove(direction);
+      return;
+    }
+
+    window.clearTimeout(handleWheelGesture.resetTimer);
+    handleWheelGesture.resetTimer = window.setTimeout(() => {
+      wheelGesture.dx = 0;
+      wheelGesture.dy = 0;
+    }, 140);
+  }
+
+  function resolveDirectionalGesture(dx, dy, threshold) {
+    const absX = Math.abs(dx);
+    const absY = Math.abs(dy);
+    if (Math.max(absX, absY) < threshold) return false;
+    const direction = absX > absY ? (dx > 0 ? 'right' : 'left') : (dy > 0 ? 'down' : 'up');
+    makeMove(direction);
+    return true;
+  }
+
+  function addRandomTile() {
+    const empties = [];
+    for (let r = 0; r < SIZE; r++) {
+      for (let c = 0; c < SIZE; c++) {
+        if (board[r][c] === 0) empties.push([r, c]);
+      }
+    }
+    if (!empties.length) return null;
+    const [row, col] = empties[Math.floor(Math.random() * empties.length)];
+    board[row][col] = Math.random() < 0.9 ? 2 : 4;
+    return { row, col, value: board[row][col] };
+  }
+
+  function makeMove(direction) {
+    if (isAnimating) return;
+
+    const snapshot = cloneGameState();
+    const result = shiftBoard(direction);
+    if (!result.moved) return;
+
+    previousState = snapshot;
+    board = result.board;
+    score += result.scoreGained;
+
+    const spawned = addRandomTile();
+    saveState();
+    renderBoard({
+      spawned,
+      mergedCells: result.mergedCells
+    });
+
+    if (!hasWon && highestTile(board) >= 2048) {
+      hasWon = true;
+      saveState();
+      triggerVictory();
+      updateStatus('The Phoenix Ascends. You may continue playing.');
+    } else if (!hasAvailableMoves(board)) {
+      showGameOver = true;
+      saveState();
+      updateStatus('No legal moves remain. Begin a new game to rekindle the board.');
+    } else {
+      showGameOver = false;
+      const dirWord = direction.charAt(0).toUpperCase() + direction.slice(1);
+      updateStatus(dirWord + ' move resolved. Keep the largest tile anchored.');
+    }
+  }
+
+  function shiftBoard(direction) {
+    const working = createEmptyBoard();
+    let moved = false;
+    let scoreGained = 0;
+    const mergedCells = [];
+
+    for (let index = 0; index < SIZE; index++) {
+      let line = getLine(board, direction, index);
+      const compressed = compressLine(line);
+      const nextLine = compressed.line;
+      scoreGained += compressed.scoreGained;
+
+      if (!arraysEqual(line, nextLine)) moved = true;
+
+      setLine(working, direction, index, nextLine);
+      for (const merged of compressed.mergedIndices) {
+        const cell = lineIndexToCell(direction, index, merged);
+        mergedCells.push(cell.row + '-' + cell.col);
+      }
+    }
+
+    return { board: working, moved, scoreGained, mergedCells };
+  }
+
+  function getLine(grid, direction, index) {
+    const line = [];
+    if (direction === 'left') {
+      for (let c = 0; c < SIZE; c++) line.push(grid[index][c]);
+    } else if (direction === 'right') {
+      for (let c = SIZE - 1; c >= 0; c--) line.push(grid[index][c]);
+    } else if (direction === 'up') {
+      for (let r = 0; r < SIZE; r++) line.push(grid[r][index]);
+    } else if (direction === 'down') {
+      for (let r = SIZE - 1; r >= 0; r--) line.push(grid[r][index]);
+    }
+    return line;
+  }
+
+  function setLine(grid, direction, index, values) {
+    if (direction === 'left') {
+      for (let c = 0; c < SIZE; c++) grid[index][c] = values[c];
+    } else if (direction === 'right') {
+      for (let c = SIZE - 1, i = 0; c >= 0; c--, i++) grid[index][c] = values[i];
+    } else if (direction === 'up') {
+      for (let r = 0; r < SIZE; r++) grid[r][index] = values[r];
+    } else if (direction === 'down') {
+      for (let r = SIZE - 1, i = 0; r >= 0; r--, i++) grid[r][index] = values[i];
+    }
+  }
+
+  function lineIndexToCell(direction, fixedIndex, lineIndex) {
+    if (direction === 'left') return { row: fixedIndex, col: lineIndex };
+    if (direction === 'right') return { row: fixedIndex, col: SIZE - 1 - lineIndex };
+    if (direction === 'up') return { row: lineIndex, col: fixedIndex };
+    return { row: SIZE - 1 - lineIndex, col: fixedIndex };
+  }
+
+  function compressLine(line) {
+    const compact = line.filter(v => v !== 0);
+    const result = [];
+    const mergedIndices = [];
+    let scoreGained = 0;
+
+    for (let i = 0; i < compact.length; i++) {
+      if (compact[i] !== 0 && compact[i] === compact[i + 1]) {
+        const merged = compact[i] * 2;
+        result.push(merged);
+        mergedIndices.push(result.length - 1);
+        scoreGained += merged;
+        i++;
+      } else {
+        result.push(compact[i]);
+      }
+    }
+
+    while (result.length < SIZE) result.push(0);
+    return { line: result, mergedIndices, scoreGained };
+  }
+
+  function highestTile(grid) {
+    let max = 0;
+    for (const row of grid) {
+      for (const value of row) max = Math.max(max, value);
+    }
+    return max;
+  }
+
+  function hasAvailableMoves(grid) {
+    for (let r = 0; r < SIZE; r++) {
+      for (let c = 0; c < SIZE; c++) {
+        if (grid[r][c] === 0) return true;
+        if (c < SIZE - 1 && grid[r][c] === grid[r][c + 1]) return true;
+        if (r < SIZE - 1 && grid[r][c] === grid[r + 1][c]) return true;
+      }
+    }
+    return false;
+  }
+
+  function arraysEqual(a, b) {
+    return a.length === b.length && a.every((value, index) => value === b[index]);
+  }
+
+  function renderBoard(options = {}) {
+    tilesLayer.innerHTML = '';
+    scoreEl.textContent = formatScore(score);
+    bestEl.textContent = formatScore(best);
+
+    const gap = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--cell-gap')) || 12;
+
+    for (let r = 0; r < SIZE; r++) {
+      for (let c = 0; c < SIZE; c++) {
+        const value = board[r][c];
+        if (!value) continue;
+
+        const tile = document.createElement('div');
+        tile.className = 'tile';
+        if (options.spawned && options.spawned.row === r && options.spawned.col === c) tile.classList.add('new');
+        if (options.mergedCells && options.mergedCells.includes(r + '-' + c)) tile.classList.add('merge');
+
+        const style = tileStyleFor(value);
+        tile.style.width = tilePixelSize + 'px';
+        tile.style.height = tilePixelSize + 'px';
+        tile.style.left = (c * (tilePixelSize + gap) + gap) + 'px';
+        tile.style.top = (r * (tilePixelSize + gap) + gap) + 'px';
+        tile.style.background = style.bg;
+        tile.style.color = style.color;
+
+        const valueSpan = document.createElement('span');
+        valueSpan.className = 'tile-value';
+        valueSpan.textContent = String(value);
+        valueSpan.style.fontSize = tileFontSize(value);
+        tile.appendChild(valueSpan);
+        tilesLayer.appendChild(tile);
+      }
+    }
+  }
+
+  function tileStyleFor(value) {
+    if (TILE_STYLES[value]) return TILE_STYLES[value];
+    if (value > 8192) {
+      return {
+        bg: 'linear-gradient(160deg, #fff7df 0%, #f0cf6e 100%)',
+        color: '#1d1200'
+      };
+    }
+    return TILE_STYLES[2];
+  }
+
+  function tileFontSize(value) {
+    const digits = String(value).length;
+    if (digits <= 2) return 'clamp(1.7rem, 6vw, 3.2rem)';
+    if (digits === 3) return 'clamp(1.45rem, 4.9vw, 2.65rem)';
+    if (digits === 4) return 'clamp(1.1rem, 4.1vw, 2.1rem)';
+    return 'clamp(0.9rem, 3.3vw, 1.55rem)';
+  }
+
+  function formatScore(value) {
+    return Number(value).toLocaleString();
+  }
+
+  function updateStatus(text) {
+    statusBar.textContent = text;
+  }
+
+  function clearVictoryMessage() {
+    clearTimeout(victoryTimeout);
+    victoryMessage.classList.remove('show');
+    victoryMessage.setAttribute('aria-hidden', 'true');
+  }
+
+  function triggerVictory() {
+    clearVictoryMessage();
+    victoryMessage.classList.add('show');
+    victoryMessage.setAttribute('aria-hidden', 'false');
+    launchConfettiBursts();
+    victoryTimeout = setTimeout(() => {
+      clearVictoryMessage();
+    }, 1750);
+  }
+
+  function launchConfettiBursts() {
+    resizeConfettiCanvas();
+    const bursts = 18;
+    for (let i = 0; i < bursts; i++) {
+      const x = (i + 0.5) / bursts * confettiCanvas.width + (Math.random() - 0.5) * (confettiCanvas.width * 0.06);
+      const y = confettiCanvas.height * (0.16 + Math.random() * 0.46);
+      spawnConfettiBurst(x, y, 24 + Math.floor(Math.random() * 18));
+    }
+    if (!confettiRaf) animateConfetti();
+  }
+
+  function resizeConfettiCanvas() {
+    const dpr = window.devicePixelRatio || 1;
+    confettiCanvas.width = Math.floor(window.innerWidth * dpr);
+    confettiCanvas.height = Math.floor(window.innerHeight * dpr);
+    confettiCanvas.style.width = window.innerWidth + 'px';
+    confettiCanvas.style.height = window.innerHeight + 'px';
+    confettiCtx.setTransform(1, 0, 0, 1, 0, 0);
+    confettiCtx.scale(dpr, dpr);
+  }
+
+  window.addEventListener('resize', resizeConfettiCanvas);
+  resizeConfettiCanvas();
+
+  function spawnConfettiBurst(x, y, count) {
+    const colors = ['#f0d080', '#c8952a', '#d4553f', '#7aaa5a', '#8ed7ff', '#fff4bf', '#b56cff'];
+    for (let i = 0; i < count; i++) {
+      const angle = (Math.PI * 2 * i / count) + (Math.random() * 0.4 - 0.2);
+      const speed = 2.2 + Math.random() * 5.8;
+      confettiParticles.push({
+        x,
+        y,
+        vx: Math.cos(angle) * speed,
+        vy: Math.sin(angle) * speed - (1.6 + Math.random() * 2.4),
+        size: 4 + Math.random() * 8,
+        width: 4 + Math.random() * 8,
+        height: 6 + Math.random() * 9,
+        color: colors[Math.floor(Math.random() * colors.length)],
+        life: 44 + Math.random() * 30,
+        maxLife: 44 + Math.random() * 30,
+        rotation: Math.random() * Math.PI * 2,
+        spin: (Math.random() - 0.5) * 0.35,
+        shape: Math.random() < 0.5 ? 'rect' : 'circle'
+      });
+    }
+  }
+
+  function animateConfetti() {
+    confettiRaf = requestAnimationFrame(animateConfetti);
+    confettiCtx.clearRect(0, 0, window.innerWidth, window.innerHeight);
+
+    confettiParticles = confettiParticles.filter(p => p.life > 0);
+    for (const p of confettiParticles) {
+      p.life -= 1;
+      p.vy += 0.12;
+      p.x += p.vx;
+      p.y += p.vy;
+      p.rotation += p.spin;
+      const alpha = Math.max(0, p.life / p.maxLife);
+
+      confettiCtx.save();
+      confettiCtx.globalAlpha = alpha;
+      confettiCtx.translate(p.x, p.y);
+      confettiCtx.rotate(p.rotation);
+      confettiCtx.fillStyle = p.color;
+
+      if (p.shape === 'rect') {
+        confettiCtx.fillRect(-p.width / 2, -p.height / 2, p.width, p.height);
+      } else {
+        confettiCtx.beginPath();
+        confettiCtx.arc(0, 0, p.size / 2, 0, Math.PI * 2);
+        confettiCtx.fill();
+      }
+      confettiCtx.restore();
+    }
+
+    if (!confettiParticles.length) {
+      cancelAnimationFrame(confettiRaf);
+      confettiRaf = null;
+      confettiCtx.clearRect(0, 0, window.innerWidth, window.innerHeight);
+    }
+  }
+</script>
+</body>
+</html>
