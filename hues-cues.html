@@ -1,0 +1,1398 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Hues &amp; Cues — Rising Phoenix Games</title>
+<link rel="stylesheet" href="shared.css">
+<link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700&family=Cinzel:wght@400;600;700&family=IM+Fell+English:ital@0;1&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0f0c07;
+    --bg-warm: #1a1005;
+    --surface: #1e1608;
+    --surface-2: #261c0a;
+    --border: rgba(200,149,42,0.25);
+    --border-bright: rgba(200,149,42,0.55);
+    --gold-dim: #8a6818;
+    --gold: #c8952a;
+    --gold-light: #f0d080;
+    --gold-glow: rgba(200,149,42,0.35);
+    --crimson: #8b1a1a;
+    --crimson-light: #c04040;
+    --sage: #4a7a3a;
+    --sage-light: #7aaa5a;
+    --text: #e8dfc8;
+    --text-muted: #a09070;
+    --text-dim: rgba(200,170,100,0.45);
+    --font-display: 'Cinzel Decorative','Cinzel',serif;
+    --font-ui: 'Cinzel',serif;
+    --font-body: 'IM Fell English',Georgia,serif;
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; }
+  body {
+    background: radial-gradient(ellipse at 20% 10%, #2a1a06 0%, #0f0c07 60%), radial-gradient(ellipse at 80% 90%, #1a0e04 0%, transparent 60%);
+    background-color: var(--bg);
+    color: var(--text);
+    font-family: var(--font-body);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+  /* ---- HEADER ---- */
+  #page-header {
+    display: flex; align-items: center; justify-content: center; gap: 14px;
+    padding: 18px 20px 12px;
+    border-bottom: 1px solid var(--border);
+    background: linear-gradient(180deg, rgba(30,20,6,0.95) 0%, rgba(15,12,7,0.85) 100%);
+    position: relative;
+  }
+  #page-header img.logo { width: 52px; height: 52px; object-fit: contain; filter: drop-shadow(0 0 8px rgba(200,149,42,0.5)); }
+  .header-text { text-align: center; }
+  .header-text .hub-name {
+    font-family: var(--font-ui);
+    font-size: 0.65rem; letter-spacing: 0.18em; color: var(--text-muted);
+    text-transform: uppercase;
+  }
+  .header-text h1 {
+    font-family: var(--font-display);
+    font-size: clamp(1.3rem, 4vw, 1.9rem);
+    background: linear-gradient(135deg, var(--gold-dim) 0%, var(--gold-light) 50%, var(--gold) 100%);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+    line-height: 1.1;
+  }
+  .rpg-back {
+    position: absolute; left: 16px; top: 50%;
+    transform: translateY(-50%);
+    font-family: var(--font-ui); font-size: 0.7rem; letter-spacing: 0.1em;
+    color: var(--text-muted); text-decoration: none;
+    border: 1px solid var(--border); padding: 5px 10px; border-radius: 3px;
+    transition: color .2s, border-color .2s;
+  }
+  .rpg-back::before { content: '← '; }
+  .rpg-back:hover { color: var(--gold-light); border-color: var(--border-bright); }
+
+  /* ---- SCREEN SYSTEM ---- */
+  .screen { display: none; }
+  .screen.active { display: block; }
+
+  /* ---- SETUP SCREEN ---- */
+  #setup-screen { padding: 24px 16px; max-width: 560px; margin: 0 auto; }
+  .section-title {
+    font-family: var(--font-display); font-size: 0.85rem;
+    color: var(--gold); letter-spacing: 0.12em; text-transform: uppercase;
+    margin-bottom: 12px; padding-bottom: 6px;
+    border-bottom: 1px solid var(--border);
+  }
+  .player-entry {
+    display: flex; gap: 8px; align-items: center; margin-bottom: 8px;
+  }
+  .player-entry input {
+    flex: 1; background: var(--surface); border: 1px solid var(--border);
+    color: var(--text); font-family: var(--font-ui); font-size: 0.85rem;
+    padding: 8px 12px; border-radius: 4px; outline: none;
+    transition: border-color .2s;
+  }
+  .player-entry input:focus { border-color: var(--border-bright); }
+  .player-entry input::placeholder { color: var(--text-dim); }
+  .color-dot {
+    width: 28px; height: 28px; border-radius: 50%;
+    border: 2px solid rgba(255,255,255,0.25); flex-shrink: 0;
+  }
+  .btn-remove {
+    background: none; border: 1px solid var(--crimson); color: var(--crimson-light);
+    width: 28px; height: 28px; border-radius: 50%; cursor: pointer;
+    font-size: 1rem; line-height: 1; display: flex; align-items: center; justify-content: center;
+    transition: background .15s;
+  }
+  .btn-remove:hover { background: rgba(139,26,26,0.3); }
+  .rpg-btn {
+    font-family: var(--font-ui); font-size: 0.8rem; letter-spacing: 0.12em;
+    text-transform: uppercase; cursor: pointer;
+    background: linear-gradient(180deg, var(--surface-2) 0%, var(--surface) 100%);
+    border: 1px solid var(--border-bright); color: var(--gold-light);
+    padding: 10px 20px; border-radius: 4px;
+    box-shadow: inset 0 1px 0 rgba(200,149,42,0.15), 0 2px 8px rgba(0,0,0,0.4);
+    transition: border-color .2s, box-shadow .2s, transform .1s;
+  }
+  .rpg-btn:hover { border-color: var(--gold); box-shadow: 0 0 12px var(--gold-glow), inset 0 1px 0 rgba(200,149,42,0.25); }
+  .rpg-btn:active { transform: translateY(1px); }
+  .rpg-btn-sage { border-color: rgba(74,122,58,0.6); color: var(--sage-light); }
+  .rpg-btn-sage:hover { border-color: var(--sage-light); box-shadow: 0 0 12px rgba(74,122,58,0.35); }
+  .rpg-btn-crimson { border-color: rgba(139,26,26,0.6); color: var(--crimson-light); }
+  .rpg-btn-crimson:hover { border-color: var(--crimson-light); box-shadow: 0 0 12px rgba(139,26,26,0.35); }
+  .btn-row { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 6px; }
+  .setup-section { margin-bottom: 24px; }
+  #rounds-input {
+    width: 70px; background: var(--surface); border: 1px solid var(--border);
+    color: var(--text); font-family: var(--font-ui); font-size: 0.9rem;
+    padding: 6px 10px; border-radius: 4px; text-align: center; outline: none;
+  }
+  #rounds-input:focus { border-color: var(--border-bright); }
+
+  /* ---- CLUE-GIVER SCREEN (before board) ---- */
+  #cluegiver-screen {
+    display: none; position: fixed; inset: 0; z-index: 200;
+    background: radial-gradient(ellipse at center, #2a1a06 0%, #0a0804 100%);
+    flex-direction: column; align-items: center; justify-content: center;
+    text-align: center; padding: 40px 24px;
+  }
+  #cluegiver-screen.active { display: flex; }
+  .cg-player-name {
+    font-family: var(--font-display);
+    font-size: clamp(1.6rem, 6vw, 2.8rem);
+    background: linear-gradient(135deg, var(--gold-dim), var(--gold-light), var(--gold));
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+    margin-bottom: 12px;
+  }
+  .cg-subtitle { font-family: var(--font-body); font-style: italic; color: var(--text-muted); font-size: 1rem; margin-bottom: 32px; }
+  .target-swatch-wrap { margin-bottom: 32px; }
+  #target-swatch {
+    width: 140px; height: 140px; border-radius: 8px;
+    border: 3px solid var(--border-bright);
+    box-shadow: 0 0 32px rgba(200,149,42,0.3), 0 8px 24px rgba(0,0,0,0.6);
+    margin: 0 auto 12px;
+    animation: swatchReveal 0.6s cubic-bezier(0.34,1.56,0.64,1);
+  }
+  @keyframes swatchReveal { from { transform: scale(0.5) rotate(-10deg); opacity: 0; } to { transform: scale(1) rotate(0deg); opacity: 1; } }
+  .target-hex { font-family: var(--font-ui); font-size: 0.75rem; letter-spacing: 0.12em; color: var(--text-muted); }
+  .cg-instruction { font-family: var(--font-body); font-size: 1rem; color: var(--text); max-width: 360px; margin-bottom: 28px; line-height: 1.6; }
+  .clue-round-badge {
+    font-family: var(--font-ui); font-size: 0.7rem; letter-spacing: 0.15em;
+    color: var(--gold); border: 1px solid var(--border); padding: 4px 12px; border-radius: 12px; margin-bottom: 24px;
+  }
+
+  /* ---- GAME SCREEN ---- */
+  #game-screen { display: none; }
+  #game-screen.active { display: flex; flex-direction: column; height: calc(100vh - 88px); }
+  #game-screen.active #board-outer { flex: 1; min-height: 0; }
+  #game-statusbar {
+    font-family: var(--font-ui); font-size: 0.72rem; letter-spacing: 0.1em;
+    color: var(--gold-light); background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 8px 16px; display: flex; align-items: center; gap: 16px; flex-wrap: wrap;
+  }
+  #game-statusbar::before { content: '⚜'; color: var(--gold); margin-right: 4px; }
+  .status-sep { color: var(--border-bright); }
+  /* board wrapper holds axis labels + board */
+  #board-outer {
+    flex: 1; overflow: hidden; display: flex; flex-direction: column;
+    position: relative;
+  }
+  /* top/bottom number rails */
+  .col-labels {
+    display: flex; flex-shrink: 0;
+    padding-left: 20px; /* offset for row-label column */
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+  }
+  .col-labels.bottom { border-bottom: none; border-top: 1px solid var(--border); }
+  .col-label {
+    flex: 1; text-align: center;
+    font-family: var(--font-ui); font-size: clamp(0.38rem, 1vw, 0.6rem);
+    color: var(--gold); line-height: 1;
+    padding: 2px 0;
+    letter-spacing: 0;
+    user-select: none;
+  }
+  /* middle row: letter labels + board */
+  #board-mid {
+    flex: 1; overflow: hidden; display: flex; min-height: 0;
+  }
+  /* left/right letter rails */
+  .row-labels {
+    display: flex; flex-direction: column; flex-shrink: 0;
+    width: 20px;
+    background: var(--surface);
+    border-right: 1px solid var(--border);
+  }
+  .row-labels.right { border-right: none; border-left: 1px solid var(--border); }
+  .row-label {
+    flex: 1; display: flex; align-items: center; justify-content: center;
+    font-family: var(--font-ui); font-size: clamp(0.38rem, 1vw, 0.6rem);
+    color: var(--gold-light); line-height: 1;
+    user-select: none;
+  }
+  #board-container {
+    flex: 1; overflow: hidden; position: relative; cursor: crosshair;
+    touch-action: none;
+  }
+  #color-board {
+    display: grid;
+    grid-template-columns: repeat(24, 1fr);
+    width: 100%; height: 100%;
+    position: relative;
+  }
+  .board-cell {
+    position: relative; transition: filter 0.05s;
+  }
+  .board-cell:hover { z-index: 2; filter: brightness(1.25) saturate(1.3); }
+  /* ripple canvas overlay */
+  #ripple-canvas {
+    position: absolute; inset: 0; pointer-events: none; z-index: 10;
+  }
+  /* player tokens — children of .board-cell so they scale with zoom */
+  .player-token {
+    position: absolute;
+    left: 50%; top: 50%;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-family: var(--font-ui); font-weight: 700;
+    z-index: 20; pointer-events: none;
+    /* size is set as a % of cell via width/height/font-size on the element */
+    transform: translate(-50%, -50%);
+    animation: tokenBounce 0.5s cubic-bezier(0.34,1.56,0.64,1);
+    box-sizing: border-box;
+  }
+  /* Phase 1: solid player colour, white border, white text */
+  .player-token.phase-1 {
+    border: 2px solid #fff;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.7);
+    color: #fff;
+  }
+  /* Phase 2: solid player colour, black border, black text */
+  .player-token.phase-2 {
+    border: 2px solid #000;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.8);
+    color: #000;
+  }
+  @keyframes tokenBounce { from { transform: translate(-50%,-50%) scale(0); } to { transform: translate(-50%,-50%) scale(1); } }
+  @keyframes tokenBreathe {
+    0%, 100% { transform: translate(-50%,-50%) scale(1); }
+    50% { transform: translate(-50%,-50%) scale(1.15); }
+  }
+  .token-breathing { animation: tokenBreathe 2.2s ease-in-out infinite; }
+  /* ---- Scoring zone overlays (applied to .board-cell after reveal) ---- */
+  .score-zone-3 {
+    outline: 3px solid #fff;
+    outline-offset: -2px;
+    z-index: 5;
+  }
+  .score-zone-2 {
+    outline: 2px solid #888;
+    outline-offset: -1px;
+    z-index: 4;
+  }
+  .score-zone-1 {
+    outline: 2px solid #000;
+    outline-offset: -1px;
+    z-index: 3;
+  }
+  /* Star marker for exact target cell */
+  .score-zone-3::after {
+    content: '★';
+    position: absolute; inset: 0;
+    display: flex; align-items: center; justify-content: center;
+    font-size: clamp(8px, 1.4vw, 16px);
+    color: #fff;
+    text-shadow: 0 0 4px rgba(0,0,0,0.9);
+    pointer-events: none; z-index: 6;
+  }
+  /* clue input area */
+  #clue-panel {
+    background: var(--surface); border-top: 1px solid var(--border);
+    padding: 10px 16px; display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+  }
+  #clue-label { font-family: var(--font-ui); font-size: 0.7rem; letter-spacing: 0.12em; color: var(--gold); text-transform: uppercase; white-space: nowrap; }
+  #clue-display { font-family: var(--font-body); font-style: italic; color: var(--text); font-size: 0.95rem; }
+  #clue-input {
+    flex: 1; min-width: 140px; background: var(--surface-2); border: 1px solid var(--border-bright);
+    color: var(--text); font-family: var(--font-body); font-size: 0.9rem;
+    padding: 6px 10px; border-radius: 4px; outline: none;
+  }
+  #clue-input:focus { border-color: var(--gold); }
+
+  /* ---- SCORES PANEL ---- */
+  #scores-panel {
+    background: var(--surface); border-top: 1px solid var(--border);
+    padding: 8px 16px; display: flex; gap: 12px; flex-wrap: wrap; align-items: center;
+  }
+  .score-chip {
+    display: flex; align-items: center; gap: 6px;
+    font-family: var(--font-ui); font-size: 0.72rem; letter-spacing: 0.08em; color: var(--text);
+  }
+  .score-chip .chip-dot {
+    width: 14px; height: 14px; border-radius: 50%; border: 1.5px solid rgba(255,255,255,0.4);
+    flex-shrink: 0;
+  }
+  .score-chip .chip-pts { color: var(--gold-light); font-weight: 600; }
+
+  /* ---- REVEAL / SCORING SCREEN ---- */
+  #reveal-screen {
+    display: none; position: fixed; inset: 0; z-index: 300;
+    background: rgba(10,8,4,0.92); backdrop-filter: blur(4px);
+    flex-direction: column; align-items: center; justify-content: center;
+    padding: 32px 24px; text-align: center; overflow-y: auto;
+  }
+  #reveal-screen.active { display: flex; }
+  .reveal-title {
+    font-family: var(--font-display); font-size: clamp(1.1rem, 4vw, 1.7rem);
+    color: var(--gold-light); margin-bottom: 20px;
+  }
+  .reveal-target-swatch {
+    width: 90px; height: 90px; border-radius: 6px;
+    border: 2px solid var(--gold); margin: 0 auto 16px;
+    box-shadow: 0 0 24px rgba(200,149,42,0.4);
+  }
+  .reveal-table { width: 100%; max-width: 460px; margin-bottom: 20px; }
+  .reveal-row {
+    display: flex; align-items: center; gap: 10px;
+    padding: 8px 12px; border-bottom: 1px solid var(--border);
+    font-family: var(--font-ui); font-size: 0.78rem; letter-spacing: 0.06em;
+  }
+  .reveal-row .rv-dot { width: 20px; height: 20px; border-radius: 50%; border: 2px solid rgba(255,255,255,0.4); flex-shrink: 0; }
+  .reveal-row .rv-name { flex: 1; text-align: left; color: var(--text); }
+  .reveal-row .rv-pts { color: var(--gold-light); font-weight: 600; width: 60px; text-align: right; }
+  .medal { font-size: 1rem; }
+
+  /* ---- FINAL SCORES ---- */
+  #final-screen {
+    display: none; padding: 32px 16px; max-width: 520px; margin: 0 auto; text-align: center;
+  }
+  #final-screen.active { display: block; }
+  .final-title {
+    font-family: var(--font-display); font-size: clamp(1.3rem, 5vw, 2rem);
+    background: linear-gradient(135deg, var(--gold-dim), var(--gold-light), var(--gold));
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+    margin-bottom: 24px;
+  }
+  .final-podium { margin-bottom: 28px; }
+  .podium-row {
+    display: flex; align-items: center; gap: 12px;
+    background: var(--surface); border: 1px solid var(--border);
+    padding: 10px 16px; margin-bottom: 8px; border-radius: 4px;
+  }
+  .podium-rank { font-family: var(--font-display); font-size: 1.1rem; color: var(--gold); width: 30px; }
+  .podium-dot { width: 28px; height: 28px; border-radius: 50%; border: 2px solid rgba(255,255,255,0.4); flex-shrink: 0; }
+  .podium-name { flex: 1; text-align: left; font-family: var(--font-ui); font-size: 0.85rem; color: var(--text); }
+  .podium-score { font-family: var(--font-ui); color: var(--gold-light); font-size: 1rem; font-weight: 600; }
+
+  /* ---- ZOOM ---- */
+  #board-container.zoomed #color-board { cursor: zoom-out; }
+  /* ---- Board-reveal banner (shown while target is highlighted on board) ---- */
+  #board-reveal-bar {
+    display: none;
+    background: linear-gradient(90deg, rgba(30,20,6,0.97) 0%, rgba(38,28,10,0.97) 100%);
+    border-top: 1px solid var(--border-bright);
+    padding: 10px 16px;
+    align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap;
+  }
+  #board-reveal-bar.active { display: flex; }
+  #board-reveal-bar .brb-label {
+    font-family: var(--font-ui); font-size: 0.78rem; letter-spacing: 0.1em;
+    color: var(--gold-light);
+  }
+  #board-reveal-bar .brb-swatch {
+    width: 28px; height: 28px; border-radius: 4px;
+    border: 2px solid var(--border-bright);
+    box-shadow: 0 0 8px rgba(200,149,42,0.4);
+    flex-shrink: 0;
+  }
+  #board-reveal-bar .brb-left { display: flex; align-items: center; gap: 10px; }
+
+  .zoom-hint {
+    position: absolute; bottom: 8px; right: 8px; z-index: 50;
+    font-family: var(--font-ui); font-size: 0.62rem; letter-spacing: 0.08em;
+    color: var(--text-muted); background: rgba(15,12,7,0.7); padding: 3px 7px; border-radius: 10px;
+    pointer-events: none;
+  }
+
+  /* ---- LOOK-AWAY COVER ---- */
+  #lookaway-screen {
+    display: none; position: fixed; inset: 0; z-index: 500;
+    background: #0a0804; align-items: center; justify-content: center; flex-direction: column;
+    text-align: center; padding: 40px 24px;
+  }
+  #lookaway-screen.active { display: flex; }
+  .lookaway-msg { font-family: var(--font-body); font-style: italic; color: var(--text-muted); font-size: 1rem; margin-bottom: 28px; }
+
+  @media (prefers-reduced-motion: reduce) {
+    * { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+  }
+</style>
+</head>
+<body>
+
+<header id="page-header">
+  <a href="index.html" class="rpg-back">Hub</a>
+  <img class="logo" src="data:image/jpeg;base64,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" alt="Rising Phoenix Games">
+  <div class="header-text">
+    <div class="hub-name">Rising Phoenix Games</div>
+    <h1>Hues &amp; Cues</h1>
+  </div>
+</header>
+
+<!-- SETUP SCREEN -->
+<div id="setup-screen" class="screen active">
+  <div class="setup-section">
+    <div class="section-title">Players (2–8)</div>
+    <div id="player-list"></div>
+    <div class="btn-row">
+      <button class="rpg-btn rpg-btn-sage" id="add-player-btn">+ Add Player</button>
+    </div>
+  </div>
+  <div class="setup-section">
+    <div class="section-title">Rounds per Player</div>
+    <div style="display:flex;align-items:center;gap:12px;margin-top:4px;">
+      <input type="number" id="rounds-input" value="3" min="1" max="10">
+      <span style="font-family:var(--font-body);font-style:italic;color:var(--text-muted);font-size:0.9rem;">rounds as Clue-Giver each</span>
+    </div>
+  </div>
+  <div class="btn-row">
+    <button class="rpg-btn" id="start-btn">Begin the Game</button>
+  </div>
+  <div style="margin-top:24px;padding-top:16px;border-top:1px solid var(--border);">
+    <div class="section-title">How to Play</div>
+    <div style="font-family:var(--font-body);font-style:italic;color:var(--text-muted);font-size:0.9rem;line-height:1.7;">
+      The Clue-Giver sees a secret colour and gives <strong style="color:var(--text);">one word</strong>. Other players tap their best guess on the colour grid.
+      If no one is close, the Clue-Giver may give a <strong style="color:var(--text);">second clue (two words)</strong>.<br><br>
+      <strong style="color:var(--gold-light);">3 pts</strong> — exact cell &nbsp;|&nbsp; <strong style="color:var(--gold-light);">2 pts</strong> — adjacent ring &nbsp;|&nbsp; <strong style="color:var(--gold-light);">1 pt</strong> — next ring out<br>
+      Clue-Giver earns 1pt for each player scoring 3 or 2 pts.
+    </div>
+  </div>
+</div>
+
+<!-- LOOK-AWAY COVER (pass device) -->
+<div id="lookaway-screen">
+  <div class="cg-player-name" id="lookaway-name"></div>
+  <div class="lookaway-msg">Everyone else look away while the Clue-Giver sees the target colour.</div>
+  <button class="rpg-btn" id="lookaway-ready-btn">I'm Ready — Show Target</button>
+</div>
+
+<!-- CLUE-GIVER SCREEN -->
+<div id="cluegiver-screen">
+  <div class="clue-round-badge" id="cg-round-badge">Round 1</div>
+  <div class="cg-player-name" id="cg-name"></div>
+  <div class="cg-subtitle">You are the Clue-Giver</div>
+  <div class="target-swatch-wrap">
+    <div id="target-swatch"></div>
+    <div class="target-hex" id="target-hex"></div>
+    <div id="target-coord" style="font-family:var(--font-ui);font-size:0.85rem;letter-spacing:0.14em;color:var(--gold-light);margin-top:8px;"></div>
+  </div>
+  <div class="cg-instruction" id="cg-instruction">
+    Study your colour. Then tap below to show the board and give your <em>one-word</em> clue aloud.
+  </div>
+  <div style="display:flex;gap:12px;flex-wrap:wrap;justify-content:center;">
+    <button class="rpg-btn" id="show-board-btn">Show the Board</button>
+    <button class="rpg-btn rpg-btn-crimson" id="pass-clue-btn" style="display:none;">Pass — Skip 2nd Clue</button>
+  </div>
+</div>
+
+<!-- GAME SCREEN (board) -->
+<div id="game-screen" class="screen">
+  <div id="game-statusbar">
+    <span id="status-clue-giver"></span>
+    <span class="status-sep">|</span>
+    <span id="status-clue"></span>
+    <span class="status-sep">|</span>
+    <span id="status-waiting"></span>
+  </div>
+
+  <div id="board-outer">
+    <div class="col-labels" id="col-labels-top"></div>
+    <div id="board-mid">
+      <div class="row-labels" id="row-labels-left"></div>
+      <div id="board-container">
+        <canvas id="ripple-canvas"></canvas>
+        <div id="color-board"></div>
+        <div class="zoom-hint" id="zoom-hint">Double-tap to zoom</div>
+      </div>
+      <div class="row-labels right" id="row-labels-right"></div>
+    </div>
+    <div class="col-labels bottom" id="col-labels-bottom"></div>
+  </div>
+
+  <div id="clue-panel">
+    <span id="clue-label">Clue:</span>
+    <span id="clue-display"></span>
+  </div>
+
+  <div id="scores-panel" id="scores-panel"></div>
+
+  <!-- Board-reveal bar: shown after zones are drawn, before score popup -->
+  <div id="board-reveal-bar">
+    <div class="brb-left">
+      <div class="brb-swatch" id="brb-swatch"></div>
+      <span class="brb-label">★ Target revealed — see zones on the board</span>
+    </div>
+    <button class="rpg-btn rpg-btn-sage" id="see-scores-btn">See Scores →</button>
+  </div>
+
+  <div style="background:var(--surface);border-top:1px solid var(--border);padding:8px 16px;display:flex;gap:8px;flex-wrap:wrap;">
+    <button class="rpg-btn rpg-btn-sage" id="reveal-btn" style="display:none;">Reveal Target &amp; Score</button>
+    <button class="rpg-btn" id="second-clue-btn" style="display:none;">Give 2nd Clue</button>
+    <button class="rpg-btn rpg-btn-crimson" id="next-round-btn" style="display:none;">Next Round →</button>
+  </div>
+</div>
+
+<!-- REVEAL SCREEN -->
+<div id="reveal-screen">
+  <div class="reveal-title">The Target Was…</div>
+  <div id="reveal-target-swatch" class="reveal-target-swatch"></div>
+  <div id="reveal-table" class="reveal-table"></div>
+  <button class="rpg-btn" id="continue-btn">Continue</button>
+</div>
+
+<!-- FINAL SCREEN -->
+<div id="final-screen" class="screen">
+  <div class="final-title">Final Scores</div>
+  <div id="final-podium" class="final-podium"></div>
+  <div class="btn-row" style="justify-content:center;">
+    <button class="rpg-btn" id="play-again-btn">Play Again</button>
+    <button class="rpg-btn" onclick="location.href='index.html'">← Hub</button>
+  </div>
+</div>
+
+<script>
+(function() {
+  'use strict';
+
+  // ---- CONSTANTS ----
+  const COLS = 24, ROWS = 20;
+  const PLAYER_COLORS = ['#ee0100','#0000f0','#00f000','#f4ef00','#e500f1','#fe8800','#0077ff','#00f6ff'];
+  const SCORE_ZONES = [3, 2, 1]; // rings 0,1,2
+
+  // ---- STATE ----
+  let players = [], scores = {}, roundsPerPlayer = 3;
+  let totalRounds, currentRoundIdx = 0;
+  let roundOrder = []; // array of player indices (clue-givers in order)
+  let currentClueGiverIdx = 0;
+  let targetCell = null; // {row, col}
+  let targetColor = '';
+  let boardColors = []; // 2D array [row][col] = hsl string
+  let cluePhase = 1; // 1 or 2
+  let clue1 = '', clue2 = '';
+  let placements = {}; // playerIdx -> [{row,col}, ...] (up to 2 tokens each)
+  let waitingPlayers = []; // indices of non-clue-giver players who haven't placed in current phase
+  let currentPlacingPlayerIdx = -1;
+  let gameOver = false;
+  let pendingRevealData = null; // holds {results, roundScores} between board-reveal and score popup
+
+  // ---- DOM ----
+  const setupScreen = document.getElementById('setup-screen');
+  const lookawayScreen = document.getElementById('lookaway-screen');
+  const cluegiverScreen = document.getElementById('cluegiver-screen');
+  const gameScreen = document.getElementById('game-screen');
+  const revealScreen = document.getElementById('reveal-screen');
+  const finalScreen = document.getElementById('final-screen');
+  const playerList = document.getElementById('player-list');
+  const addPlayerBtn = document.getElementById('add-player-btn');
+  const startBtn = document.getElementById('start-btn');
+  const roundsInput = document.getElementById('rounds-input');
+  const lookawayName = document.getElementById('lookaway-name');
+  const lookawayReadyBtn = document.getElementById('lookaway-ready-btn');
+  const cgName = document.getElementById('cg-name');
+  const cgRoundBadge = document.getElementById('cg-round-badge');
+  const cgInstruction = document.getElementById('cg-instruction');
+  const targetSwatch = document.getElementById('target-swatch');
+  const targetHex = document.getElementById('target-hex');
+  const showBoardBtn = document.getElementById('show-board-btn');
+  const colorBoard = document.getElementById('color-board');
+  const boardContainer = document.getElementById('board-container');
+  const rippleCanvas = document.getElementById('ripple-canvas');
+  const statusClueGiver = document.getElementById('status-clue-giver');
+  const statusClue = document.getElementById('status-clue');
+  const statusWaiting = document.getElementById('status-waiting');
+  const clueDisplay = document.getElementById('clue-display');
+  const scoresPanel = document.getElementById('scores-panel');
+  const revealBtn = document.getElementById('reveal-btn');
+  const secondClueBtn = document.getElementById('second-clue-btn');
+  const nextRoundBtn = document.getElementById('next-round-btn');
+  const revealTargetSwatch = document.getElementById('reveal-target-swatch');
+  const revealTable = document.getElementById('reveal-table');
+  const continueBtn = document.getElementById('continue-btn');
+  const finalPodium = document.getElementById('final-podium');
+  const playAgainBtn = document.getElementById('play-again-btn');
+
+  // ---- SETUP ----
+  function createPlayerEntry(idx, name) {
+    const div = document.createElement('div');
+    div.className = 'player-entry';
+    div.dataset.idx = idx;
+    const dot = document.createElement('div');
+    dot.className = 'color-dot';
+    dot.style.background = PLAYER_COLORS[idx % PLAYER_COLORS.length];
+    const inp = document.createElement('input');
+    inp.type = 'text'; inp.placeholder = 'Player ' + (idx + 1);
+    inp.value = name || '';
+    inp.maxLength = 20;
+    const rmv = document.createElement('button');
+    rmv.className = 'btn-remove'; rmv.innerHTML = '×';
+    rmv.onclick = function() { removePlayer(idx); };
+    div.appendChild(dot); div.appendChild(inp); div.appendChild(rmv);
+    return div;
+  }
+
+  function rebuildPlayerList() {
+    playerList.innerHTML = '';
+    players.forEach(function(p, i) {
+      playerList.appendChild(createPlayerEntry(i, p));
+    });
+  }
+
+  addPlayerBtn.onclick = function() {
+    if (players.length >= 8) return;
+    players.push('');
+    rebuildPlayerList();
+  };
+
+  function removePlayer(idx) {
+    if (players.length <= 2) return;
+    players.splice(idx, 1);
+    rebuildPlayerList();
+  }
+
+  function getPlayerNames() {
+    var entries = playerList.querySelectorAll('.player-entry');
+    var names = [];
+    entries.forEach(function(e, i) {
+      var v = e.querySelector('input').value.trim();
+      names.push(v || 'Player ' + (i + 1));
+    });
+    return names;
+  }
+
+  // init 2 default players
+  players = ['', ''];
+  rebuildPlayerList();
+
+  startBtn.onclick = function() {
+    players = getPlayerNames();
+    if (players.length < 2) return;
+    roundsPerPlayer = Math.max(1, parseInt(roundsInput.value) || 3);
+    scores = {};
+    players.forEach(function(p) { scores[p] = 0; });
+    buildRoundOrder();
+    currentRoundIdx = 0;
+    gameOver = false;
+    buildBoard();
+    showScreen(null);
+    startRound();
+  };
+
+  function buildRoundOrder() {
+    roundOrder = [];
+    for (var r = 0; r < roundsPerPlayer; r++) {
+      players.forEach(function(_, i) { roundOrder.push(i); });
+    }
+    totalRounds = roundOrder.length;
+  }
+
+  // ---- BOARD GENERATION ----
+  function buildBoard() {
+    colorBoard.innerHTML = '';
+    boardColors = [];
+    colorBoard.style.gridTemplateColumns = 'repeat(' + COLS + ', 1fr)';
+    for (var row = 0; row < ROWS; row++) {
+      boardColors.push([]);
+      for (var col = 0; col < COLS; col++) {
+        var hue = Math.round((col / (COLS - 1)) * 360);
+        var lightness = Math.round(78 - (row / (ROWS - 1)) * 56);
+        var saturation = row === 0 ? 75 : (row === ROWS - 1 ? 55 : 90);
+        var color = 'hsl(' + hue + ',' + saturation + '%,' + lightness + '%)';
+        boardColors[row].push(color);
+        var cell = document.createElement('div');
+        cell.className = 'board-cell';
+        cell.style.background = color;
+        cell.dataset.row = row;
+        cell.dataset.col = col;
+        colorBoard.appendChild(cell);
+      }
+    }
+    // Build column number labels (1-based)
+    var colLabelsTop = document.getElementById('col-labels-top');
+    var colLabelsBot = document.getElementById('col-labels-bottom');
+    colLabelsTop.innerHTML = ''; colLabelsBot.innerHTML = '';
+    for (var c = 0; c < COLS; c++) {
+      var lt = document.createElement('div'); lt.className = 'col-label'; lt.textContent = c + 1;
+      var lb = document.createElement('div'); lb.className = 'col-label'; lb.textContent = c + 1;
+      colLabelsTop.appendChild(lt); colLabelsBot.appendChild(lb);
+    }
+    // Build row letter labels (A, B, C…)
+    var rowLabelsLeft = document.getElementById('row-labels-left');
+    var rowLabelsRight = document.getElementById('row-labels-right');
+    rowLabelsLeft.innerHTML = ''; rowLabelsRight.innerHTML = '';
+    for (var rr = 0; rr < ROWS; rr++) {
+      var letter = String.fromCharCode(65 + rr);
+      var ll = document.createElement('div'); ll.className = 'row-label'; ll.textContent = letter;
+      var lr = document.createElement('div'); lr.className = 'row-label'; lr.textContent = letter;
+      rowLabelsLeft.appendChild(ll); rowLabelsRight.appendChild(lr);
+    }
+    setupBoardEvents();
+    setupRipple();
+    setupZoom();
+  }
+
+  // ---- ROUND FLOW ----
+  function startRound() {
+    if (currentRoundIdx >= totalRounds) { endGame(); return; }
+    cluePhase = 1; clue1 = ''; clue2 = '';
+    placements = {};
+    players.forEach(function(_, i) { placements[i] = []; });
+    // pick target
+    var row = Math.floor(Math.random() * ROWS);
+    var col = Math.floor(Math.random() * COLS);
+    targetCell = {row: row, col: col};
+    targetColor = boardColors[row][col];
+    currentClueGiverIdx = roundOrder[currentRoundIdx];
+    // clear tokens from board
+    colorBoard.querySelectorAll('.player-token').forEach(function(t) { t.remove(); });
+    clearScoreRings();
+    // show look-away cover
+    lookawayName.textContent = players[currentClueGiverIdx];
+    lookawayScreen.classList.add('active');
+  }
+
+  lookawayReadyBtn.onclick = function() {
+    lookawayScreen.classList.remove('active');
+    showCluegiverScreen();
+  };
+
+  function showCluegiverScreen() {
+    cgName.textContent = players[currentClueGiverIdx];
+    cgRoundBadge.textContent = 'Round ' + (currentRoundIdx + 1) + ' of ' + totalRounds;
+    targetSwatch.style.background = targetColor;
+    targetHex.textContent = hslToHex(targetColor);
+    var coordLetter = String.fromCharCode(65 + targetCell.row);
+    var coordNum = targetCell.col + 1;
+    document.getElementById('target-coord').textContent = 'Row ' + coordLetter + '  ·  Column ' + coordNum;
+    var passBtn = document.getElementById('pass-clue-btn');
+    if (cluePhase === 1) {
+      cgInstruction.innerHTML = 'Study your colour. Give <em>one word</em> to describe it. Tap below to show the board.';
+      showBoardBtn.textContent = 'Show the Board';
+      passBtn.style.display = 'none';
+    } else {
+      cgInstruction.innerHTML = 'Give a <em>second clue</em> (two words max) — or Pass to skip straight to scoring.';
+      showBoardBtn.textContent = 'Show Board (2nd Clue)';
+      passBtn.style.display = '';
+    }
+    cluegiverScreen.classList.add('active');
+  }
+
+  showBoardBtn.onclick = function() {
+    cluegiverScreen.classList.remove('active');
+    showGameScreen();
+  };
+
+  document.getElementById('pass-clue-btn').onclick = function() {
+    // Clue-giver passes on 2nd clue — go straight to reveal, no second guesses
+    cluegiverScreen.classList.remove('active');
+    showScreen('game-screen');
+    updateStatusBar();
+    updateScoresPanel();
+    doReveal();
+  };
+
+  function showGameScreen() {
+    showScreen('game-screen');
+    updateStatusBar();
+    updateScoresPanel();
+    // who places?
+    waitingPlayers = players.map(function(_, i) { return i; }).filter(function(i) { return i !== currentClueGiverIdx; });
+    advancePlacingPlayer();
+  }
+
+  function advancePlacingPlayer() {
+    // remove already-placed-in-this-phase players
+    var phasePlaced = waitingPlayers.filter(function(i) {
+      return placements[i].length >= cluePhase;
+    });
+    var stillWaiting = waitingPlayers.filter(function(i) {
+      return placements[i].length < cluePhase;
+    });
+    if (stillWaiting.length === 0) {
+      // all placed this phase
+      currentPlacingPlayerIdx = -1;
+      updateStatusBar();
+      if (cluePhase === 1) {
+        // Check if any guesser hit the exact target cell — if so, skip straight to reveal
+        var exactHit = players.some(function(_, i) {
+          if (i === currentClueGiverIdx) return false;
+          return placements[i].length >= 1 &&
+                 placements[i][0].row === targetCell.row &&
+                 placements[i][0].col === targetCell.col;
+        });
+        if (exactHit) {
+          // Skip 2nd clue — go straight to reveal
+          revealBtn.style.display = '';
+        } else {
+          secondClueBtn.style.display = '';
+        }
+      } else {
+        revealBtn.style.display = '';
+      }
+    } else {
+      currentPlacingPlayerIdx = stillWaiting[0];
+      updateStatusBar();
+      secondClueBtn.style.display = 'none';
+      revealBtn.style.display = 'none';
+    }
+  }
+
+  secondClueBtn.onclick = function() {
+    secondClueBtn.style.display = 'none';
+    cluePhase = 2;
+    // Hand device back to clue-giver to give 2nd clue or pass
+    showScreen(null);
+    // Brief look-away so clue-giver can see target privately
+    lookawayName.textContent = players[currentClueGiverIdx];
+    lookawayScreen.classList.add('active');
+  };
+
+  revealBtn.onclick = function() {
+    revealBtn.style.display = 'none';
+    doReveal();
+  };
+
+  document.getElementById('see-scores-btn').onclick = function() {
+    // Hide the board-reveal bar
+    document.getElementById('board-reveal-bar').classList.remove('active');
+    // Build and show the score popup with the stashed results
+    if (pendingRevealData) {
+      buildRevealTable(pendingRevealData.results, pendingRevealData.roundScores);
+      revealTargetSwatch.style.background = targetColor;
+      revealScreen.classList.add('active');
+    }
+  };
+
+  // ---- BOARD INTERACTION ----
+  // _touchDidPan is set by setupZoom when the user drags; prevents accidental token placement
+  var _touchDidPan = false;
+
+  function setupBoardEvents() {
+    colorBoard.addEventListener('click', onBoardClick);
+    // Use touchend so we can distinguish a tap from a pan drag
+    colorBoard.addEventListener('touchend', onBoardTouchEnd, {passive: false});
+  }
+
+  function onBoardClick(e) {
+    var cell = e.target.closest('.board-cell');
+    if (!cell) return;
+    placeToken(parseInt(cell.dataset.row), parseInt(cell.dataset.col));
+  }
+
+  function onBoardTouchEnd(e) {
+    if (_touchDidPan) return; // drag — not a tap
+    var t = e.changedTouches[0];
+    var el = document.elementFromPoint(t.clientX, t.clientY);
+    var cell = el && el.closest('.board-cell');
+    if (!cell) return;
+    placeToken(parseInt(cell.dataset.row), parseInt(cell.dataset.col));
+  }
+
+  function isCellOccupied(row, col, excludePlayer, excludePhase) {
+    // Check if any placed marker (across all players/phases) occupies this cell,
+    // except the current player's own marker in the same phase (allow repositioning)
+    var occupied = false;
+    players.forEach(function(_, i) {
+      placements[i].forEach(function(pl, phaseIdx) {
+        if (i === excludePlayer && phaseIdx === excludePhase) return; // allow replacing own
+        if (pl.row === row && pl.col === col) occupied = true;
+      });
+    });
+    return occupied;
+  }
+
+  function flashCellOccupied(row, col) {
+    var cellEl = colorBoard.querySelector('[data-row="' + row + '"][data-col="' + col + '"]');
+    if (!cellEl) return;
+    var orig = cellEl.style.filter;
+    cellEl.style.filter = 'brightness(2) saturate(0)';
+    cellEl.style.transition = 'filter 0.05s';
+    setTimeout(function() { cellEl.style.filter = orig; }, 300);
+  }
+
+  function placeToken(row, col) {
+    if (currentPlacingPlayerIdx < 0) return;
+    var pi = currentPlacingPlayerIdx;
+    var phaseIdx = cluePhase - 1;
+    // ── Feature 3: block occupied cells ──
+    if (isCellOccupied(row, col, pi, phaseIdx)) {
+      flashCellOccupied(row, col);
+      return;
+    }
+    // remove previous token for this player in this phase if any
+    colorBoard.querySelectorAll('.player-token[data-player="' + pi + '"][data-phase="' + phaseIdx + '"]').forEach(function(t) { t.remove(); });
+    // (tokens are now children of their cell, so colorBoard.querySelectorAll covers them)
+    // update placement
+    if (placements[pi].length > phaseIdx) {
+      placements[pi][phaseIdx] = {row: row, col: col};
+    } else {
+      placements[pi].push({row: row, col: col});
+    }
+    renderToken(pi, row, col, phaseIdx);
+    advancePlacingPlayer();
+  }
+
+  function renderToken(pi, row, col, phaseIdx) {
+    var cellEl = colorBoard.querySelector('[data-row="' + row + '"][data-col="' + col + '"]');
+    if (!cellEl) return;
+    var playerColor = PLAYER_COLORS[pi % PLAYER_COLORS.length];
+    var tok = document.createElement('div');
+    tok.className = 'player-token token-breathing ' + (phaseIdx === 0 ? 'phase-1' : 'phase-2');
+    tok.dataset.player = pi;
+    tok.dataset.phase = phaseIdx;
+    // Position at centre of cell using % — stays correct at any zoom level
+    tok.style.left = '50%';
+    tok.style.top = '50%';
+    // Size relative to cell: 80% of the smaller dimension, capped
+    tok.style.width = '80%';
+    tok.style.height = '80%';
+    tok.style.fontSize = '45%';
+    tok.style.background = playerColor;
+    if (phaseIdx === 0) {
+      tok.style.color = '#fff';
+      tok.textContent = players[pi].charAt(0).toUpperCase();
+    } else {
+      tok.style.color = '#000';
+      tok.textContent = players[pi].charAt(0).toUpperCase() + '²';
+    }
+    // Append inside the cell so it zooms with the board
+    cellEl.appendChild(tok);
+  }
+
+  // ---- RIPPLE ----
+  var ripples = [];
+  var rippleCtx;
+  var lastMouseCell = null;
+
+  function setupRipple() {
+    var dpr = window.devicePixelRatio || 1;
+    function resize() {
+      var r = boardContainer.getBoundingClientRect();
+      rippleCanvas.width = r.width * dpr;
+      rippleCanvas.height = r.height * dpr;
+      rippleCanvas.style.width = r.width + 'px';
+      rippleCanvas.style.height = r.height + 'px';
+      rippleCtx = rippleCanvas.getContext('2d');
+      rippleCtx.scale(dpr, dpr);
+    }
+    resize();
+    window.addEventListener('resize', resize);
+    boardContainer.addEventListener('mousemove', function(e) {
+      var r = boardContainer.getBoundingClientRect();
+      spawnRipple(e.clientX - r.left, e.clientY - r.top, e.clientX, e.clientY);
+    });
+    boardContainer.addEventListener('touchmove', function(e) {
+      var t = e.touches[0];
+      var r = boardContainer.getBoundingClientRect();
+      spawnRipple(t.clientX - r.left, t.clientY - r.top, t.clientX, t.clientY);
+    }, {passive: true});
+    requestAnimationFrame(animateRipples);
+  }
+
+  function spawnRipple(x, y, cx, cy) {
+    var el = document.elementFromPoint(cx, cy);
+    var cell = el && el.closest('.board-cell');
+    var color = cell ? cell.style.background : 'rgba(200,149,42,0.5)';
+    ripples.push({x: x, y: y, r: 0, maxR: 60, color: color, alpha: 0.55, born: performance.now()});
+    if (ripples.length > 12) ripples.shift();
+  }
+
+  function animateRipples(ts) {
+    if (!rippleCtx) { requestAnimationFrame(animateRipples); return; }
+    var r = boardContainer.getBoundingClientRect();
+    rippleCtx.clearRect(0, 0, r.width, r.height);
+    ripples = ripples.filter(function(rp) { return rp.alpha > 0.02; });
+    ripples.forEach(function(rp) {
+      var age = (ts - rp.born) / 600;
+      rp.r = Math.max(0, rp.maxR * age);
+      rp.alpha = 0.55 * (1 - age);
+      if (rp.alpha < 0) rp.alpha = 0;
+      if (rp.r <= 0) return;
+      rippleCtx.beginPath();
+      rippleCtx.arc(rp.x, rp.y, rp.r, 0, Math.PI * 2);
+      rippleCtx.strokeStyle = rp.color.replace('hsl', 'hsla').replace(')', ', ' + rp.alpha.toFixed(2) + ')');
+      if (rp.color.indexOf('hsla') < 0 && rp.color.indexOf('rgba') < 0) {
+        // build stroke with alpha
+        rippleCtx.strokeStyle = 'rgba(255,255,255,' + rp.alpha.toFixed(2) + ')';
+      }
+      rippleCtx.lineWidth = 3;
+      rippleCtx.stroke();
+    });
+    requestAnimationFrame(animateRipples);
+  }
+
+  // ---- ZOOM + PAN ----
+  function setupZoom() {
+    var zoomed = false;
+    var zoomScale = 2.5;
+    var panX = 0, panY = 0;      // current translation in px
+    var lastTap = 0;
+
+    // --- pan state ---
+    var isPanning = false;
+    var panStartX = 0, panStartY = 0;
+    var panOriginX = 0, panOriginY = 0;
+
+    // Two-finger touch pan
+    var touchPanning = false;
+    var touchStartX = 0, touchStartY = 0;
+    var touchOriginX = 0, touchOriginY = 0;
+
+    colorBoard.style.transformOrigin = '0 0'; // always top-left; we handle origin via translate
+
+    function applyTransform() {
+      if (zoomed) {
+        // Clamp pan so board edges can't be dragged past the container boundary
+        var r = boardContainer.getBoundingClientRect();
+        var maxPanX = 0;
+        var minPanX = r.width  - r.width  * zoomScale;
+        var maxPanY = 0;
+        var minPanY = r.height - r.height * zoomScale;
+        panX = Math.min(maxPanX, Math.max(minPanX, panX));
+        panY = Math.min(maxPanY, Math.max(minPanY, panY));
+        colorBoard.style.transform = 'translate(' + panX + 'px,' + panY + 'px) scale(' + zoomScale + ')';
+      } else {
+        colorBoard.style.transform = '';
+      }
+    }
+
+    function zoomToPoint(cx, cy) {
+      // cx, cy are coords relative to boardContainer
+      // When zooming in, keep the tapped point visually anchored
+      panX = cx - cx * zoomScale;
+      panY = cy - cy * zoomScale;
+      zoomed = true;
+      applyTransform();
+      document.getElementById('zoom-hint').textContent = 'Double-tap to zoom out';
+      boardContainer.style.cursor = 'grab';
+    }
+
+    function zoomOut() {
+      zoomed = false;
+      panX = 0; panY = 0;
+      applyTransform();
+      document.getElementById('zoom-hint').textContent = 'Double-tap to zoom';
+      boardContainer.style.cursor = 'crosshair';
+    }
+
+    // ── Double-click to zoom/unzoom ──
+    boardContainer.addEventListener('dblclick', function(e) {
+      var r = boardContainer.getBoundingClientRect();
+      if (!zoomed) {
+        zoomToPoint(e.clientX - r.left, e.clientY - r.top);
+      } else {
+        zoomOut();
+      }
+    });
+
+    // ── Double-tap to zoom/unzoom ──
+    boardContainer.addEventListener('touchend', function(e) {
+      var now = Date.now();
+      if (now - lastTap < 350 && e.changedTouches.length === 1) {
+        var t = e.changedTouches[0];
+        var r = boardContainer.getBoundingClientRect();
+        if (!zoomed) {
+          zoomToPoint(t.clientX - r.left, t.clientY - r.top);
+        } else {
+          zoomOut();
+        }
+        e.preventDefault();
+      }
+      lastTap = now;
+    });
+
+    // ── Mouse drag to pan ──
+    boardContainer.addEventListener('mousedown', function(e) {
+      if (!zoomed) return;
+      if (e.button !== 0) return;
+      isPanning = true;
+      panStartX = e.clientX;
+      panStartY = e.clientY;
+      panOriginX = panX;
+      panOriginY = panY;
+      boardContainer.style.cursor = 'grabbing';
+      e.preventDefault();
+    });
+
+    window.addEventListener('mousemove', function(e) {
+      if (!isPanning) return;
+      panX = panOriginX + (e.clientX - panStartX);
+      panY = panOriginY + (e.clientY - panStartY);
+      applyTransform();
+    });
+
+    window.addEventListener('mouseup', function() {
+      if (isPanning) {
+        isPanning = false;
+        boardContainer.style.cursor = zoomed ? 'grab' : 'crosshair';
+      }
+    });
+
+    // ── Touch drag to pan (single finger when zoomed) ──
+    boardContainer.addEventListener('touchstart', function(e) {
+      _touchDidPan = false; // reset on every new touch
+      if (!zoomed) return;
+      if (e.touches.length === 1) {
+        touchPanning = true;
+        touchStartX = e.touches[0].clientX;
+        touchStartY = e.touches[0].clientY;
+        touchOriginX = panX;
+        touchOriginY = panY;
+      }
+    }, {passive: true});
+
+    boardContainer.addEventListener('touchmove', function(e) {
+      if (!touchPanning || !zoomed) return;
+      if (e.touches.length === 1) {
+        var dx = e.touches[0].clientX - touchStartX;
+        var dy = e.touches[0].clientY - touchStartY;
+        // Only mark as a pan if moved more than 6px (avoids micro-drift on taps)
+        if (Math.abs(dx) > 6 || Math.abs(dy) > 6) _touchDidPan = true;
+        if (_touchDidPan) {
+          panX = touchOriginX + dx;
+          panY = touchOriginY + dy;
+          applyTransform();
+          e.preventDefault();
+        }
+      }
+    }, {passive: false});
+
+    boardContainer.addEventListener('touchend', function(e) {
+      touchPanning = false;
+    }, {passive: true});
+  }
+
+  // ---- SCORING ----
+  // Official frame: target = 3pts; cells within 1 step (Chebyshev) = 2pts (inside frame);
+  // cells exactly 2 steps out = 1pt (outer perimeter of frame); beyond = 0.
+  function cellDistance(a, b) {
+    return Math.max(Math.abs(a.row - b.row), Math.abs(a.col - b.col));
+  }
+
+  function scoreForDistance(d) {
+    if (d === 0) return 3;
+    if (d === 1) return 2;
+    if (d === 2) return 1;
+    return 0;
+  }
+
+  // Returns true if a placement is inside the scoring frame (2pt or 3pt zone)
+  function isInFrame(placement) {
+    return cellDistance(placement, targetCell) <= 1;
+  }
+
+  function doReveal() {
+    // ── Step 1: compute all scores (but don't commit to scoreboard yet) ──
+    var cgPlayer = players[currentClueGiverIdx];
+    var roundScores = {};
+    players.forEach(function(p) { roundScores[p] = 0; });
+    var results = [];
+    players.forEach(function(_, i) {
+      if (i === currentClueGiverIdx) return;
+      var totalPts = 0;
+      var markerScores = [];
+      placements[i].forEach(function(pl) {
+        var d = cellDistance(pl, targetCell);
+        var s = scoreForDistance(d);
+        markerScores.push(s);
+        totalPts += s;
+      });
+      totalPts = Math.min(totalPts, 5);
+      results.push({pi: i, pts: totalPts, markerScores: markerScores});
+      roundScores[players[i]] += totalPts;
+      scores[players[i]] += totalPts;
+      placements[i].forEach(function(pl) {
+        if (isInFrame(pl)) {
+          roundScores[cgPlayer] += 1;
+          scores[cgPlayer] += 1;
+        }
+      });
+    });
+    // Stash results for the score popup
+    pendingRevealData = {results: results, roundScores: roundScores};
+
+    // ── Step 2: show the board with scoring zones highlighted ──
+    showScreen('game-screen');
+    showScoreZones();
+
+    // Show target swatch in the reveal bar and make it visible
+    var brbSwatch = document.getElementById('brb-swatch');
+    brbSwatch.style.background = targetColor;
+    document.getElementById('board-reveal-bar').classList.add('active');
+
+    // Hide the normal action buttons while in board-reveal mode
+    revealBtn.style.display = 'none';
+    secondClueBtn.style.display = 'none';
+    nextRoundBtn.style.display = 'none';
+
+    // Scroll/zoom to target cell so it's visible
+    scrollToTargetCell();
+  }
+
+  function scrollToTargetCell() {
+    var cellEl = colorBoard.querySelector('[data-row="' + targetCell.row + '"][data-col="' + targetCell.col + '"]');
+    if (cellEl) { cellEl.scrollIntoView({block:'nearest', inline:'nearest', behavior:'smooth'}); }
+  }
+
+  function showScoreZones() {
+    clearScoreZones();
+    // Highlight every cell in the scoring frame directly on the board
+    for (var r = 0; r < ROWS; r++) {
+      for (var c = 0; c < COLS; c++) {
+        var d = Math.max(Math.abs(r - targetCell.row), Math.abs(c - targetCell.col));
+        if (d > 2) continue;
+        var cellEl = colorBoard.querySelector('[data-row="' + r + '"][data-col="' + c + '"]');
+        if (!cellEl) continue;
+        if (d === 0) cellEl.classList.add('score-zone-3');
+        else if (d === 1) cellEl.classList.add('score-zone-2');
+        else if (d === 2) cellEl.classList.add('score-zone-1');
+      }
+    }
+  }
+
+  function clearScoreZones() {
+    colorBoard.querySelectorAll('.score-zone-3,.score-zone-2,.score-zone-1').forEach(function(el) {
+      el.classList.remove('score-zone-3','score-zone-2','score-zone-1');
+    });
+  }
+
+  // Keep old name as alias so existing call in doReveal still works
+  function showScoreRings() { showScoreZones(); }
+  function clearScoreRings() { clearScoreZones(); }
+
+  function buildRevealTable(results, roundScores) {
+    revealTable.innerHTML = '';
+    var cgRow = document.createElement('div');
+    cgRow.className = 'reveal-row';
+    var cgDot = document.createElement('div');
+    cgDot.className = 'rv-dot';
+    cgDot.style.background = PLAYER_COLORS[currentClueGiverIdx % PLAYER_COLORS.length];
+    var cgNameEl = document.createElement('div');
+    cgNameEl.className = 'rv-name';
+    cgNameEl.textContent = players[currentClueGiverIdx] + ' (Clue-Giver)';
+    var cgPts = document.createElement('div');
+    cgPts.className = 'rv-pts';
+    cgPts.textContent = '+' + (roundScores[players[currentClueGiverIdx]] || 0) + ' pts';
+    cgRow.appendChild(cgDot); cgRow.appendChild(cgNameEl); cgRow.appendChild(cgPts);
+    revealTable.appendChild(cgRow);
+    results.forEach(function(r) {
+      var row = document.createElement('div');
+      row.className = 'reveal-row';
+      var dot = document.createElement('div');
+      dot.className = 'rv-dot';
+      dot.style.background = PLAYER_COLORS[r.pi % PLAYER_COLORS.length];
+      var nm = document.createElement('div');
+      nm.className = 'rv-name';
+      var medal = r.pts === 3 ? '🥇 ' : r.pts === 2 ? '🥈 ' : r.pts === 1 ? '🥉 ' : '';
+      nm.textContent = medal + players[r.pi];
+      var pts = document.createElement('div');
+      pts.className = 'rv-pts';
+      pts.textContent = '+' + r.pts + ' pts';
+      row.appendChild(dot); row.appendChild(nm); row.appendChild(pts);
+      revealTable.appendChild(row);
+    });
+  }
+
+  continueBtn.onclick = function() {
+    revealScreen.classList.remove('active');
+    document.getElementById('board-reveal-bar').classList.remove('active');
+    pendingRevealData = null;
+    // Clear all tokens and score zones so the board is clean for the next round
+    colorBoard.querySelectorAll('.player-token').forEach(function(t) { t.remove(); });
+    clearScoreZones();
+    currentRoundIdx++;
+    if (currentRoundIdx >= totalRounds) {
+      endGame();
+    } else {
+      startRound();
+    }
+  };
+
+  // ---- STATUS ----
+  function updateStatusBar() {
+    statusClueGiver.textContent = '⚜ ' + players[currentClueGiverIdx] + ' — Clue-Giver';
+    var clueText = clue1 ? ('"' + clue1 + '"' + (clue2 ? ' / "' + clue2 + '"' : '')) : '(awaiting clue)';
+    statusClue.textContent = clueText;
+    if (currentPlacingPlayerIdx >= 0) {
+      statusWaiting.textContent = players[currentPlacingPlayerIdx] + ' — place your token';
+    } else {
+      statusWaiting.textContent = 'All placed';
+    }
+  }
+
+  function updateScoresPanel() {
+    scoresPanel.innerHTML = '';
+    players.forEach(function(p, i) {
+      var chip = document.createElement('div');
+      chip.className = 'score-chip';
+      var dot = document.createElement('div');
+      dot.className = 'chip-dot';
+      dot.style.background = PLAYER_COLORS[i % PLAYER_COLORS.length];
+      var nm = document.createElement('span');
+      nm.textContent = p + ': ';
+      var pts = document.createElement('span');
+      pts.className = 'chip-pts';
+      pts.textContent = scores[p] + ' pts';
+      chip.appendChild(dot); chip.appendChild(nm); chip.appendChild(pts);
+      scoresPanel.appendChild(chip);
+    });
+  }
+
+  // ---- END GAME ----
+  function endGame() {
+    gameOver = true;
+    showScreen('final-screen');
+    var sorted = players.slice().sort(function(a, b) { return scores[b] - scores[a]; });
+    finalPodium.innerHTML = '';
+    sorted.forEach(function(p, rank) {
+      var pi = players.indexOf(p);
+      var row = document.createElement('div');
+      row.className = 'podium-row';
+      var rankEl = document.createElement('div');
+      rankEl.className = 'podium-rank';
+      rankEl.textContent = rank === 0 ? '🏆' : (rank + 1);
+      var dot = document.createElement('div');
+      dot.className = 'podium-dot';
+      dot.style.background = PLAYER_COLORS[pi % PLAYER_COLORS.length];
+      var nm = document.createElement('div');
+      nm.className = 'podium-name';
+      nm.textContent = p;
+      var sc = document.createElement('div');
+      sc.className = 'podium-score';
+      sc.textContent = scores[p] + ' pts';
+      row.appendChild(rankEl); row.appendChild(dot); row.appendChild(nm); row.appendChild(sc);
+      finalPodium.appendChild(row);
+    });
+  }
+
+  playAgainBtn.onclick = function() {
+    showScreen('setup-screen');
+  };
+
+  // ---- HELPERS ----
+  function showScreen(id) {
+    [setupScreen, gameScreen, finalScreen].forEach(function(s) { s.classList.remove('active'); });
+    if (id) document.getElementById(id).classList.add('active');
+  }
+
+  function hslToHex(hsl) {
+    var m = hsl.match(/hsl\((\d+),\s*(\d+)%,\s*(\d+)%\)/);
+    if (!m) return hsl;
+    var h = parseInt(m[1]) / 360, s = parseInt(m[2]) / 100, l = parseInt(m[3]) / 100;
+    var r, g, b;
+    if (s === 0) { r = g = b = l; }
+    else {
+      var hue2rgb = function(p, q, t) {
+        if (t < 0) t += 1; if (t > 1) t -= 1;
+        if (t < 1/6) return p + (q - p) * 6 * t;
+        if (t < 1/2) return q;
+        if (t < 2/3) return p + (q - p) * (2/3 - t) * 6;
+        return p;
+      };
+      var q = l < 0.5 ? l * (1 + s) : l + s - l * s;
+      var p = 2 * l - q;
+      r = hue2rgb(p, q, h + 1/3);
+      g = hue2rgb(p, q, h);
+      b = hue2rgb(p, q, h - 1/3);
+    }
+    return '#' + [r, g, b].map(function(x) {
+      return ('0' + Math.round(x * 255).toString(16)).slice(-2);
+    }).join('');
+  }
+
+})();
+</script>
+</body>
+</html>
