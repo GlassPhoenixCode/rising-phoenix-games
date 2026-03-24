@@ -1,0 +1,1241 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tic-Tac-Toe · Rising Phoenix Games</title>
+  <link rel="stylesheet" href="shared.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700;900&family=Cinzel:wght@400;600;700;900&family=IM+Fell+English:ital@0;1&display=swap" rel="stylesheet">
+
+  <style>
+    /* ── Reset & base ── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: var(--font-body);
+      color: var(--text);
+      min-height: 100vh;
+      background:
+        radial-gradient(ellipse 80% 60% at 20% 10%, rgba(120,70,10,0.38) 0%, transparent 60%),
+        radial-gradient(ellipse 60% 50% at 80% 90%, rgba(90,45,5,0.32) 0%, transparent 55%),
+        radial-gradient(ellipse 100% 80% at 50% 50%, rgba(30,18,4,0.95) 0%, transparent 100%),
+        #0f0c07;
+      background-attachment: fixed;
+    }
+
+    /* ── Page shell ── */
+    .page { max-width: 1100px; margin: 0 auto; padding: 18px 16px 48px; }
+
+    /* ── Header ── */
+    .game-header {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      margin-bottom: 28px;
+      padding-bottom: 18px;
+      border-bottom: 1px solid var(--border);
+    }
+    .header-inner {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      flex: 1;
+      flex-wrap: wrap;
+    }
+    .header-titles { flex: 1; min-width: 0; }
+    .game-title {
+      font-family: var(--font-display);
+      font-size: clamp(1.1rem, 3vw, 1.7rem);
+      background: linear-gradient(135deg, var(--gold) 0%, var(--gold-light) 60%, var(--gold) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      line-height: 1.2;
+    }
+    .game-subtitle {
+      font-family: var(--font-body);
+      font-style: italic;
+      color: var(--text-muted);
+      font-size: 0.88rem;
+      margin-top: 3px;
+    }
+
+    /* ── Controls bar ── */
+    .controls-bar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      align-items: center;
+      margin-bottom: 22px;
+    }
+    .segment-group {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .seg-label {
+      font-family: var(--font-ui);
+      font-size: 0.7rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--gold);
+    }
+    .segment {
+      display: inline-flex;
+      gap: 6px;
+      background: transparent;
+      border: none;
+    }
+    .segment button {
+      font-family: var(--font-ui);
+      font-size: 0.75rem;
+      letter-spacing: 0.06em;
+      border: 1px solid rgba(200,149,42,0.38);
+      border-radius: 999px;
+      background: var(--surface);
+      color: var(--gold);
+      padding: 7px 16px;
+      cursor: pointer;
+      transition: transform 0.18s ease, box-shadow 0.18s ease, background 0.15s, border-color 0.15s;
+    }
+    .segment button.active {
+      background: var(--gold-dim);
+      color: var(--gold-light);
+      border-color: var(--gold);
+      box-shadow: 0 0 10px 2px rgba(200,149,42,0.32);
+    }
+    .segment button:hover:not(.active) {
+      transform: scale(1.07);
+      border-color: var(--gold);
+      color: var(--gold-light);
+      box-shadow:
+        0 0 14px 3px rgba(200,149,42,0.38),
+        0 0 32px 8px rgba(180,120,20,0.18);
+    }
+    .segment button:active { transform: scale(0.97); }
+
+    /* ── Main layout ── */
+    .main-layout {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 20px;
+    }
+    @media (min-width: 820px) {
+      .main-layout { grid-template-columns: 1fr 320px; }
+    }
+
+    /* ── Board panel ── */
+    .board-panel {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 22px;
+      box-shadow:
+        inset 0 1px 0 rgba(200,149,42,0.08),
+        0 8px 32px rgba(0,0,0,0.55);
+    }
+
+    /* Status bar */
+    .status-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 16px;
+      padding: 9px 14px;
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+    }
+    .status-bar::before {
+      content: '⚜';
+      color: var(--gold-dim);
+      margin-right: 8px;
+      font-size: 0.9rem;
+    }
+    #status-text {
+      font-family: var(--font-ui);
+      font-size: 0.82rem;
+      letter-spacing: 0.05em;
+      color: var(--gold-light);
+      flex: 1;
+    }
+    .turn-badge {
+      font-family: var(--font-ui);
+      font-size: 0.75rem;
+      letter-spacing: 0.06em;
+      color: var(--gold);
+    }
+    .turn-badge strong { font-size: 1rem; }
+
+    /* ── Board grid ── */
+    .board-wrap {
+      max-width: 420px;
+      margin: 0 auto;
+      background: radial-gradient(ellipse 80% 80% at 50% 50%, #2e2010 0%, #1c1206 100%);
+      border-radius: 14px;
+      border: 2px solid rgba(200,149,42,0.5);
+      box-shadow:
+        0 0 0 1px rgba(0,0,0,0.7),
+        inset 0 1px 0 rgba(255,200,80,0.07),
+        0 14px 44px rgba(0,0,0,0.75);
+      padding: 16px;
+      position: relative;
+    }
+
+    /* SVG grid lines — absolute overlay */
+    .board-lines-svg {
+      position: absolute;
+      inset: 16px;
+      width: calc(100% - 32px);
+      height: calc(100% - 32px);
+      pointer-events: none;
+      z-index: 2;
+      overflow: visible;
+    }
+
+    #cell-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 0;
+      position: relative;
+      z-index: 1;
+    }
+
+    .cell {
+      position: relative;
+      aspect-ratio: 1 / 1;
+      border-radius: 0;
+      background: rgba(255,220,130,0.04);
+      border: none;
+      display: grid;
+      place-items: center;
+      cursor: pointer;
+      transition: background 0.15s, box-shadow 0.15s, transform 0.1s;
+      outline: none;
+    }
+    .cell:hover:not([aria-disabled="true"]) {
+      background: rgba(200,149,42,0.12);
+      box-shadow: inset 0 0 18px rgba(200,149,42,0.12);
+    }
+    .cell:focus-visible {
+      box-shadow: inset 0 0 0 3px rgba(200,149,42,0.6);
+      background: rgba(200,149,42,0.08);
+    }
+    .cell:active:not([aria-disabled="true"]) { transform: scale(0.94); }
+    .cell[aria-disabled="true"] { cursor: default; }
+    .cell.win-cell {
+      background: rgba(200,149,42,0.13);
+      box-shadow: inset 0 0 24px rgba(200,149,42,0.22);
+    }
+
+    /* Marks */
+    .mark {
+      font-family: var(--font-display);
+      font-size: clamp(2.2rem, 8vw, 3.2rem);
+      font-weight: 900;
+      line-height: 1;
+      will-change: transform;
+      user-select: none;
+    }
+    .mark-x {
+      color: #e85565;
+      text-shadow:
+        0 0 12px rgba(232,85,101,0.7),
+        0 0 30px rgba(232,85,101,0.35);
+    }
+    .mark-o {
+      color: #f2c94c;
+      text-shadow:
+        0 0 12px rgba(242,201,76,0.7),
+        0 0 30px rgba(242,201,76,0.35);
+    }
+
+    /* Breathing animation — per-piece random timing set via JS */
+    @keyframes breathe {
+      0%   { transform: translate(0,0) scale(1) rotate(0deg); }
+      20%  { transform: translate(1px,-2px) scale(1.012) rotate(-0.4deg); }
+      50%  { transform: translate(-1px,1.5px) scale(0.988) rotate(0.3deg); }
+      75%  { transform: translate(1.5px,0.5px) scale(1.008) rotate(-0.25deg); }
+      100% { transform: translate(0,0) scale(1) rotate(0deg); }
+    }
+    @keyframes shimmer {
+      0%   { background-position: -200% 0; }
+      100% { background-position: 200% 0; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .mark { animation: none !important; }
+    }
+
+    /* ── Win celebration overlays ── */
+
+    /* Fullscreen dimmer that hosts the burst mark */
+    #win-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 900;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      pointer-events: none;
+      background: transparent;
+    }
+    #win-overlay.active { pointer-events: none; }
+
+    /* The giant exploding mark */
+    #burst-mark {
+      font-family: var(--font-display);
+      font-weight: 900;
+      font-size: 8rem;
+      line-height: 1;
+      opacity: 0;
+      transform: scale(0.1);
+      animation: none;
+      user-select: none;
+    }
+    #burst-mark.burst-x {
+      color: #e85565;
+      text-shadow:
+        0 0 30px rgba(232,85,101,1),
+        0 0 80px rgba(232,85,101,0.7),
+        0 0 160px rgba(232,85,101,0.4);
+      animation: burst-expand 0.75s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+    }
+    #burst-mark.burst-o {
+      color: #f2c94c;
+      text-shadow:
+        0 0 30px rgba(242,201,76,1),
+        0 0 80px rgba(242,201,76,0.7),
+        0 0 160px rgba(242,201,76,0.4);
+      animation: burst-expand 0.75s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+    }
+    @keyframes burst-expand {
+      0%   { opacity: 0;   transform: scale(0.05); }
+      30%  { opacity: 1;   transform: scale(1.05); }
+      60%  { opacity: 0.85; transform: scale(1.3); }
+      100% { opacity: 0;   transform: scale(2.2); }
+    }
+
+    /* Confetti canvas sits full-screen above everything */
+    #confetti-canvas {
+      position: fixed;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 901;
+    }
+
+    /* SVG win-line drawn over the board */
+    #win-line-svg {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 10;
+      overflow: visible;
+    }
+    #win-line-path {
+      stroke-width: 5;
+      stroke-linecap: round;
+      fill: none;
+      opacity: 0;
+    }
+    #win-line-path.animate-line {
+      animation: draw-line 0.45s 0.15s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+    }
+    @keyframes draw-line {
+      0%   { opacity: 0; stroke-dashoffset: var(--line-len); }
+      15%  { opacity: 1; }
+      100% { opacity: 1; stroke-dashoffset: 0; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      #burst-mark { animation: none !important; }
+      #win-line-path.animate-line { animation: none !important; opacity: 1; stroke-dashoffset: 0; }
+    }
+
+    /* ── Board action buttons ── */
+    .board-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 18px;
+      justify-content: center;
+    }
+    /* Override shared rpg-btn to pills with gold border + halo hover */
+    .board-actions .rpg-btn {
+      border-radius: 999px;
+      border: 1px solid rgba(200,149,42,0.5);
+      padding: 9px 22px;
+      font-size: 0.78rem;
+      font-family: var(--font-ui);
+      letter-spacing: 0.06em;
+      background: var(--surface);
+      color: var(--gold-light);
+      cursor: pointer;
+      transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.15s, background 0.15s;
+    }
+    .board-actions .rpg-btn:hover {
+      transform: scale(1.07);
+      border-color: var(--gold);
+      background: rgba(138,104,24,0.18);
+      box-shadow:
+        0 0 16px 4px rgba(200,149,42,0.4),
+        0 0 40px 10px rgba(180,120,20,0.18);
+    }
+    .board-actions .rpg-btn:active { transform: scale(0.97); }
+    .board-actions .rpg-btn-crimson {
+      border-color: rgba(139,26,26,0.55);
+      color: #e07070;
+    }
+    .board-actions .rpg-btn-crimson:hover {
+      border-color: #c04040;
+      background: rgba(139,26,26,0.18);
+      box-shadow:
+        0 0 16px 4px rgba(192,64,64,0.38),
+        0 0 40px 10px rgba(139,26,26,0.18);
+    }
+
+    /* ── Sidebar ── */
+    .sidebar { display: flex; flex-direction: column; gap: 16px; }
+
+    /* Scoreboard */
+    .score-panel {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 18px;
+      box-shadow: 0 4px 18px rgba(0,0,0,0.45);
+    }
+    .score-panel h3 {
+      font-family: var(--font-ui);
+      font-size: 0.75rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--gold);
+      margin-bottom: 14px;
+    }
+    .score-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+      text-align: center;
+    }
+    .score-box {
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 10px 6px;
+      box-shadow: inset 0 1px 0 rgba(200,149,42,0.07);
+    }
+    .score-label {
+      font-family: var(--font-display);
+      font-size: 1.15rem;
+      font-weight: 900;
+    }
+    .score-label.x { color: #e85565; text-shadow: 0 0 10px rgba(232,85,101,0.5); }
+    .score-label.o { color: #f2c94c; text-shadow: 0 0 10px rgba(242,201,76,0.5); }
+    .score-label.t { color: var(--gold); }
+    .score-num {
+      font-family: var(--font-ui);
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: var(--gold-light);
+      margin-top: 4px;
+    }
+    .score-sub {
+      font-family: var(--font-ui);
+      font-size: 0.62rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--gold);
+      margin-top: 2px;
+    }
+
+    /* Chronicle */
+    .chronicle-panel {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 18px;
+      box-shadow: 0 4px 18px rgba(0,0,0,0.45);
+      flex: 1;
+    }
+    .chronicle-panel h3 {
+      font-family: var(--font-ui);
+      font-size: 0.75rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--gold);
+      margin-bottom: 12px;
+    }
+    .chronicle-scroll {
+      height: 180px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      scrollbar-width: thin;
+      scrollbar-color: var(--gold-dim) transparent;
+    }
+    .chronicle-scroll::-webkit-scrollbar { width: 4px; }
+    .chronicle-scroll::-webkit-scrollbar-track { background: transparent; }
+    .chronicle-scroll::-webkit-scrollbar-thumb { background: var(--gold-dim); border-radius: 4px; }
+    .chronicle-entry {
+      font-family: var(--font-body);
+      font-size: 0.82rem;
+      color: var(--gold);
+      font-style: italic;
+      padding: 5px 9px;
+      background: var(--surface-2);
+      border-left: 2px solid var(--border);
+      border-radius: 0 6px 6px 0;
+      transition: border-color 0.2s;
+    }
+    .chronicle-entry.new-entry {
+      color: var(--gold-light);
+      border-left-color: var(--gold);
+      font-style: normal;
+    }
+
+    /* Appearance drawer */
+    .appearance-panel {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      overflow: hidden;
+      box-shadow: 0 4px 18px rgba(0,0,0,0.45);
+    }
+    .appearance-toggle {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: transparent;
+      border: none;
+      color: var(--gold);
+      font-family: var(--font-ui);
+      font-size: 0.75rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      padding: 14px 18px;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+    .appearance-toggle:hover { background: var(--surface-2); }
+    .appearance-toggle .chevron { transition: transform 0.25s; font-size: 0.65rem; }
+    .appearance-toggle[aria-expanded="true"] .chevron { transform: rotate(180deg); }
+    .appearance-body {
+      padding: 0 18px 16px;
+      display: none;
+    }
+    .appearance-body.open { display: block; }
+    .preset-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 7px; }
+    .preset-btn {
+      font-family: var(--font-ui);
+      font-size: 0.68rem;
+      letter-spacing: 0.07em;
+      border-radius: 7px;
+      padding: 8px 6px;
+      border: 1px solid;
+      cursor: pointer;
+      transition: opacity 0.15s, box-shadow 0.15s;
+      text-align: center;
+    }
+    .preset-btn:hover { opacity: 0.85; }
+    .preset-btn.active-preset { box-shadow: 0 0 0 2px var(--gold); }
+
+    /* ── Footer ── */
+    .game-footer {
+      margin-top: 36px;
+      padding-top: 18px;
+      border-top: 1px solid var(--border);
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      gap: 8px;
+      font-family: var(--font-body);
+      font-size: 0.78rem;
+      color: var(--text-muted);
+      font-style: italic;
+    }
+
+    /* ── Color presets ── */
+    :root {
+      --mark-x: #e85565;
+      --mark-x-glow: rgba(232,85,101,0.65);
+      --mark-o: #f2c94c;
+      --mark-o-glow: rgba(242,201,76,0.65);
+    }
+    body.preset-ivory-ebony {
+      --bg: #0a0a0a; --surface: #111; --surface-2: #1a1a1a;
+      --border: rgba(180,180,180,0.2); --border-bright: rgba(200,200,200,0.45);
+      --mark-x: #ddd; --mark-x-glow: rgba(220,220,220,0.5);
+      --mark-o: #888; --mark-o-glow: rgba(140,140,140,0.5);
+    }
+    body.preset-forest {
+      --bg: #060e07; --surface: #0d1a0e; --surface-2: #111f12;
+      --border: rgba(74,122,58,0.3); --border-bright: rgba(122,170,90,0.5);
+      --gold: #7aaa5a; --gold-light: #b0d890; --gold-dim: #4a7a3a;
+      --mark-x: #e85565; --mark-x-glow: rgba(232,85,101,0.65);
+      --mark-o: #7aaa5a; --mark-o-glow: rgba(122,170,90,0.65);
+    }
+    body.preset-midnight {
+      --bg: #050510; --surface: #0a0a1e; --surface-2: #0f0f28;
+      --border: rgba(80,80,200,0.3); --border-bright: rgba(120,120,240,0.5);
+      --gold: #7070e8; --gold-light: #a0a0f8; --gold-dim: #4040a0;
+      --mark-x: #e85565; --mark-x-glow: rgba(232,85,101,0.65);
+      --mark-o: #7070e8; --mark-o-glow: rgba(112,112,232,0.65);
+    }
+
+    /* sr-only */
+    .sr-only {
+      position: absolute; width: 1px; height: 1px;
+      padding: 0; margin: -1px; overflow: hidden;
+      clip: rect(0,0,0,0); white-space: nowrap; border-width: 0;
+    }
+
+    /* Phoenix SVG wrapper */
+    .phoenix-mark { flex-shrink: 0; }
+  </style>
+</head>
+<body>
+  <div class="page rpg-fadein">
+
+    <!-- Win celebration overlays (hidden until triggered) -->
+    <canvas id="confetti-canvas"></canvas>
+    <div id="win-overlay">
+      <span id="burst-mark"></span>
+    </div>
+
+    <!-- Header -->
+    <header class="game-header">
+      <div class="header-inner">
+        <a href="index.html" class="rpg-back">Hub</a>
+
+        <span class="phoenix-mark">
+          <img src="data:image/png;base64,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" width="54" height="54" alt="Rising Phoenix Gallery logo" style="display:block;border-radius:8px;">
+        </span>
+
+        <div class="header-titles">
+          <div class="game-title">Tic-Tac-Toe</div>
+          <div class="game-subtitle">The Glass Phoenix Edition — every move shapes the final piece</div>
+        </div>
+      </div>
+    </header>
+
+    <!-- Controls bar -->
+    <div class="controls-bar" role="group" aria-label="Game settings">
+      <div class="segment-group">
+        <span class="seg-label">Mode</span>
+        <div class="segment">
+          <button id="modePvp" class="active" aria-pressed="true">Player vs Player</button>
+          <button id="modeAi" aria-pressed="false">vs AI</button>
+        </div>
+      </div>
+      <div class="segment-group">
+        <span class="seg-label">Starts</span>
+        <div class="segment">
+          <button id="startX" class="active" aria-pressed="true">X goes first</button>
+          <button id="startO" aria-pressed="false">O goes first</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Main layout -->
+    <div class="main-layout">
+
+      <!-- Board panel -->
+      <section class="board-panel" aria-label="Game board">
+
+        <!-- Status -->
+        <div class="status-bar" role="status" aria-live="polite">
+          <span id="status-text">X to move</span>
+          <span class="turn-badge">Turn: <strong id="turn-badge" style="color:#e85565">X</strong></span>
+        </div>
+
+        <!-- Board -->
+        <div class="board-wrap" id="board-wrap">
+          <!-- Win-line SVG drawn over the grid -->
+          <svg id="win-line-svg" viewBox="0 0 300 300" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" preserveAspectRatio="none">
+            <path id="win-line-path" d=""/>
+          </svg>
+          <!-- Four gold grid lines: 2 vertical, 2 horizontal, in a 300×300 viewBox -->
+          <svg class="board-lines-svg" viewBox="0 0 300 300" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" preserveAspectRatio="none">
+            <defs>
+              <linearGradient id="vline-grad" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%"   stop-color="rgba(200,149,42,0.1)"/>
+                <stop offset="20%"  stop-color="rgba(200,149,42,0.75)"/>
+                <stop offset="50%"  stop-color="rgba(240,208,128,1)"/>
+                <stop offset="80%"  stop-color="rgba(200,149,42,0.75)"/>
+                <stop offset="100%" stop-color="rgba(200,149,42,0.1)"/>
+              </linearGradient>
+              <linearGradient id="hline-grad" x1="0" y1="0" x2="1" y2="0">
+                <stop offset="0%"   stop-color="rgba(200,149,42,0.1)"/>
+                <stop offset="20%"  stop-color="rgba(200,149,42,0.75)"/>
+                <stop offset="50%"  stop-color="rgba(240,208,128,1)"/>
+                <stop offset="80%"  stop-color="rgba(200,149,42,0.75)"/>
+                <stop offset="100%" stop-color="rgba(200,149,42,0.1)"/>
+              </linearGradient>
+            </defs>
+            <!-- Vertical lines at 1/3 and 2/3 -->
+            <rect x="98.5" y="6" width="3" height="288" fill="url(#vline-grad)" rx="1.5"/>
+            <rect x="198.5" y="6" width="3" height="288" fill="url(#vline-grad)" rx="1.5"/>
+            <!-- Horizontal lines at 1/3 and 2/3 -->
+            <rect x="6" y="98.5" width="288" height="3" fill="url(#hline-grad)" rx="1.5"/>
+            <rect x="6" y="198.5" width="288" height="3" fill="url(#hline-grad)" rx="1.5"/>
+          </svg>
+          <div id="cell-grid" role="grid" aria-label="Tic-tac-toe board"></div>
+        </div>
+
+        <!-- Action buttons -->
+        <div class="board-actions">
+          <button class="rpg-btn" id="btn-new-round">New Round</button>
+          <button class="rpg-btn" id="btn-clear">Clear Board</button>
+          <button class="rpg-btn rpg-btn-crimson" id="btn-reset">Reset Scores</button>
+        </div>
+
+      </section>
+
+      <!-- Sidebar -->
+      <aside class="sidebar">
+
+        <!-- Scoreboard -->
+        <div class="score-panel rpg-panel">
+          <h3>⚜ Scoreboard</h3>
+          <div class="score-grid">
+            <div class="score-box">
+              <div class="score-label x">X</div>
+              <div class="score-num" id="score-x">0</div>
+              <div class="score-sub">Wins</div>
+            </div>
+            <div class="score-box">
+              <div class="score-label t">—</div>
+              <div class="score-num" id="score-t">0</div>
+              <div class="score-sub">Ties</div>
+            </div>
+            <div class="score-box">
+              <div class="score-label o">O</div>
+              <div class="score-num" id="score-o">0</div>
+              <div class="score-sub">Wins</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Chronicle -->
+        <div class="chronicle-panel">
+          <h3>⚜ Chronicle</h3>
+          <div class="chronicle-scroll" id="chronicle" aria-live="polite" aria-label="Game chronicle"></div>
+        </div>
+
+        <!-- Appearance -->
+        <div class="appearance-panel">
+          <button class="appearance-toggle" id="appearance-toggle" aria-expanded="false" aria-controls="appearance-body">
+            <span>⚜ Appearance</span>
+            <span class="chevron">▼</span>
+          </button>
+          <div class="appearance-body" id="appearance-body">
+            <div class="preset-grid">
+              <button class="preset-btn active-preset" data-preset="default"
+                style="background:linear-gradient(135deg,#1e1608,#261c0a);color:#f0d080;border-color:rgba(200,149,42,0.4)">
+                Tavern Oak
+              </button>
+              <button class="preset-btn" data-preset="ivory-ebony"
+                style="background:linear-gradient(135deg,#111,#1a1a1a);color:#ccc;border-color:rgba(180,180,180,0.3)">
+                Ivory &amp; Ebony
+              </button>
+              <button class="preset-btn" data-preset="forest"
+                style="background:linear-gradient(135deg,#0d1a0e,#111f12);color:#7aaa5a;border-color:rgba(74,122,58,0.4)">
+                Forest Glade
+              </button>
+              <button class="preset-btn" data-preset="midnight"
+                style="background:linear-gradient(135deg,#0a0a1e,#0f0f28);color:#a0a0f8;border-color:rgba(80,80,200,0.35)">
+                Royal Midnight
+              </button>
+            </div>
+          </div>
+        </div>
+
+      </aside>
+    </div>
+
+    <!-- Footer -->
+    <footer class="game-footer rpg-footer">
+      <span>© <span id="year"></span> Rising Phoenix Gallery · Michigan City, IN</span>
+      <span>Crafted by John Ryszka II</span>
+    </footer>
+
+  </div><!-- /.page -->
+
+  <script>
+  (function() {
+    'use strict';
+
+    // ── DOM refs ──
+    const cellGrid   = document.getElementById('cell-grid');
+    const statusText = document.getElementById('status-text');
+    const turnBadge  = document.getElementById('turn-badge');
+    const scoreX     = document.getElementById('score-x');
+    const scoreO     = document.getElementById('score-o');
+    const scoreT     = document.getElementById('score-t');
+    const chronicle  = document.getElementById('chronicle');
+
+    const modePvp    = document.getElementById('modePvp');
+    const modeAi     = document.getElementById('modeAi');
+    const startX     = document.getElementById('startX');
+    const startO     = document.getElementById('startO');
+
+    const btnNewRound = document.getElementById('btn-new-round');
+    const btnClear    = document.getElementById('btn-clear');
+    const btnReset    = document.getElementById('btn-reset');
+
+    const appearToggle = document.getElementById('appearance-toggle');
+    const appearBody   = document.getElementById('appearance-body');
+
+    document.getElementById('year').textContent = new Date().getFullYear();
+
+    // ── State ──
+    let mode    = 'pvp';
+    let xStarts = true;
+    let current = 'X';
+    let board   = newBoard();
+    let winner  = null;
+    let winLine = null;
+    let scores  = { X: 0, O: 0, tie: 0 };
+    let gameOver = false;
+    const AI_DELAY = 260;
+
+    // Per-piece breathing timing — randomised once, consistent across renders
+    const BREATH_PERIODS = [3.8, 4.2, 5.1, 3.6, 4.7, 5.8, 4.0, 4.5, 3.9];
+    const BREATH_DELAYS  = [-1.4, -2.1, -0.8, -3.2, -1.9, -0.5, -2.7, -1.1, -3.0];
+    const SHIMMER_PERIODS = [9, 12, 7, 14, 10, 11, 8, 13, 9.5];
+
+    // ── Win flavour text ──
+    const WIN_X = [
+      "Master of Xs — you've sculpted your victory!",
+      "X claims the board like hot glass from the kiln.",
+      "Artisan of Xs — the triumphal piece is yours.",
+      "The crimson mark prevails. X wins!",
+    ];
+    const WIN_O = [
+      "Overlord of Os — you've forged a golden triumph!",
+      "O glows like dichroic glass in morning light. Victory!",
+      "Savant of Os — the board is yours.",
+      "The golden circle is complete. O wins!",
+    ];
+    const TIES = [
+      "A glass standoff. Neither kiln claims the prize.",
+      "Draw! Even masterpieces have trial runs.",
+      "The board is balanced — a true artisan's stalemate.",
+      "A tie. Fire up another round.",
+      "Equilibrium. The craft awaits its next breath.",
+    ];
+
+    // ── Game logic ──
+    function newBoard() {
+      return Array.from({ length: 3 }, () => Array(3).fill(''));
+    }
+    function clone(b) { return b.map(r => r.slice()); }
+    function empties(b) {
+      const out = [];
+      for (let r = 0; r < 3; r++) for (let c = 0; c < 3; c++) if (!b[r][c]) out.push([r, c]);
+      return out;
+    }
+    function isFull(b) { return empties(b).length === 0; }
+
+    const LINES = [
+      [[0,0],[0,1],[0,2]], [[1,0],[1,1],[1,2]], [[2,0],[2,1],[2,2]],
+      [[0,0],[1,0],[2,0]], [[0,1],[1,1],[2,1]], [[0,2],[1,2],[2,2]],
+      [[0,0],[1,1],[2,2]], [[0,2],[1,1],[2,0]],
+    ];
+    function getWinner(b) {
+      for (const line of LINES) {
+        const [[r1,c1],[r2,c2],[r3,c3]] = line;
+        const v = b[r1][c1];
+        if (v && b[r2][c2] === v && b[r3][c3] === v) return { winner: v, line };
+      }
+      return { winner: null, line: null };
+    }
+
+    function minimax(b, ai, human, aiTurn, depth) {
+      if (depth === undefined) depth = 0;
+      const w = getWinner(b).winner;
+      if (w === ai)    return { score: 10 - depth };
+      if (w === human) return { score: depth - 10 };
+      if (isFull(b))   return { score: 0 };
+      const moves = empties(b);
+      if (aiTurn) {
+        let best = -Infinity, move;
+        for (const [r, c] of moves) {
+          b[r][c] = ai;
+          const s = minimax(b, ai, human, false, depth + 1).score;
+          b[r][c] = '';
+          if (s > best) { best = s; move = [r, c]; }
+        }
+        return { score: best, move };
+      } else {
+        let best = Infinity, move;
+        for (const [r, c] of moves) {
+          b[r][c] = human;
+          const s = minimax(b, ai, human, true, depth + 1).score;
+          b[r][c] = '';
+          if (s < best) { best = s; move = [r, c]; }
+        }
+        return { score: best, move };
+      }
+    }
+
+    function pick(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
+
+    // ── Rendering ──
+    function render() {
+      cellGrid.innerHTML = '';
+      for (let r = 0; r < 3; r++) {
+        for (let c = 0; c < 3; c++) {
+          const idx = r * 3 + c;
+          const val = board[r][c];
+          const cell = document.createElement('button');
+          cell.className = 'cell';
+          cell.setAttribute('role', 'gridcell');
+          cell.setAttribute('aria-label', val ? val + ' in row ' + (r+1) + ' column ' + (c+1) : 'Empty row ' + (r+1) + ' column ' + (c+1));
+          cell.dataset.idx = idx.toString();
+
+          const isWinCell = winLine && winLine.some(([wr, wc]) => wr === r && wc === c);
+          if (isWinCell) cell.classList.add('win-cell');
+
+          const playable = !val && !gameOver && (mode === 'pvp' || current === (xStarts ? 'X' : 'O'));
+          if (!playable) cell.setAttribute('aria-disabled', 'true');
+
+          if (val) {
+            const span = document.createElement('span');
+            span.className = 'mark ' + (val === 'X' ? 'mark-x' : 'mark-o');
+            span.textContent = val;
+            span.setAttribute('aria-hidden', 'true');
+
+            // Per-piece breathing
+            const period = BREATH_PERIODS[idx];
+            const delay  = BREATH_DELAYS[idx];
+            span.style.animation = `breathe ${period}s ${delay}s ease-in-out infinite`;
+
+            // Shimmer — layered background flash
+            const shimPeriod = SHIMMER_PERIODS[idx];
+            span.style.background = val === 'X'
+              ? `linear-gradient(105deg, transparent 40%, rgba(255,180,180,0.18) 50%, transparent 60%)`
+              : `linear-gradient(105deg, transparent 40%, rgba(255,240,160,0.18) 50%, transparent 60%)`;
+            span.style.backgroundSize = '200% 100%';
+            span.style.webkitBackgroundClip = 'text';
+
+            cell.appendChild(span);
+          } else {
+            const empty = document.createElement('span');
+            empty.className = 'sr-only';
+            empty.textContent = 'empty';
+            cell.appendChild(empty);
+          }
+
+          cell.addEventListener('click', () => { if (playable) play(r, c); });
+          cellGrid.appendChild(cell);
+        }
+      }
+    }
+
+    function updateStatus() {
+      if (winner) {
+        statusText.textContent = winner === 'X' ? pick(WIN_X) : pick(WIN_O);
+      } else if (gameOver) {
+        statusText.textContent = pick(TIES);
+      } else {
+        statusText.textContent = current + ' to move';
+      }
+      turnBadge.textContent = current;
+      turnBadge.style.color = current === 'X' ? '#e85565' : '#f2c94c';
+    }
+
+    function updateScores() {
+      scoreX.textContent = scores.X;
+      scoreO.textContent = scores.O;
+      scoreT.textContent = scores.tie;
+    }
+
+    function addChronicle(msg, isNew) {
+      const entry = document.createElement('div');
+      entry.className = 'chronicle-entry' + (isNew ? ' new-entry' : '');
+      entry.textContent = msg;
+      chronicle.appendChild(entry);
+      chronicle.scrollTop = chronicle.scrollHeight;
+      // Fade old entries
+      setTimeout(() => { if (isNew) entry.classList.remove('new-entry'); }, 3000);
+    }
+
+    // ── Play ──
+    function play(r, c) {
+      if (board[r][c] || gameOver) return;
+      const nb = clone(board);
+      nb[r][c] = current;
+      advance(nb);
+    }
+
+    function advance(b) {
+      board = b;
+      const w = getWinner(board);
+      if (w.winner) {
+        winner = w.winner;
+        winLine = w.line;
+        gameOver = true;
+        scores[winner]++;
+        updateScores();
+        const msg = winner === 'X' ? pick(WIN_X) : pick(WIN_O);
+        addChronicle(msg, true);
+        render();
+        updateStatus();
+        celebrateWin(winner, winLine);
+      } else if (isFull(board)) {
+        winner = null;
+        winLine = null;
+        gameOver = true;
+        scores.tie++;
+        updateScores();
+        addChronicle(pick(TIES), true);
+        render();
+        updateStatus();
+      } else {
+        current = current === 'X' ? 'O' : 'X';
+        render();
+        updateStatus();
+        maybeAI();
+      }
+    }
+
+    // ── Win celebration ──
+    function celebrateWin(w, line) {
+      burstMark(w);
+      drawWinLine(line, w);
+      launchConfetti(w);
+    }
+
+    // Giant mark explosion from screen center
+    function burstMark(w) {
+      const el = document.getElementById('burst-mark');
+      el.textContent = w;
+      el.className = '';
+      void el.offsetWidth; // force reflow to restart animation
+      el.className = w === 'X' ? 'burst-x' : 'burst-o';
+    }
+
+    // Draw win line over the board using a 300×300 viewBox
+    // Cell centers in that viewBox: col/row 0→50, 1→150, 2→250
+    function drawWinLine(line, w) {
+      if (!line) return;
+      const centers = [[50,50],[150,50],[250,50],[50,150],[150,150],[250,150],[50,250],[150,250],[250,250]];
+      const [a, b2, c] = line;
+      const [x1,y1] = centers[a[0]*3 + a[1]];
+      const [x2,y2] = centers[c[0]*3 + c[1]];
+
+      const path = document.getElementById('win-line-path');
+      const color = w === 'X' ? '#e85565' : '#f2c94c';
+      const glow  = w === 'X' ? 'rgba(232,85,101,0.7)' : 'rgba(242,201,76,0.7)';
+
+      path.setAttribute('d', `M ${x1} ${y1} L ${x2} ${y2}`);
+      path.setAttribute('stroke', color);
+      path.style.filter = `drop-shadow(0 0 6px ${glow}) drop-shadow(0 0 14px ${glow})`;
+
+      // Measure dash length
+      const len = Math.hypot(x2 - x1, y2 - y1);
+      path.style.strokeDasharray = len;
+      path.style.setProperty('--line-len', len);
+      path.style.strokeDashoffset = len;
+
+      path.setAttribute('class', '');
+      void path.getBoundingClientRect(); // force reflow
+      path.setAttribute('class', 'animate-line');
+    }
+
+    function clearWinLine() {
+      const path = document.getElementById('win-line-path');
+      path.setAttribute('class', '');
+      path.setAttribute('d', '');
+      path.style.opacity = '0';
+    }
+
+    // Confetti burst
+    function launchConfetti(w) {
+      const canvas = document.getElementById('confetti-canvas');
+      canvas.width  = window.innerWidth;
+      canvas.height = window.innerHeight;
+      const ctx = canvas.getContext('2d');
+
+      const xColor = ['#e85565','#ff8895','#c04455','#ffb3bb'];
+      const oColor = ['#f2c94c','#ffd966','#c8952a','#fff0a0'];
+      const colors = w === 'X' ? xColor : oColor;
+      // Always add gold to both
+      const allColors = [...colors, '#f0d080','#c8952a','#ffffff'];
+
+      const PARTICLE_COUNT = 120;
+      const particles = [];
+
+      for (let i = 0; i < PARTICLE_COUNT; i++) {
+        // Burst from 3–5 origin points spread across screen
+        const originX = window.innerWidth  * (0.2 + Math.random() * 0.6);
+        const originY = window.innerHeight * (0.1 + Math.random() * 0.5);
+        particles.push({
+          x: originX, y: originY,
+          vx: (Math.random() - 0.5) * 14,
+          vy: (Math.random() - 0.8) * 14,
+          w: 6 + Math.random() * 8,
+          h: 3 + Math.random() * 5,
+          color: allColors[Math.floor(Math.random() * allColors.length)],
+          angle: Math.random() * Math.PI * 2,
+          spin: (Math.random() - 0.5) * 0.25,
+          life: 1.0,
+          decay: 0.012 + Math.random() * 0.014,
+          gravity: 0.28 + Math.random() * 0.12,
+        });
+      }
+
+      let frame;
+      function tick() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        let alive = false;
+        for (const p of particles) {
+          p.x  += p.vx;
+          p.y  += p.vy;
+          p.vy += p.gravity;
+          p.vx *= 0.985;
+          p.angle += p.spin;
+          p.life  -= p.decay;
+          if (p.life <= 0) continue;
+          alive = true;
+          ctx.save();
+          ctx.globalAlpha = Math.max(0, p.life);
+          ctx.translate(p.x, p.y);
+          ctx.rotate(p.angle);
+          ctx.fillStyle = p.color;
+          ctx.fillRect(-p.w/2, -p.h/2, p.w, p.h);
+          ctx.restore();
+        }
+        if (alive) {
+          frame = requestAnimationFrame(tick);
+        } else {
+          ctx.clearRect(0, 0, canvas.width, canvas.height);
+        }
+      }
+      // Cancel any running animation first
+      if (canvas._confettiFrame) cancelAnimationFrame(canvas._confettiFrame);
+      frame = requestAnimationFrame(tick);
+      canvas._confettiFrame = frame;
+    }
+
+    function maybeAI() {
+      if (mode !== 'ai' || gameOver) return;
+      const human = xStarts ? 'X' : 'O';
+      const ai    = xStarts ? 'O' : 'X';
+      if (current !== ai) return;
+      setTimeout(() => {
+        const result = minimax(clone(board), ai, human, true);
+        if (result.move) {
+          const [r, c] = result.move;
+          const nb = clone(board);
+          nb[r][c] = ai;
+          advance(nb);
+        }
+      }, AI_DELAY);
+    }
+
+    function clearBoard() {
+      board    = newBoard();
+      winner   = null;
+      winLine  = null;
+      gameOver = false;
+      current  = xStarts ? 'X' : 'O';
+      clearWinLine();
+      render();
+      updateStatus();
+      const first = cellGrid.querySelector('.cell');
+      if (first) first.focus();
+    }
+
+    function newRound() {
+      xStarts = !xStarts;
+      setStarter(xStarts);
+      addChronicle('— New round —', false);
+      clearBoard();
+    }
+
+    function hardReset() {
+      scores = { X: 0, O: 0, tie: 0 };
+      updateScores();
+      xStarts = true;
+      setStarter(true);
+      addChronicle('— Scores reset —', false);
+      clearBoard();
+    }
+
+    // ── Control handlers ──
+    function setMode(m) {
+      mode = m;
+      modePvp.classList.toggle('active', m === 'pvp');
+      modeAi.classList.toggle('active', m === 'ai');
+      modePvp.setAttribute('aria-pressed', m === 'pvp');
+      modeAi.setAttribute('aria-pressed', m === 'ai');
+      clearBoard();
+    }
+
+    function setStarter(x) {
+      xStarts = x;
+      startX.classList.toggle('active', x);
+      startO.classList.toggle('active', !x);
+      startX.setAttribute('aria-pressed', x);
+      startO.setAttribute('aria-pressed', !x);
+    }
+
+    modePvp.addEventListener('click', () => setMode('pvp'));
+    modeAi.addEventListener('click',  () => setMode('ai'));
+    startX.addEventListener('click',  () => { setStarter(true);  clearBoard(); });
+    startO.addEventListener('click',  () => { setStarter(false); clearBoard(); });
+    btnNewRound.addEventListener('click', newRound);
+    btnClear.addEventListener('click',    clearBoard);
+    btnReset.addEventListener('click',    hardReset);
+
+    // ── Keyboard navigation ──
+    cellGrid.addEventListener('keydown', (e) => {
+      const focus = document.activeElement;
+      const idx = focus && focus.dataset ? parseInt(focus.dataset.idx || '-1') : -1;
+      if (idx < 0) return;
+      const r = Math.floor(idx / 3), c = idx % 3;
+      const moveFocus = (rr, cc) => {
+        const next = cellGrid.querySelector('[data-idx="' + (rr * 3 + cc) + '"]');
+        if (next) next.focus();
+      };
+      if (e.key === 'ArrowRight') { e.preventDefault(); moveFocus(r, Math.min(2, c + 1)); }
+      if (e.key === 'ArrowLeft')  { e.preventDefault(); moveFocus(r, Math.max(0, c - 1)); }
+      if (e.key === 'ArrowDown')  { e.preventDefault(); moveFocus(Math.min(2, r + 1), c); }
+      if (e.key === 'ArrowUp')    { e.preventDefault(); moveFocus(Math.max(0, r - 1), c); }
+      if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); play(r, c); }
+    });
+
+    // ── Appearance ──
+    appearToggle.addEventListener('click', () => {
+      const open = appearBody.classList.toggle('open');
+      appearToggle.setAttribute('aria-expanded', open);
+    });
+
+    document.querySelectorAll('.preset-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const preset = btn.dataset.preset;
+        document.body.className = preset === 'default' ? '' : 'preset-' + preset;
+        document.querySelectorAll('.preset-btn').forEach(b => b.classList.remove('active-preset'));
+        btn.classList.add('active-preset');
+      });
+    });
+
+    // ── Init ──
+    addChronicle('The board is set. Let the game begin.', false);
+    clearBoard();
+    updateScores();
+
+  })();
+  </script>
+</body>
+</html>
