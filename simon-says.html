@@ -1,0 +1,1218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Simon Says · Rising Phoenix Games</title>
+  <link rel="stylesheet" href="shared.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700&family=Cinzel:wght@400;600;700;900&family=IM+Fell+English:ital@0;1&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; }
+    html, body { margin: 0; min-height: 100%; }
+
+    :root {
+      --pad-green: #3e8f45;
+      --pad-red: #a43a35;
+      --pad-gold: #c8952a;
+      --pad-blue: #356bb8;
+      --pad-green-bright: #83d38a;
+      --pad-red-bright: #ff8d82;
+      --pad-gold-bright: #ffe89c;
+      --pad-blue-bright: #8bbcff;
+    }
+
+    body {
+      font-family: var(--font-body);
+      color: var(--text);
+      background:
+        radial-gradient(ellipse 90% 55% at 15% 8%, rgba(90,48,12,0.55) 0%, transparent 58%),
+        radial-gradient(ellipse 70% 65% at 85% 90%, rgba(50,25,6,0.60) 0%, transparent 55%),
+        radial-gradient(ellipse 60% 40% at 50% 50%, rgba(30,18,5,0.40) 0%, transparent 70%),
+        linear-gradient(160deg, #1c1106 0%, #0f0c07 45%, #13100a 100%);
+      background-attachment: fixed;
+    }
+
+    #app {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      isolation: isolate;
+    }
+
+    .site-header {
+      padding: 0;
+      background: linear-gradient(180deg, #1e1508 0%, #120e06 100%);
+      border-bottom: 2px solid var(--gold);
+      box-shadow: 0 4px 24px rgba(0,0,0,0.7), 0 1px 0 rgba(200,149,42,0.15) inset;
+      position: relative;
+      overflow: hidden;
+      flex-shrink: 0;
+    }
+    .site-header::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: repeating-linear-gradient(
+        90deg,
+        transparent 0px,
+        transparent 48px,
+        rgba(200,149,42,0.04) 48px,
+        rgba(200,149,42,0.04) 49px
+      );
+      pointer-events: none;
+    }
+    .header-inner { position: relative; padding: 14px 20px 12px; }
+    .header-row { display: flex; align-items: center; margin-bottom: 6px; }
+
+    .rpg-back {
+      display: inline-block;
+      font-family: var(--font-ui);
+      font-size: 0.78rem;
+      letter-spacing: 0.08em;
+      color: var(--gold);
+      text-decoration: none;
+      padding: 0.55rem 1.1rem 0.55rem 2rem;
+      border: 1px solid rgba(200,149,42,0.25);
+      border-radius: 3px;
+      background: linear-gradient(180deg, #2a2010 0%, #1a1508 100%);
+      position: relative;
+      transition: border-color 0.2s, box-shadow 0.2s, color 0.2s;
+      margin: 0;
+      flex: 0 0 auto;
+      z-index: 2;
+    }
+    .rpg-back::before { content: '\2190'; position: absolute; left: 0.7rem; }
+    .rpg-back:hover {
+      border-color: var(--gold-light);
+      box-shadow: 0 0 18px 2px var(--gold-glow);
+      color: var(--gold-light);
+    }
+
+    .header-center {
+      flex: 1 1 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.85rem;
+      min-width: 0;
+    }
+    .header-spacer { visibility: hidden; pointer-events: none; }
+    .phoenix-mark {
+      width: 52px;
+      height: 52px;
+      object-fit: contain;
+      flex-shrink: 0;
+      filter: drop-shadow(0 0 10px rgba(200,149,42,0.5));
+    }
+    .title-block {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      min-width: 0;
+    }
+    .game-title {
+      margin: 0;
+      font-family: var(--font-display);
+      font-size: clamp(1.1rem, 3.7vw, 2rem);
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      line-height: 1.1;
+      background: linear-gradient(135deg, var(--gold-light) 0%, var(--gold) 40%, #a07020 80%, var(--gold-light) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .game-subtitle {
+      margin: 0.2rem 0 0;
+      font-style: italic;
+      color: #c8a878;
+      font-size: 0.82rem;
+      letter-spacing: 0.05em;
+    }
+
+    .main-wrap {
+      width: 100%;
+      max-width: 1120px;
+      margin: 0 auto;
+      padding: 22px 16px 36px;
+      display: grid;
+      grid-template-columns: minmax(320px, 1.15fr) minmax(280px, 0.85fr);
+      gap: 20px;
+      flex: 1;
+    }
+
+    .panel {
+      background: linear-gradient(160deg, var(--surface) 0%, var(--bg-warm) 100%);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      box-shadow: inset 0 0 30px rgba(0,0,0,0.35), 0 10px 34px rgba(0,0,0,0.45);
+      overflow: hidden;
+      position: relative;
+    }
+    .panel-header {
+      padding: 14px 16px 10px;
+      border-bottom: 1px solid rgba(200,149,42,0.14);
+      background: linear-gradient(180deg, rgba(255,255,255,0.03) 0%, rgba(255,255,255,0) 100%);
+    }
+    .panel-label {
+      font-family: var(--font-ui);
+      font-size: 0.7rem;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: var(--gold);
+      margin: 0 0 0.25rem;
+    }
+    .status-bar {
+      margin: 0;
+      min-height: 2.4rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      padding: 8px 16px 8px 28px;
+      background: rgba(0,0,0,0.32);
+      border: 1px solid rgba(200,149,42,0.18);
+      border-radius: 8px;
+      font-family: var(--font-ui);
+      font-size: 0.8rem;
+      letter-spacing: 0.08em;
+      color: var(--gold-light);
+      position: relative;
+      text-align: center;
+    }
+    .status-bar::before {
+      content: '⚜';
+      position: absolute;
+      left: 10px;
+      font-size: 10px;
+      color: var(--gold);
+      opacity: 0.7;
+    }
+
+    .board-panel {
+      display: flex;
+      flex-direction: column;
+      min-height: 700px;
+    }
+    .board-area {
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 20px;
+      flex: 1;
+      position: relative;
+    }
+
+    .memory-board {
+      width: min(100%, 620px);
+      aspect-ratio: 1 / 1;
+      position: relative;
+      border-radius: 50%;
+      padding: 16px;
+      background:
+        radial-gradient(circle at 50% 50%, rgba(72,42,10,0.28) 0%, rgba(18,11,4,0.95) 70%),
+        linear-gradient(160deg, #201407 0%, #100b04 100%);
+      border: 1px solid rgba(200,149,42,0.32);
+      box-shadow:
+        inset 0 1px 0 rgba(240,208,128,0.08),
+        inset 0 0 50px rgba(0,0,0,0.45),
+        0 0 0 1px rgba(0,0,0,0.55),
+        0 16px 40px rgba(0,0,0,0.45);
+      overflow: hidden;
+    }
+    .memory-board::before,
+    .memory-board::after {
+      content: '◆';
+      position: absolute;
+      color: rgba(200,149,42,0.32);
+      font-size: 11px;
+      line-height: 1;
+      z-index: 3;
+    }
+    .memory-board::before { top: 24px; left: 42px; }
+    .memory-board::after  { right: 42px; bottom: 24px; }
+
+    .pad-grid {
+      position: absolute;
+      inset: 16px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      grid-template-rows: 1fr 1fr;
+      gap: 12px;
+      border-radius: 50%;
+      overflow: hidden;
+    }
+
+    .pad {
+      border: 0;
+      cursor: pointer;
+      position: relative;
+      overflow: hidden;
+      transition: transform 0.12s ease, filter 0.18s ease, box-shadow 0.18s ease;
+      animation: breathe var(--breathe, 4.8s) ease-in-out infinite;
+      animation-delay: var(--delay, -1.2s);
+      box-shadow: inset 0 0 0 1px rgba(255,255,255,0.08), inset 0 -20px 32px rgba(0,0,0,0.25);
+      touch-action: manipulation;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .pad::before,
+    .pad::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+    }
+    .pad::before {
+      background: linear-gradient(135deg, rgba(255,255,255,0.14) 0%, transparent 34%, transparent 62%, rgba(255,255,255,0.05) 100%);
+      opacity: 0.7;
+    }
+    .pad::after {
+      width: 180%;
+      inset: -35% auto auto -65%;
+      transform: rotate(25deg);
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.18), transparent);
+      animation: shimmer var(--shimmer, 10.6s) linear infinite;
+      opacity: 0.15;
+    }
+    .pad:hover {
+      transform: translateY(-1px) scale(1.015);
+      box-shadow: inset 0 0 0 1px rgba(255,255,255,0.14), 0 0 18px rgba(200,149,42,0.12), inset 0 -16px 24px rgba(0,0,0,0.18);
+      filter: brightness(1.04);
+    }
+    .pad:active { transform: scale(0.985); }
+    .pad:focus-visible {
+      outline: 2px solid rgba(240,208,128,0.8);
+      outline-offset: -3px;
+    }
+
+    .pad.green { background: radial-gradient(circle at 32% 26%, rgba(255,255,255,0.16) 0%, rgba(255,255,255,0.05) 16%, transparent 32%), linear-gradient(160deg, #5cac64 0%, var(--pad-green) 48%, #264f2b 100%); border-top-left-radius: 100%; }
+    .pad.red   { background: radial-gradient(circle at 68% 26%, rgba(255,255,255,0.16) 0%, rgba(255,255,255,0.05) 16%, transparent 32%), linear-gradient(160deg, #cf635b 0%, var(--pad-red) 48%, #5c1c18 100%); border-top-right-radius: 100%; }
+    .pad.gold  { background: radial-gradient(circle at 32% 74%, rgba(255,255,255,0.16) 0%, rgba(255,255,255,0.05) 16%, transparent 32%), linear-gradient(160deg, #f2ca64 0%, var(--pad-gold) 48%, #7f5610 100%); border-bottom-left-radius: 100%; }
+    .pad.blue  { background: radial-gradient(circle at 68% 74%, rgba(255,255,255,0.16) 0%, rgba(255,255,255,0.05) 16%, transparent 32%), linear-gradient(160deg, #6599e4 0%, var(--pad-blue) 48%, #183b6c 100%); border-bottom-right-radius: 100%; }
+
+    .pad.active.green { background: radial-gradient(circle at 36% 30%, rgba(255,255,255,0.9) 0%, rgba(255,255,255,0.38) 16%, transparent 36%), linear-gradient(160deg, var(--pad-green-bright) 0%, #5fbf67 45%, #2c6a33 100%); box-shadow: 0 0 24px rgba(131,211,138,0.45), 0 0 64px rgba(131,211,138,0.20), inset 0 0 24px rgba(255,255,255,0.2); }
+    .pad.active.red   { background: radial-gradient(circle at 64% 30%, rgba(255,255,255,0.9) 0%, rgba(255,255,255,0.38) 16%, transparent 36%), linear-gradient(160deg, var(--pad-red-bright) 0%, #df5e57 45%, #70221d 100%); box-shadow: 0 0 24px rgba(255,141,130,0.45), 0 0 64px rgba(255,141,130,0.18), inset 0 0 24px rgba(255,255,255,0.2); }
+    .pad.active.gold  { background: radial-gradient(circle at 36% 70%, rgba(255,255,255,0.9) 0%, rgba(255,255,255,0.38) 16%, transparent 36%), linear-gradient(160deg, var(--pad-gold-bright) 0%, #ebbc42 45%, #8b6213 100%); box-shadow: 0 0 24px rgba(255,232,156,0.45), 0 0 64px rgba(255,232,156,0.18), inset 0 0 24px rgba(255,255,255,0.2); }
+    .pad.active.blue  { background: radial-gradient(circle at 64% 70%, rgba(255,255,255,0.9) 0%, rgba(255,255,255,0.38) 16%, transparent 36%), linear-gradient(160deg, var(--pad-blue-bright) 0%, #5d8de4 45%, #214b88 100%); box-shadow: 0 0 24px rgba(139,188,255,0.45), 0 0 64px rgba(139,188,255,0.20), inset 0 0 24px rgba(255,255,255,0.2); }
+
+    .board-center {
+      position: absolute;
+      inset: 50%;
+      width: 34%;
+      height: 34%;
+      transform: translate(-50%, -50%);
+      border-radius: 50%;
+      background:
+        radial-gradient(circle at 40% 32%, rgba(255,255,255,0.11) 0%, transparent 34%),
+        linear-gradient(160deg, #2a1a08 0%, #160e05 100%);
+      border: 2px solid rgba(200,149,42,0.34);
+      box-shadow: inset 0 0 30px rgba(0,0,0,0.45), 0 0 26px rgba(0,0,0,0.35), 0 0 0 6px rgba(0,0,0,0.18);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 0.25rem;
+      text-align: center;
+      z-index: 2;
+      padding: 0.5rem;
+    }
+    .center-brand {
+      font-family: var(--font-ui);
+      font-size: 0.58rem;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: #c8a878;
+      line-height: 1.2;
+    }
+    .round-display {
+      font-family: var(--font-display);
+      font-size: clamp(1.15rem, 4vw, 2rem);
+      line-height: 1;
+      color: var(--gold-light);
+      text-shadow: 0 0 12px rgba(200,149,42,0.18);
+    }
+    .center-hint {
+      font-family: var(--font-ui);
+      font-size: 0.58rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      line-height: 1.25;
+    }
+
+    .victory-banner {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      width: 82%;
+      max-width: 470px;
+      transform: translate(-50%, -50%) scale(0.12);
+      transform-origin: center center;
+      border-radius: 18px;
+      padding: 18px 22px;
+      background: linear-gradient(135deg, rgba(18,11,4,0.96) 0%, rgba(55,31,6,0.96) 45%, rgba(18,11,4,0.96) 100%);
+      border: 1px solid rgba(240,208,128,0.7);
+      box-shadow: 0 0 28px rgba(240,208,128,0.2), 0 0 70px rgba(200,149,42,0.14), inset 0 1px 0 rgba(255,255,255,0.08);
+      text-align: center;
+      z-index: 5;
+      opacity: 0;
+      pointer-events: none;
+    }
+    .victory-banner.show {
+      animation: victoryGrow 1.75s ease forwards;
+    }
+    .victory-title {
+      font-family: var(--font-display);
+      font-size: clamp(1rem, 2.8vw, 1.65rem);
+      letter-spacing: 0.05em;
+      background: linear-gradient(135deg, var(--gold-light) 0%, #fff3bf 50%, var(--gold) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin: 0 0 0.35rem;
+      line-height: 1.1;
+    }
+    .victory-copy {
+      margin: 0;
+      color: #ebdbb8;
+      font-size: 0.95rem;
+      line-height: 1.35;
+    }
+
+    .controls-panel { display: flex; flex-direction: column; }
+    .controls-body {
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      flex: 1;
+    }
+    .control-group {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      padding-bottom: 14px;
+      border-bottom: 1px solid rgba(200,149,42,0.12);
+    }
+    .control-group:last-of-type {
+      border-bottom: none;
+      padding-bottom: 0;
+    }
+    .group-title {
+      font-family: var(--font-ui);
+      font-size: 0.68rem;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--gold);
+      margin: 0;
+    }
+    .group-copy {
+      margin: 0;
+      color: #c8a878;
+      line-height: 1.45;
+      font-size: 0.95rem;
+    }
+    .segmented {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    .segmented button,
+    .action-btn {
+      appearance: none;
+      border: 1px solid rgba(200,149,42,0.34);
+      border-radius: 999px;
+      background: linear-gradient(180deg, #2a2010 0%, #1a1508 100%);
+      color: var(--gold-light);
+      font-family: var(--font-ui);
+      font-size: 0.72rem;
+      letter-spacing: 0.11em;
+      text-transform: uppercase;
+      padding: 10px 14px;
+      cursor: pointer;
+      transition: transform 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease, color 0.15s ease, background 0.15s ease;
+    }
+    .segmented button:hover,
+    .action-btn:hover {
+      transform: translateY(-1px);
+      border-color: rgba(240,208,128,0.75);
+      box-shadow: 0 0 18px 2px rgba(200,149,42,0.18), 0 0 42px 6px rgba(180,120,20,0.08);
+      color: #fff1b8;
+    }
+    .segmented button.active {
+      background: linear-gradient(180deg, rgba(200,149,42,0.24) 0%, rgba(85,56,14,0.42) 100%);
+      border-color: rgba(240,208,128,0.72);
+      box-shadow: 0 0 18px rgba(200,149,42,0.16);
+    }
+    .button-stack {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+    .action-btn.full { grid-column: 1 / -1; }
+    .action-btn.sage {
+      border-color: rgba(122,170,90,0.4);
+      color: #cfe8bb;
+    }
+    .action-btn.sage:hover { box-shadow: 0 0 18px rgba(122,170,90,0.14), 0 0 40px rgba(122,170,90,0.08); }
+
+    .toggle-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 10px 12px;
+      border: 1px solid rgba(200,149,42,0.14);
+      border-radius: 10px;
+      background: rgba(0,0,0,0.18);
+    }
+    .toggle-copy strong {
+      display: block;
+      font-family: var(--font-ui);
+      color: var(--gold-light);
+      font-size: 0.72rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      margin-bottom: 0.22rem;
+    }
+    .toggle-copy span {
+      display: block;
+      color: #c8a878;
+      font-size: 0.9rem;
+      line-height: 1.35;
+    }
+    .toggle {
+      position: relative;
+      width: 56px;
+      height: 30px;
+      flex: 0 0 auto;
+    }
+    .toggle input {
+      position: absolute;
+      inset: 0;
+      opacity: 0;
+      cursor: pointer;
+    }
+    .toggle-ui {
+      position: absolute;
+      inset: 0;
+      border-radius: 999px;
+      background: linear-gradient(180deg, #31230e 0%, #1b1408 100%);
+      border: 1px solid rgba(200,149,42,0.28);
+      transition: background 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease;
+    }
+    .toggle-ui::after {
+      content: '';
+      position: absolute;
+      top: 3px;
+      left: 3px;
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      background: linear-gradient(180deg, #f0d080 0%, #c8952a 100%);
+      box-shadow: 0 2px 8px rgba(0,0,0,0.35);
+      transition: transform 0.18s ease;
+    }
+    .toggle input:checked + .toggle-ui {
+      background: linear-gradient(180deg, rgba(122,170,90,0.35) 0%, rgba(28,58,20,0.8) 100%);
+      border-color: rgba(122,170,90,0.58);
+      box-shadow: 0 0 18px rgba(122,170,90,0.12);
+    }
+    .toggle input:checked + .toggle-ui::after {
+      transform: translateX(26px);
+    }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 10px;
+    }
+    .stat-card {
+      padding: 12px 12px 10px;
+      border: 1px solid rgba(200,149,42,0.16);
+      border-radius: 10px;
+      background: rgba(0,0,0,0.22);
+    }
+    .stat-label {
+      display: block;
+      font-family: var(--font-ui);
+      font-size: 0.58rem;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      margin-bottom: 0.35rem;
+    }
+    .stat-value {
+      display: block;
+      font-family: var(--font-display);
+      font-size: 1.15rem;
+      color: var(--gold-light);
+      line-height: 1.1;
+    }
+
+    .legend-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 8px;
+    }
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 10px;
+      border-radius: 10px;
+      background: rgba(0,0,0,0.18);
+      border: 1px solid rgba(200,149,42,0.12);
+      color: #d6c39b;
+      font-size: 0.92rem;
+    }
+    .legend-swatch {
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      flex: 0 0 auto;
+      box-shadow: 0 0 10px rgba(255,255,255,0.08);
+    }
+
+    .chronicle {
+      max-height: 180px;
+      overflow: auto;
+      padding-right: 4px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .chronicle::-webkit-scrollbar { width: 6px; }
+    .chronicle::-webkit-scrollbar-thumb { background: rgba(200,149,42,0.32); border-radius: 999px; }
+    .chronicle-entry {
+      padding: 9px 10px;
+      border-radius: 10px;
+      background: rgba(0,0,0,0.22);
+      border: 1px solid rgba(200,149,42,0.12);
+      color: #d6c39b;
+      line-height: 1.35;
+      font-size: 0.9rem;
+    }
+
+    .confetti-layer {
+      position: fixed;
+      inset: 0;
+      overflow: hidden;
+      pointer-events: none;
+      z-index: 20;
+    }
+    .confetti {
+      position: absolute;
+      width: 10px;
+      height: 14px;
+      opacity: 0.95;
+      transform-origin: center;
+      animation: confettiFall linear forwards;
+      will-change: transform, opacity;
+    }
+
+    .rpg-footer {
+      margin-top: auto;
+      padding: 12px 20px 18px;
+      border-top: 1px solid rgba(200,149,42,0.12);
+      text-align: center;
+      color: rgba(200,170,100,0.55);
+      font-style: italic;
+      font-size: 0.82rem;
+    }
+
+    @keyframes breathe {
+      0%, 100% { transform: translateY(0) scale(1); }
+      50% { transform: translateY(-1px) scale(1.012); }
+    }
+    @keyframes shimmer {
+      0% { transform: translateX(-8%) rotate(25deg); }
+      100% { transform: translateX(118%) rotate(25deg); }
+    }
+    @keyframes victoryGrow {
+      0% { opacity: 0; transform: translate(-50%, -50%) scale(0.12); }
+      42.857% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+      100% { opacity: 0; transform: translate(-50%, -50%) scale(1); }
+    }
+    @keyframes confettiFall {
+      0% { transform: translate3d(0, 0, 0) rotate(0deg) scale(1); opacity: 1; }
+      100% { transform: translate3d(var(--dx), var(--dy), 0) rotate(var(--rot)) scale(0.7); opacity: 0; }
+    }
+
+    @media (max-width: 920px) {
+      .main-wrap { grid-template-columns: 1fr; }
+      .board-panel { min-height: auto; }
+    }
+    @media (max-width: 640px) {
+      .header-row {
+        display: grid;
+        grid-template-columns: auto 1fr auto;
+        gap: 8px;
+        align-items: center;
+      }
+      .header-center { gap: 0.55rem; }
+      .phoenix-mark { width: 46px; height: 46px; }
+      .rpg-back { padding: 0.5rem 0.8rem 0.5rem 1.7rem; font-size: 0.72rem; }
+      .board-area { padding: 14px; }
+      .memory-board { width: min(100%, 520px); }
+      .board-center { width: 39%; height: 39%; }
+      .button-stack { grid-template-columns: 1fr; }
+      .stats-grid, .legend-grid { grid-template-columns: 1fr 1fr; }
+      .victory-banner { width: 88%; padding: 16px 18px; }
+    }
+  </style>
+</head>
+<body>
+  <div id="app">
+    <header class="site-header">
+      <div class="header-inner">
+        <div class="header-row">
+          <a href="index.html" class="rpg-back">Hub</a>
+          <div class="header-center">
+            <img class="phoenix-mark" src="RPG Favicon no background copy.png" alt="Rising Phoenix Games logo">
+            <div class="title-block">
+              <h1 class="game-title">Simon Says</h1>
+              <p class="game-subtitle">Attend the glowing sigils and echo the phoenix's cadence</p>
+            </div>
+          </div>
+          <a href="index.html" class="rpg-back header-spacer" aria-hidden="true">Hub</a>
+        </div>
+      </div>
+    </header>
+
+    <main class="main-wrap">
+      <section class="panel board-panel" aria-labelledby="board-title">
+        <div class="panel-header">
+          <div class="panel-label" id="board-title">Memory Board</div>
+          <div class="status-bar" id="statusBar">Select a difficulty, then begin the sequence.</div>
+        </div>
+        <div class="board-area">
+          <div class="memory-board" id="memoryBoard">
+            <div class="pad-grid" aria-label="Simon Says pads">
+              <button class="pad green" data-pad="0" aria-label="Green pad"></button>
+              <button class="pad red" data-pad="1" aria-label="Red pad"></button>
+              <button class="pad gold" data-pad="2" aria-label="Gold pad"></button>
+              <button class="pad blue" data-pad="3" aria-label="Blue pad"></button>
+            </div>
+
+            <div class="board-center" aria-hidden="true">
+              <div class="center-brand">Rising Phoenix</div>
+              <div class="round-display" id="roundDisplay">0</div>
+              <div class="center-hint" id="centerHint">Awaiting<br>invocation</div>
+            </div>
+
+            <div class="victory-banner" id="victoryBanner" aria-hidden="true">
+              <h2 class="victory-title">Phoenix Memory Mastered</h2>
+              <p class="victory-copy" id="victoryCopy">The full sequence has been restored to flame and gold.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <aside class="panel controls-panel" aria-labelledby="controls-title">
+        <div class="panel-header">
+          <div class="panel-label" id="controls-title">Game Controls</div>
+          <div class="status-bar" id="turnBar">Idle</div>
+        </div>
+        <div class="controls-body">
+          <section class="control-group">
+            <h3 class="group-title">Difficulty</h3>
+            <p class="group-copy">Each mode sets the victory length. Harder modes require a longer flawless recitation.</p>
+            <div class="segmented" id="difficultyButtons">
+              <button class="active" data-mode="novice">Novice</button>
+              <button data-mode="adept">Adept</button>
+              <button data-mode="master">Master</button>
+            </div>
+          </section>
+
+          <section class="control-group">
+            <h3 class="group-title">Commands</h3>
+            <div class="button-stack">
+              <button class="action-btn sage" id="startBtn">Start Rite</button>
+              <button class="action-btn" id="replayBtn">Replay Sequence</button>
+              <button class="action-btn full" id="resetBtn">Reset Game</button>
+            </div>
+          </section>
+
+          <section class="control-group">
+            <h3 class="group-title">Rules</h3>
+            <div class="toggle-row">
+              <div class="toggle-copy">
+                <strong>Strict Mode</strong>
+                <span>One mistake ends the rite immediately.</span>
+              </div>
+              <label class="toggle" aria-label="Toggle strict mode">
+                <input type="checkbox" id="strictToggle">
+                <span class="toggle-ui"></span>
+              </label>
+            </div>
+          </section>
+
+          <section class="control-group">
+            <h3 class="group-title">Score</h3>
+            <div class="stats-grid">
+              <div class="stat-card"><span class="stat-label">Current Round</span><span class="stat-value" id="statRound">0</span></div>
+              <div class="stat-card"><span class="stat-label">Target Length</span><span class="stat-value" id="statTarget">8</span></div>
+              <div class="stat-card"><span class="stat-label">Input Step</span><span class="stat-value" id="statStep">0</span></div>
+              <div class="stat-card"><span class="stat-label">Best Run</span><span class="stat-value" id="statBest">0</span></div>
+            </div>
+          </section>
+
+          <section class="control-group">
+            <h3 class="group-title">Key Bindings</h3>
+            <div class="legend-grid">
+              <div class="legend-item"><span class="legend-swatch" style="background:var(--pad-green);"></span>1 / Q / ↑</div>
+              <div class="legend-item"><span class="legend-swatch" style="background:var(--pad-red);"></span>2 / W / →</div>
+              <div class="legend-item"><span class="legend-swatch" style="background:var(--pad-gold);"></span>3 / A / ↓</div>
+              <div class="legend-item"><span class="legend-swatch" style="background:var(--pad-blue);"></span>4 / S / ←</div>
+            </div>
+          </section>
+
+          <section class="control-group">
+            <h3 class="group-title">Chronicle</h3>
+            <div class="chronicle" id="chronicle"></div>
+          </section>
+        </div>
+      </aside>
+    </main>
+
+    <div class="confetti-layer" id="confettiLayer" aria-hidden="true"></div>
+
+    <footer class="rpg-footer">
+      © <span id="year"></span> Rising Phoenix Gallery · Michigan City, IN · Crafted by John Ryszka II
+    </footer>
+  </div>
+
+  <script>
+    const yearEl = document.getElementById('year');
+    yearEl.textContent = new Date().getFullYear();
+
+    const MODE_CONFIG = {
+      novice: { label: 'Novice', target: 8, speed: 560 },
+      adept:  { label: 'Adept',  target: 12, speed: 480 },
+      master: { label: 'Master', target: 20, speed: 420 }
+    };
+
+    const PAD_NAMES = ['Green', 'Red', 'Gold', 'Blue'];
+    const PAD_CLASSES = ['green', 'red', 'gold', 'blue'];
+    const PAD_FREQS = [329.63, 392.0, 261.63, 523.25];
+
+    const pads = [...document.querySelectorAll('.pad')];
+    const statusBar = document.getElementById('statusBar');
+    const turnBar = document.getElementById('turnBar');
+    const startBtn = document.getElementById('startBtn');
+    const replayBtn = document.getElementById('replayBtn');
+    const resetBtn = document.getElementById('resetBtn');
+    const strictToggle = document.getElementById('strictToggle');
+    const roundDisplay = document.getElementById('roundDisplay');
+    const centerHint = document.getElementById('centerHint');
+    const chronicle = document.getElementById('chronicle');
+    const victoryBanner = document.getElementById('victoryBanner');
+    const victoryCopy = document.getElementById('victoryCopy');
+    const confettiLayer = document.getElementById('confettiLayer');
+    const statRound = document.getElementById('statRound');
+    const statTarget = document.getElementById('statTarget');
+    const statStep = document.getElementById('statStep');
+    const statBest = document.getElementById('statBest');
+    const difficultyButtons = [...document.querySelectorAll('#difficultyButtons button')];
+
+    let audioCtx = null;
+    let mode = 'novice';
+    let sequence = [];
+    let inputIndex = 0;
+    let round = 0;
+    let bestRun = 0;
+    let strict = false;
+    let acceptingInput = false;
+    let showingSequence = false;
+    let gameStarted = false;
+    let locked = false;
+
+    function rand(min, max) {
+      return Math.random() * (max - min) + min;
+    }
+
+    function initPadAnimations() {
+      pads.forEach((pad) => {
+        pad.style.setProperty('--breathe', `${rand(3.9, 5.7).toFixed(2)}s`);
+        pad.style.setProperty('--delay', `${(-rand(0.1, 4.8)).toFixed(2)}s`);
+        pad.style.setProperty('--shimmer', `${rand(8.2, 14.6).toFixed(2)}s`);
+      });
+    }
+
+    function ensureAudio() {
+      if (!audioCtx) {
+        const Ctx = window.AudioContext || window.webkitAudioContext;
+        if (Ctx) audioCtx = new Ctx();
+      }
+      if (audioCtx && audioCtx.state === 'suspended') {
+        audioCtx.resume();
+      }
+    }
+
+    function toneForPad(index, duration = 0.24) {
+      ensureAudio();
+      if (!audioCtx) return;
+      const now = audioCtx.currentTime;
+      const oscillator = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      oscillator.type = 'sine';
+      oscillator.frequency.setValueAtTime(PAD_FREQS[index], now);
+      gain.gain.setValueAtTime(0.0001, now);
+      gain.gain.exponentialRampToValueAtTime(0.14, now + 0.02);
+      gain.gain.exponentialRampToValueAtTime(0.0001, now + duration);
+      oscillator.connect(gain);
+      gain.connect(audioCtx.destination);
+      oscillator.start(now);
+      oscillator.stop(now + duration + 0.02);
+    }
+
+    function errorTone() {
+      ensureAudio();
+      if (!audioCtx) return;
+      const now = audioCtx.currentTime;
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.type = 'sawtooth';
+      osc.frequency.setValueAtTime(180, now);
+      osc.frequency.exponentialRampToValueAtTime(90, now + 0.25);
+      gain.gain.setValueAtTime(0.0001, now);
+      gain.gain.exponentialRampToValueAtTime(0.12, now + 0.02);
+      gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.30);
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+      osc.start(now);
+      osc.stop(now + 0.32);
+    }
+
+    function victoryChord() {
+      ensureAudio();
+      if (!audioCtx) return;
+      const freqs = [261.63, 329.63, 392.0, 523.25];
+      const now = audioCtx.currentTime;
+      freqs.forEach((freq, i) => {
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(freq, now);
+        gain.gain.setValueAtTime(0.0001, now + i * 0.02);
+        gain.gain.exponentialRampToValueAtTime(0.07, now + i * 0.02 + 0.02);
+        gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.62 + i * 0.02);
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start(now + i * 0.02);
+        osc.stop(now + 0.68 + i * 0.02);
+      });
+    }
+
+    function setStatus(text) {
+      statusBar.textContent = text;
+    }
+
+    function setTurn(text) {
+      turnBar.textContent = text;
+    }
+
+    function updateStats() {
+      statRound.textContent = String(round);
+      statTarget.textContent = String(MODE_CONFIG[mode].target);
+      statStep.textContent = String(inputIndex);
+      statBest.textContent = String(bestRun);
+      roundDisplay.textContent = String(round);
+    }
+
+    function setCenterHint(text) {
+      centerHint.innerHTML = text;
+    }
+
+    function addChronicle(text) {
+      const entry = document.createElement('div');
+      entry.className = 'chronicle-entry';
+      entry.textContent = text;
+      chronicle.prepend(entry);
+    }
+
+    function sleep(ms) {
+      return new Promise(resolve => setTimeout(resolve, ms));
+    }
+
+    function activatePad(index, duration = 320, withTone = true) {
+      const pad = pads[index];
+      if (!pad) return Promise.resolve();
+      if (withTone) toneForPad(index, Math.max(0.16, duration / 1000 * 0.85));
+      pad.classList.add('active');
+      return new Promise(resolve => {
+        setTimeout(() => {
+          pad.classList.remove('active');
+          resolve();
+        }, duration);
+      });
+    }
+
+    function chooseNextPad() {
+      return Math.floor(Math.random() * 4);
+    }
+
+    async function startGame() {
+      if (locked || showingSequence) return;
+      ensureAudio();
+      gameStarted = true;
+      sequence = [];
+      inputIndex = 0;
+      round = 0;
+      bestRun = Math.max(bestRun, 0);
+      victoryBanner.classList.remove('show');
+      chronicle.innerHTML = '';
+      addChronicle(`The rite begins in ${MODE_CONFIG[mode].label} mode. Strict mode is ${strict ? 'active' : 'inactive'}.`);
+      await nextRound();
+    }
+
+    async function nextRound() {
+      acceptingInput = false;
+      showingSequence = false;
+      inputIndex = 0;
+      round += 1;
+      sequence.push(chooseNextPad());
+      bestRun = Math.max(bestRun, round - 1);
+      updateStats();
+      setCenterHint('Observe the<br>sequence');
+      setStatus(`Round ${round} of ${MODE_CONFIG[mode].target}. Watch closely.`);
+      setTurn('Phoenix speaks');
+      addChronicle(`Round ${round}: the sequence length grows to ${sequence.length}.`);
+      await sleep(520);
+      await playSequence();
+    }
+
+    async function playSequence() {
+      if (!gameStarted) return;
+      showingSequence = true;
+      locked = true;
+      const speed = MODE_CONFIG[mode].speed;
+      for (let i = 0; i < sequence.length; i += 1) {
+        const padIndex = sequence[i];
+        await activatePad(padIndex, Math.max(240, speed), true);
+        await sleep(Math.max(120, speed * 0.34));
+      }
+      locked = false;
+      showingSequence = false;
+      acceptingInput = true;
+      inputIndex = 0;
+      updateStats();
+      setCenterHint('Repeat the<br>cadence');
+      setStatus(`Repeat ${sequence.length} sigils in order.`);
+      setTurn('Your turn');
+    }
+
+    async function replaySequence() {
+      if (!gameStarted || showingSequence || locked) return;
+      acceptingInput = false;
+      inputIndex = 0;
+      updateStats();
+      setStatus('The phoenix repeats the cadence.');
+      setCenterHint('Observe the<br>sequence');
+      setTurn('Phoenix repeats');
+      await sleep(180);
+      await playSequence();
+    }
+
+    async function handleInput(index) {
+      if (!gameStarted || !acceptingInput || showingSequence || locked) return;
+      await activatePad(index, 220, true);
+      const expected = sequence[inputIndex];
+      if (index !== expected) {
+        await handleMistake(index, expected);
+        return;
+      }
+
+      inputIndex += 1;
+      updateStats();
+      setStatus(`Correct. ${sequence.length - inputIndex} remaining in this round.`);
+
+      if (inputIndex >= sequence.length) {
+        acceptingInput = false;
+        bestRun = Math.max(bestRun, round);
+        updateStats();
+        if (round >= MODE_CONFIG[mode].target) {
+          await handleVictory();
+        } else {
+          setStatus(`Round ${round} completed. The sequence will lengthen.`);
+          setTurn('Round complete');
+          addChronicle(`Round ${round} was completed without error.`);
+          setCenterHint('Cadence<br>sealed');
+          await sleep(820);
+          await nextRound();
+        }
+      }
+    }
+
+    async function handleMistake(actual, expected) {
+      acceptingInput = false;
+      locked = true;
+      errorTone();
+      const actualName = PAD_NAMES[actual];
+      const expectedName = PAD_NAMES[expected];
+      addChronicle(`A fault occurred: ${actualName} was struck when ${expectedName} was required.`);
+      if (strict) {
+        setStatus(`Incorrect. Strict mode ends the rite immediately.`);
+        setTurn('Rite broken');
+        setCenterHint('Strict mode<br>failed');
+        bestRun = Math.max(bestRun, round - 1);
+        updateStats();
+        gameStarted = false;
+        sequence = [];
+        round = 0;
+        inputIndex = 0;
+        await sleep(700);
+      } else {
+        setStatus(`Incorrect. The phoenix will replay the full cadence.`);
+        setTurn('Phoenix restores');
+        setCenterHint('Memory faltered<br>observe again');
+        inputIndex = 0;
+        updateStats();
+        await sleep(900);
+        locked = false;
+        await replaySequence();
+        return;
+      }
+      locked = false;
+      updateStats();
+    }
+
+    async function handleVictory() {
+      acceptingInput = false;
+      locked = true;
+      gameStarted = false;
+      bestRun = Math.max(bestRun, round);
+      updateStats();
+      setStatus(`Victory. The full ${round}-step litany has been restored.`);
+      setTurn('Triumph');
+      setCenterHint('Phoenix<br>ascendant');
+      addChronicle(`Victory achieved in ${MODE_CONFIG[mode].label} mode at sequence length ${round}.`);
+      victoryCopy.textContent = `You completed all ${round} steps of the ${MODE_CONFIG[mode].label.toLowerCase()} rite without losing the sequence.`;
+      fireConfettiBursts();
+      victoryChord();
+      victoryBanner.classList.remove('show');
+      void victoryBanner.offsetWidth;
+      victoryBanner.classList.add('show');
+      await sleep(1850);
+      locked = false;
+    }
+
+    function resetGame() {
+      gameStarted = false;
+      acceptingInput = false;
+      showingSequence = false;
+      locked = false;
+      sequence = [];
+      inputIndex = 0;
+      round = 0;
+      victoryBanner.classList.remove('show');
+      setStatus('Select a difficulty, then begin the sequence.');
+      setTurn('Idle');
+      setCenterHint('Awaiting<br>invocation');
+      addChronicle('The board has been reset.');
+      updateStats();
+    }
+
+    function setMode(nextMode) {
+      mode = nextMode;
+      difficultyButtons.forEach(btn => btn.classList.toggle('active', btn.dataset.mode === nextMode));
+      statTarget.textContent = String(MODE_CONFIG[mode].target);
+      addChronicle(`Difficulty set to ${MODE_CONFIG[mode].label}. Victory requires ${MODE_CONFIG[mode].target} steps.`);
+      if (!gameStarted) {
+        setStatus(`${MODE_CONFIG[mode].label} mode selected. Begin when ready.`);
+      }
+    }
+
+    function fireConfettiBursts() {
+      const colors = ['#f0d080', '#c8952a', '#ff8d82', '#83d38a', '#8bbcff', '#ffffff'];
+      const bursts = [0.12, 0.24, 0.38, 0.5, 0.62, 0.76, 0.88];
+      bursts.forEach((x, burstIndex) => {
+        setTimeout(() => {
+          const y = 0.18 + (burstIndex % 2) * 0.10;
+          for (let i = 0; i < 28; i += 1) {
+            const piece = document.createElement('div');
+            piece.className = 'confetti';
+            const sizeW = rand(7, 12);
+            const sizeH = rand(10, 18);
+            piece.style.width = `${sizeW}px`;
+            piece.style.height = `${sizeH}px`;
+            piece.style.left = `${x * window.innerWidth}px`;
+            piece.style.top = `${y * window.innerHeight}px`;
+            piece.style.background = colors[Math.floor(Math.random() * colors.length)];
+            piece.style.borderRadius = Math.random() > 0.45 ? '2px' : '999px';
+            piece.style.setProperty('--dx', `${rand(-190, 190)}px`);
+            piece.style.setProperty('--dy', `${rand(220, 430)}px`);
+            piece.style.setProperty('--rot', `${rand(280, 980)}deg`);
+            piece.style.animationDuration = `${rand(1.3, 2.3)}s`;
+            piece.style.animationDelay = `${rand(0, 0.08)}s`;
+            confettiLayer.appendChild(piece);
+            setTimeout(() => piece.remove(), 2500);
+          }
+        }, burstIndex * 110);
+      });
+    }
+
+    pads.forEach((pad) => {
+      pad.addEventListener('pointerdown', (event) => {
+        event.preventDefault();
+        const index = Number(pad.dataset.pad);
+        handleInput(index);
+      });
+    });
+
+    difficultyButtons.forEach((button) => {
+      button.addEventListener('click', () => setMode(button.dataset.mode));
+    });
+
+    startBtn.addEventListener('click', startGame);
+    replayBtn.addEventListener('click', replaySequence);
+    resetBtn.addEventListener('click', resetGame);
+    strictToggle.addEventListener('change', () => {
+      strict = strictToggle.checked;
+      addChronicle(`Strict mode ${strict ? 'enabled' : 'disabled'}.`);
+    });
+
+    window.addEventListener('keydown', (event) => {
+      if (event.repeat) return;
+      const key = event.key.toLowerCase();
+      const mapping = {
+        '1': 0, 'q': 0, 'arrowup': 0,
+        '2': 1, 'w': 1, 'arrowright': 1,
+        '3': 2, 'a': 2, 'arrowdown': 2,
+        '4': 3, 's': 3, 'arrowleft': 3
+      };
+      if (key === ' ') {
+        event.preventDefault();
+        if (!gameStarted) startGame();
+        else replaySequence();
+        return;
+      }
+      if (key === 'enter') {
+        event.preventDefault();
+        if (!gameStarted) startGame();
+        return;
+      }
+      if (key === 'r') {
+        event.preventDefault();
+        resetGame();
+        return;
+      }
+      if (Object.prototype.hasOwnProperty.call(mapping, key)) {
+        event.preventDefault();
+        handleInput(mapping[key]);
+      }
+    });
+
+    initPadAnimations();
+    updateStats();
+    addChronicle('The Simon Says board awaits a new memory rite.');
+  </script>
+</body>
+</html>
