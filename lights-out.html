@@ -1,0 +1,1089 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Lights Out · Rising Phoenix Games</title>
+  <link rel="stylesheet" href="shared.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700&family=Cinzel:wght@400;600;700;900&family=IM+Fell+English:ital@0;1&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; }
+    html, body { margin: 0; min-height: 100%; }
+
+    body {
+      font-family: var(--font-body);
+      color: var(--text);
+      background:
+        radial-gradient(ellipse 90% 55% at 15% 8%, rgba(90,48,12,0.55) 0%, transparent 58%),
+        radial-gradient(ellipse 70% 65% at 85% 90%, rgba(50,25,6,0.60) 0%, transparent 55%),
+        radial-gradient(ellipse 60% 40% at 50% 50%, rgba(30,18,5,0.40) 0%, transparent 70%),
+        linear-gradient(160deg, #1c1106 0%, #0f0c07 45%, #13100a 100%);
+      background-attachment: fixed;
+    }
+
+    #app {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      z-index: 1;
+    }
+
+    .site-header {
+      padding: 0;
+      background: linear-gradient(180deg, #1e1508 0%, #120e06 100%);
+      border-bottom: 2px solid var(--gold);
+      box-shadow: 0 4px 24px rgba(0,0,0,0.7), 0 1px 0 rgba(200,149,42,0.15) inset;
+      position: relative;
+      overflow: hidden;
+      flex-shrink: 0;
+    }
+    .site-header::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: repeating-linear-gradient(
+        90deg,
+        transparent 0px,
+        transparent 48px,
+        rgba(200,149,42,0.04) 48px,
+        rgba(200,149,42,0.04) 49px
+      );
+      pointer-events: none;
+    }
+
+    .header-inner {
+      position: relative;
+      padding: 14px 20px 12px;
+    }
+
+    .header-row {
+      display: flex;
+      align-items: center;
+      margin-bottom: 6px;
+    }
+
+    .rpg-back {
+      display: inline-block;
+      font-family: var(--font-ui);
+      font-size: 0.78rem;
+      letter-spacing: 0.08em;
+      color: var(--gold);
+      text-decoration: none;
+      padding: 0.55rem 1.1rem 0.55rem 2rem;
+      border: 1px solid rgba(200,149,42,0.25);
+      border-radius: 3px;
+      background: linear-gradient(180deg, #2a2010 0%, #1a1508 100%);
+      position: relative;
+      transition: border-color 0.2s, box-shadow 0.2s, color 0.2s;
+      margin: 0;
+      flex: 0 0 auto;
+      z-index: 2;
+    }
+    .rpg-back::before {
+      content: '\2190';
+      position: absolute;
+      left: 0.7rem;
+    }
+    .rpg-back:hover {
+      border-color: var(--gold-light);
+      box-shadow: 0 0 18px 2px var(--gold-glow);
+      color: var(--gold-light);
+    }
+
+    .header-center {
+      flex: 1 1 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.85rem;
+      min-width: 0;
+    }
+
+    .header-spacer {
+      visibility: hidden;
+      pointer-events: none;
+    }
+
+    .phoenix-mark {
+      width: 52px;
+      height: 52px;
+      object-fit: contain;
+      flex-shrink: 0;
+      filter: drop-shadow(0 0 10px rgba(200,149,42,0.5));
+    }
+
+    .title-block {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      min-width: 0;
+    }
+
+    .game-title {
+      margin: 0;
+      font-family: var(--font-display);
+      font-size: clamp(1.15rem, 3.8vw, 2rem);
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      line-height: 1.1;
+      background: linear-gradient(135deg, var(--gold-light) 0%, var(--gold) 40%, #a07020 80%, var(--gold-light) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .game-subtitle {
+      margin: 0.2rem 0 0;
+      font-style: italic;
+      color: #c8a878;
+      font-size: 0.82rem;
+      letter-spacing: 0.06em;
+    }
+
+    .main-wrap {
+      width: 100%;
+      max-width: 1080px;
+      margin: 0 auto;
+      padding: 22px 16px 36px;
+      display: grid;
+      grid-template-columns: minmax(300px, 1.2fr) minmax(260px, 0.8fr);
+      gap: 20px;
+      flex: 1;
+    }
+
+    .panel {
+      background: linear-gradient(160deg, var(--surface) 0%, var(--bg-warm) 100%);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      box-shadow: inset 0 0 30px rgba(0,0,0,0.35), 0 10px 34px rgba(0,0,0,0.45);
+      overflow: hidden;
+      position: relative;
+    }
+
+    .panel-header {
+      padding: 14px 16px 10px;
+      border-bottom: 1px solid rgba(200,149,42,0.14);
+      background: linear-gradient(180deg, rgba(255,255,255,0.03) 0%, rgba(255,255,255,0) 100%);
+    }
+
+    .panel-label {
+      font-family: var(--font-ui);
+      font-size: 0.7rem;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: var(--gold);
+      margin: 0 0 0.2rem;
+    }
+
+    .status-bar {
+      margin: 0;
+      min-height: 2.3rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      padding: 8px 16px 8px 28px;
+      background: rgba(0,0,0,0.32);
+      border: 1px solid rgba(200,149,42,0.18);
+      border-radius: 8px;
+      font-family: var(--font-ui);
+      font-size: 0.8rem;
+      letter-spacing: 0.08em;
+      color: var(--gold-light);
+      position: relative;
+      text-align: center;
+    }
+    .status-bar::before {
+      content: '⚜';
+      position: absolute;
+      left: 10px;
+      font-size: 10px;
+      color: var(--gold);
+      opacity: 0.7;
+    }
+
+    .board-panel {
+      display: flex;
+      flex-direction: column;
+      min-height: 560px;
+    }
+
+    .board-area {
+      padding: 18px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 18px;
+      flex: 1;
+    }
+
+    .board-frame {
+      width: min(100%, 620px);
+      aspect-ratio: 1 / 1;
+      padding: 16px;
+      border-radius: 18px;
+      background:
+        radial-gradient(circle at 50% 45%, rgba(70,40,10,0.28) 0%, rgba(20,12,4,0.96) 70%),
+        linear-gradient(160deg, #201407 0%, #100b04 100%);
+      border: 1px solid rgba(200,149,42,0.3);
+      box-shadow:
+        inset 0 1px 0 rgba(240,208,128,0.08),
+        inset 0 0 40px rgba(0,0,0,0.45),
+        0 0 0 1px rgba(0,0,0,0.55),
+        0 16px 40px rgba(0,0,0,0.45);
+      position: relative;
+    }
+
+    .board-frame::before,
+    .board-frame::after {
+      content: '◆';
+      position: absolute;
+      color: rgba(200,149,42,0.35);
+      font-size: 11px;
+      line-height: 1;
+    }
+    .board-frame::before { top: 8px; left: 10px; }
+    .board-frame::after  { right: 10px; bottom: 8px; }
+
+    .board {
+      width: 100%;
+      height: 100%;
+      display: grid;
+      gap: 10px;
+    }
+
+    .tile {
+      border: 1px solid rgba(200,149,42,0.16);
+      border-radius: 14px;
+      position: relative;
+      cursor: pointer;
+      overflow: hidden;
+      background:
+        linear-gradient(160deg, rgba(38,28,12,0.95) 0%, rgba(16,11,5,0.98) 100%);
+      box-shadow:
+        inset 0 1px 0 rgba(240,208,128,0.05),
+        inset 0 -10px 18px rgba(0,0,0,0.35),
+        0 4px 12px rgba(0,0,0,0.28);
+      transition: transform 0.14s ease, box-shadow 0.18s ease, border-color 0.18s ease, filter 0.18s ease;
+      animation: breathe var(--breathe, 4.6s) ease-in-out infinite;
+      animation-delay: var(--delay, -1.4s);
+    }
+
+    .tile::before,
+    .tile::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      border-radius: inherit;
+    }
+
+    .tile::before {
+      background: linear-gradient(135deg, rgba(255,255,255,0.08) 0%, transparent 38%, transparent 62%, rgba(255,255,255,0.03) 100%);
+      opacity: 0.65;
+    }
+
+    .tile::after {
+      width: 180%;
+      inset: -35% auto auto -65%;
+      transform: rotate(22deg);
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.12), transparent);
+      animation: shimmer var(--shimmer, 11.5s) linear infinite;
+      opacity: 0.16;
+    }
+
+    .tile:hover {
+      transform: translateY(-2px) scale(1.02);
+      border-color: rgba(240,208,128,0.48);
+      box-shadow:
+        inset 0 1px 0 rgba(255,255,255,0.08),
+        inset 0 -10px 18px rgba(0,0,0,0.28),
+        0 0 18px 2px rgba(200,149,42,0.16),
+        0 0 42px 8px rgba(180,120,20,0.10);
+    }
+
+    .tile:active {
+      transform: scale(0.97);
+    }
+
+    .tile.on {
+      border-color: rgba(240,208,128,0.7);
+      background:
+        radial-gradient(circle at 50% 35%, rgba(255,248,196,0.98) 0%, rgba(240,208,128,0.95) 22%, rgba(200,149,42,0.88) 52%, rgba(95,58,10,0.92) 100%),
+        linear-gradient(160deg, rgba(90,56,14,0.95) 0%, rgba(28,18,7,0.98) 100%);
+      box-shadow:
+        inset 0 0 18px rgba(255,245,180,0.35),
+        0 0 18px rgba(240,208,128,0.25),
+        0 0 42px rgba(200,149,42,0.18),
+        0 8px 16px rgba(0,0,0,0.24);
+      filter: brightness(1.03);
+    }
+
+    .tile.hint {
+      outline: 2px solid rgba(120,170,255,0.8);
+      outline-offset: -3px;
+      box-shadow: 0 0 24px rgba(90,130,255,0.35), inset 0 0 18px rgba(90,130,255,0.15);
+    }
+
+    .tile.solve-step {
+      outline: 2px solid rgba(122,170,90,0.9);
+      outline-offset: -3px;
+      box-shadow: 0 0 24px rgba(74,122,58,0.35), inset 0 0 18px rgba(122,170,90,0.16);
+    }
+
+    .tile-index {
+      position: absolute;
+      right: 8px;
+      bottom: 6px;
+      font-family: var(--font-ui);
+      font-size: 0.52rem;
+      letter-spacing: 0.08em;
+      color: rgba(240,208,128,0.36);
+      user-select: none;
+    }
+
+    .controls-panel {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .controls-body {
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      flex: 1;
+    }
+
+    .control-group {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      padding-bottom: 14px;
+      border-bottom: 1px solid rgba(200,149,42,0.12);
+    }
+    .control-group:last-of-type {
+      border-bottom: none;
+      padding-bottom: 0;
+    }
+
+    .group-title {
+      font-family: var(--font-ui);
+      font-size: 0.68rem;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--gold);
+      margin: 0;
+    }
+
+    .group-copy {
+      margin: 0;
+      color: #c8a878;
+      line-height: 1.45;
+      font-size: 0.95rem;
+    }
+
+    .segmented {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .segmented button,
+    .action-btn {
+      appearance: none;
+      border: 1px solid rgba(200,149,42,0.34);
+      border-radius: 999px;
+      background: linear-gradient(180deg, #2a2010 0%, #1a1508 100%);
+      color: var(--gold-light);
+      font-family: var(--font-ui);
+      font-size: 0.72rem;
+      letter-spacing: 0.11em;
+      text-transform: uppercase;
+      padding: 10px 14px;
+      cursor: pointer;
+      transition: transform 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease, color 0.15s ease;
+    }
+
+    .segmented button:hover,
+    .action-btn:hover {
+      transform: translateY(-1px);
+      border-color: rgba(240,208,128,0.75);
+      box-shadow: 0 0 18px 2px rgba(200,149,42,0.18), 0 0 42px 6px rgba(180,120,20,0.08);
+      color: #fff1b8;
+    }
+
+    .segmented button.active {
+      background: linear-gradient(180deg, rgba(200,149,42,0.22) 0%, rgba(85,56,14,0.38) 100%);
+      border-color: rgba(240,208,128,0.72);
+      box-shadow: 0 0 18px rgba(200,149,42,0.16);
+    }
+
+    .button-stack {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    .action-btn.full {
+      grid-column: 1 / -1;
+    }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 10px;
+    }
+
+    .stat-card {
+      padding: 12px 12px 10px;
+      border: 1px solid rgba(200,149,42,0.16);
+      border-radius: 10px;
+      background: rgba(0,0,0,0.22);
+    }
+
+    .stat-label {
+      display: block;
+      font-family: var(--font-ui);
+      font-size: 0.58rem;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      margin-bottom: 0.35rem;
+    }
+
+    .stat-value {
+      display: block;
+      font-family: var(--font-display);
+      font-size: 1.2rem;
+      color: var(--gold-light);
+      line-height: 1.1;
+    }
+
+    .chronicle {
+      max-height: 170px;
+      overflow: auto;
+      padding-right: 4px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .chronicle::-webkit-scrollbar { width: 6px; }
+    .chronicle::-webkit-scrollbar-thumb { background: rgba(200,149,42,0.32); border-radius: 999px; }
+
+    .chronicle-entry {
+      padding: 9px 10px;
+      border-radius: 10px;
+      background: rgba(0,0,0,0.22);
+      border: 1px solid rgba(200,149,42,0.12);
+      color: #d6c39b;
+      line-height: 1.35;
+      font-size: 0.9rem;
+    }
+
+    .rpg-footer {
+      margin-top: auto;
+      padding: 12px 20px 18px;
+      border-top: 1px solid rgba(200,149,42,0.12);
+      text-align: center;
+      color: rgba(200,170,100,0.55);
+      font-style: italic;
+      font-size: 0.82rem;
+    }
+
+    .win-flash {
+      animation: boardWinFlash 1s ease;
+    }
+
+    @keyframes breathe {
+      0%, 100% { transform: translateY(0) scale(1); }
+      50% { transform: translateY(-1px) scale(1.012); }
+    }
+
+    @keyframes shimmer {
+      0% { transform: translateX(-8%) rotate(22deg); }
+      100% { transform: translateX(118%) rotate(22deg); }
+    }
+
+    @keyframes boardWinFlash {
+      0% { box-shadow: inset 0 1px 0 rgba(240,208,128,0.08), inset 0 0 40px rgba(0,0,0,0.45), 0 0 0 1px rgba(0,0,0,0.55), 0 16px 40px rgba(0,0,0,0.45); }
+      40% { box-shadow: inset 0 1px 0 rgba(240,208,128,0.12), inset 0 0 40px rgba(0,0,0,0.25), 0 0 26px rgba(240,208,128,0.3), 0 0 60px rgba(200,149,42,0.22), 0 16px 40px rgba(0,0,0,0.35); }
+      100% { box-shadow: inset 0 1px 0 rgba(240,208,128,0.08), inset 0 0 40px rgba(0,0,0,0.45), 0 0 0 1px rgba(0,0,0,0.55), 0 16px 40px rgba(0,0,0,0.45); }
+    }
+
+    @media (max-width: 900px) {
+      .main-wrap {
+        grid-template-columns: 1fr;
+      }
+      .board-panel {
+        min-height: auto;
+      }
+    }
+
+    @media (max-width: 640px) {
+      .header-row {
+        display: grid;
+        grid-template-columns: auto 1fr auto;
+        gap: 8px;
+        align-items: center;
+      }
+      .header-center {
+        gap: 0.55rem;
+      }
+      .phoenix-mark {
+        width: 46px;
+        height: 46px;
+      }
+      .rpg-back {
+        padding: 0.5rem 0.8rem 0.5rem 1.7rem;
+        font-size: 0.72rem;
+      }
+      .board-frame {
+        padding: 12px;
+      }
+      .board {
+        gap: 8px;
+      }
+      .button-stack,
+      .stats-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .tile,
+      .tile::after,
+      .win-flash {
+        animation: none !important;
+      }
+      .tile,
+      .tile:hover,
+      .tile:active,
+      .segmented button:hover,
+      .action-btn:hover {
+        transform: none !important;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div id="app">
+    <header class="site-header">
+      <div class="header-inner">
+        <div class="header-row">
+          <a href="index.html" class="rpg-back">Hub</a>
+
+          <div class="header-center">
+            <img class="phoenix-mark" src="RPG Favicon no background copy.png" alt="Rising Phoenix Games logo">
+            <div class="title-block">
+              <h1 class="game-title">Lights Out</h1>
+              <p class="game-subtitle">Extinguish the entire board. Every touch alters its neighbors.</p>
+            </div>
+          </div>
+
+          <a href="index.html" class="rpg-back header-spacer" aria-hidden="true">Hub</a>
+        </div>
+      </div>
+    </header>
+
+    <main class="main-wrap">
+      <section class="panel board-panel">
+        <div class="panel-header">
+          <div class="status-bar" id="status-bar">Forge a new puzzle and darken every lantern.</div>
+        </div>
+        <div class="board-area">
+          <div class="board-frame" id="board-frame">
+            <div class="board" id="board" aria-label="Lights Out board"></div>
+          </div>
+        </div>
+      </section>
+
+      <aside class="panel controls-panel">
+        <div class="panel-header">
+          <p class="panel-label">Puzzle Cabinet</p>
+          <div class="status-bar" id="mode-bar">Size 5 × 5 · Difficulty Standard</div>
+        </div>
+
+        <div class="controls-body">
+          <section class="control-group">
+            <h2 class="group-title">Board Size</h2>
+            <div class="segmented" id="size-buttons">
+              <button type="button" data-size="3">3 × 3</button>
+              <button type="button" data-size="4">4 × 4</button>
+              <button type="button" data-size="5" class="active">5 × 5</button>
+            </div>
+          </section>
+
+          <section class="control-group">
+            <h2 class="group-title">Difficulty</h2>
+            <p class="group-copy">Puzzles are generated from legal presses, so every layout remains solvable.</p>
+            <div class="segmented" id="difficulty-buttons">
+              <button type="button" data-difficulty="gentle">Gentle</button>
+              <button type="button" data-difficulty="standard" class="active">Standard</button>
+              <button type="button" data-difficulty="harsh">Harsh</button>
+            </div>
+          </section>
+
+          <section class="control-group">
+            <h2 class="group-title">Actions</h2>
+            <div class="button-stack">
+              <button type="button" class="action-btn" id="new-puzzle-btn">New Puzzle</button>
+              <button type="button" class="action-btn" id="reset-btn">Reset</button>
+              <button type="button" class="action-btn" id="hint-btn">Hint</button>
+              <button type="button" class="action-btn" id="solve-btn">Show Solve Path</button>
+              <button type="button" class="action-btn full" id="clear-marks-btn">Clear Marks</button>
+            </div>
+          </section>
+
+          <section class="control-group">
+            <h2 class="group-title">Record</h2>
+            <div class="stats-grid">
+              <div class="stat-card">
+                <span class="stat-label">Moves</span>
+                <span class="stat-value" id="moves-value">0</span>
+              </div>
+              <div class="stat-card">
+                <span class="stat-label">Lit Tiles</span>
+                <span class="stat-value" id="lit-value">0</span>
+              </div>
+              <div class="stat-card">
+                <span class="stat-label">Best</span>
+                <span class="stat-value" id="best-value">—</span>
+              </div>
+              <div class="stat-card">
+                <span class="stat-label">Minimum</span>
+                <span class="stat-value" id="minimum-value">—</span>
+              </div>
+            </div>
+          </section>
+
+          <section class="control-group">
+            <h2 class="group-title">Chronicle</h2>
+            <div class="chronicle" id="chronicle"></div>
+          </section>
+        </div>
+      </aside>
+    </main>
+
+    <footer class="rpg-footer">
+      © <span id="year"></span> Rising Phoenix Gallery · Michigan City, IN · Crafted by John Ryszka II
+    </footer>
+  </div>
+
+  <script>
+    const STORAGE_KEY = 'rpg_lights_out_best_scores_v1';
+
+    const difficultyConfig = {
+      gentle: { label: 'Gentle', ratio: 0.9 },
+      standard: { label: 'Standard', ratio: 1.5 },
+      harsh: { label: 'Harsh', ratio: 2.2 }
+    };
+
+    const state = {
+      size: 5,
+      difficulty: 'standard',
+      board: [],
+      startBoard: [],
+      moveCount: 0,
+      hintIndex: null,
+      solvePath: [],
+      bestScores: loadBestScores()
+    };
+
+    const boardEl = document.getElementById('board');
+    const boardFrameEl = document.getElementById('board-frame');
+    const statusBarEl = document.getElementById('status-bar');
+    const modeBarEl = document.getElementById('mode-bar');
+    const movesValueEl = document.getElementById('moves-value');
+    const litValueEl = document.getElementById('lit-value');
+    const bestValueEl = document.getElementById('best-value');
+    const minimumValueEl = document.getElementById('minimum-value');
+    const chronicleEl = document.getElementById('chronicle');
+    const sizeButtonsEl = document.getElementById('size-buttons');
+    const difficultyButtonsEl = document.getElementById('difficulty-buttons');
+
+    function loadBestScores() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        return raw ? JSON.parse(raw) : {};
+      } catch (error) {
+        return {};
+      }
+    }
+
+    function saveBestScores() {
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(state.bestScores));
+      } catch (error) {
+        // Fail silently; local play remains intact.
+      }
+    }
+
+    function boardKey() {
+      return state.size + 'x' + state.size + ':' + state.difficulty;
+    }
+
+    function addChronicle(text) {
+      const entry = document.createElement('div');
+      entry.className = 'chronicle-entry';
+      entry.textContent = text;
+      chronicleEl.prepend(entry);
+      while (chronicleEl.children.length > 8) {
+        chronicleEl.removeChild(chronicleEl.lastChild);
+      }
+    }
+
+    function setStatus(text) {
+      statusBarEl.textContent = text;
+    }
+
+    function updateModeBar() {
+      modeBarEl.textContent = 'Size ' + state.size + ' × ' + state.size + ' · Difficulty ' + difficultyConfig[state.difficulty].label;
+    }
+
+    function cloneBoard(board) {
+      return board.slice();
+    }
+
+    function createEmptyBoard(size) {
+      return new Array(size * size).fill(0);
+    }
+
+    function indexToRowCol(index, size) {
+      return { row: Math.floor(index / size), col: index % size };
+    }
+
+    function rowColToIndex(row, col, size) {
+      return row * size + col;
+    }
+
+    function toggleAt(board, size, row, col) {
+      if (row < 0 || col < 0 || row >= size || col >= size) return;
+      const idx = rowColToIndex(row, col, size);
+      board[idx] = board[idx] ? 0 : 1;
+    }
+
+    function pressIndex(board, size, index) {
+      const pos = indexToRowCol(index, size);
+      toggleAt(board, size, pos.row, pos.col);
+      toggleAt(board, size, pos.row - 1, pos.col);
+      toggleAt(board, size, pos.row + 1, pos.col);
+      toggleAt(board, size, pos.row, pos.col - 1);
+      toggleAt(board, size, pos.row, pos.col + 1);
+    }
+
+    function countLit(board) {
+      let total = 0;
+      for (let i = 0; i < board.length; i++) total += board[i];
+      return total;
+    }
+
+    function isSolved(board) {
+      return countLit(board) === 0;
+    }
+
+    function randomInt(max) {
+      return Math.floor(Math.random() * max);
+    }
+
+    function shuffleArray(values) {
+      for (let i = values.length - 1; i > 0; i--) {
+        const j = randomInt(i + 1);
+        const temp = values[i];
+        values[i] = values[j];
+        values[j] = temp;
+      }
+      return values;
+    }
+
+    function generatePuzzle(size, difficulty) {
+      const board = createEmptyBoard(size);
+      const total = size * size;
+      const presses = [];
+      const config = difficultyConfig[difficulty];
+      const pressCount = Math.max(size + 1, Math.round(total * config.ratio));
+
+      for (let i = 0; i < pressCount; i++) {
+        const idx = randomInt(total);
+        presses.push(idx);
+        pressIndex(board, size, idx);
+      }
+
+      if (isSolved(board)) {
+        const forced = randomInt(total);
+        presses.push(forced);
+        pressIndex(board, size, forced);
+      }
+
+      return board;
+    }
+
+    function buildMatrix(size) {
+      const n = size * size;
+      const matrix = new Array(n);
+      for (let press = 0; press < n; press++) {
+        const columnBoard = createEmptyBoard(size);
+        pressIndex(columnBoard, size, press);
+        matrix[press] = columnBoard;
+      }
+      return matrix;
+    }
+
+    function solveBoard(board, size) {
+      const n = size * size;
+      const toggleColumns = buildMatrix(size);
+      const augmented = new Array(n);
+
+      for (let row = 0; row < n; row++) {
+        augmented[row] = new Array(n + 1).fill(0);
+        for (let col = 0; col < n; col++) {
+          augmented[row][col] = toggleColumns[col][row];
+        }
+        augmented[row][n] = board[row];
+      }
+
+      let lead = 0;
+      const pivotColumns = [];
+
+      for (let row = 0; row < n && lead < n; row++) {
+        let pivot = row;
+        while (pivot < n && augmented[pivot][lead] === 0) pivot++;
+        if (pivot === n) {
+          lead++;
+          row--;
+          continue;
+        }
+
+        if (pivot !== row) {
+          const tmp = augmented[row];
+          augmented[row] = augmented[pivot];
+          augmented[pivot] = tmp;
+        }
+
+        pivotColumns.push(lead);
+
+        for (let r = 0; r < n; r++) {
+          if (r !== row && augmented[r][lead] === 1) {
+            for (let c = lead; c <= n; c++) {
+              augmented[r][c] ^= augmented[row][c];
+            }
+          }
+        }
+
+        lead++;
+      }
+
+      for (let row = 0; row < n; row++) {
+        let allZero = true;
+        for (let col = 0; col < n; col++) {
+          if (augmented[row][col] !== 0) {
+            allZero = false;
+            break;
+          }
+        }
+        if (allZero && augmented[row][n] !== 0) return null;
+      }
+
+      const solution = new Array(n).fill(0);
+      for (let row = 0; row < pivotColumns.length; row++) {
+        solution[pivotColumns[row]] = augmented[row][n];
+      }
+
+      const path = [];
+      for (let i = 0; i < solution.length; i++) {
+        if (solution[i] === 1) path.push(i);
+      }
+      return path;
+    }
+
+    function applyButtonStates(container, attribute, value) {
+      const buttons = container.querySelectorAll('button');
+      buttons.forEach((button) => {
+        button.classList.toggle('active', button.dataset[attribute] === value);
+      });
+    }
+
+    function updateStats() {
+      movesValueEl.textContent = String(state.moveCount);
+      litValueEl.textContent = String(countLit(state.board));
+      const best = state.bestScores[boardKey()];
+      bestValueEl.textContent = typeof best === 'number' ? String(best) : '—';
+      const solution = solveBoard(state.board, state.size);
+      minimumValueEl.textContent = solution ? String(solution.length) : '—';
+      updateModeBar();
+    }
+
+    function clearMarks() {
+      state.hintIndex = null;
+      state.solvePath = [];
+      renderBoard();
+    }
+
+    function renderBoard() {
+      boardEl.innerHTML = '';
+      boardEl.style.gridTemplateColumns = 'repeat(' + state.size + ', 1fr)';
+      boardEl.style.gridTemplateRows = 'repeat(' + state.size + ', 1fr)';
+
+      for (let i = 0; i < state.board.length; i++) {
+        const tile = document.createElement('button');
+        tile.type = 'button';
+        tile.className = 'tile' + (state.board[i] ? ' on' : '');
+        if (state.hintIndex === i) tile.classList.add('hint');
+        if (state.solvePath.includes(i)) tile.classList.add('solve-step');
+        tile.setAttribute('aria-label', 'Press tile ' + (i + 1));
+        tile.style.setProperty('--breathe', (3.8 + (i % 7) * 0.32) + 's');
+        tile.style.setProperty('--delay', (-0.35 * i) + 's');
+        tile.style.setProperty('--shimmer', (8.5 + (i % 5) * 1.35) + 's');
+        tile.addEventListener('click', () => handlePress(i));
+
+        const badge = document.createElement('span');
+        badge.className = 'tile-index';
+        badge.textContent = String(i + 1);
+        tile.appendChild(badge);
+
+        boardEl.appendChild(tile);
+      }
+    }
+
+    function recordWin() {
+      const key = boardKey();
+      const previousBest = state.bestScores[key];
+      if (typeof previousBest !== 'number' || state.moveCount < previousBest) {
+        state.bestScores[key] = state.moveCount;
+        saveBestScores();
+        addChronicle('New best record: ' + state.moveCount + ' moves on ' + state.size + ' × ' + state.size + ' (' + difficultyConfig[state.difficulty].label + ').');
+      } else {
+        addChronicle('Puzzle solved in ' + state.moveCount + ' moves.');
+      }
+      boardFrameEl.classList.remove('win-flash');
+      void boardFrameEl.offsetWidth;
+      boardFrameEl.classList.add('win-flash');
+      setStatus('All lights extinguished. The cabinet yields to you.');
+      updateStats();
+    }
+
+    function handlePress(index) {
+      pressIndex(state.board, state.size, index);
+      state.moveCount += 1;
+      state.hintIndex = null;
+      if (state.solvePath.length) {
+        state.solvePath = state.solvePath.filter((value) => value !== index);
+      }
+      renderBoard();
+      updateStats();
+
+      const position = indexToRowCol(index, state.size);
+      addChronicle('Pressed row ' + (position.row + 1) + ', column ' + (position.col + 1) + '.');
+
+      if (isSolved(state.board)) {
+        recordWin();
+      } else {
+        const lit = countLit(state.board);
+        setStatus(lit + ' lights remain.');
+      }
+    }
+
+    function newPuzzle() {
+      state.board = generatePuzzle(state.size, state.difficulty);
+      state.startBoard = cloneBoard(state.board);
+      state.moveCount = 0;
+      state.hintIndex = null;
+      state.solvePath = [];
+      renderBoard();
+      updateStats();
+      setStatus('A new arrangement has been lit. Extinguish every tile.');
+      addChronicle('New ' + state.size + ' × ' + state.size + ' puzzle forged at ' + difficultyConfig[state.difficulty].label + ' difficulty.');
+    }
+
+    function resetPuzzle() {
+      state.board = cloneBoard(state.startBoard);
+      state.moveCount = 0;
+      state.hintIndex = null;
+      state.solvePath = [];
+      renderBoard();
+      updateStats();
+      setStatus('Board reset to its initial pattern.');
+      addChronicle('Puzzle reset to the opening state.');
+    }
+
+    function showHint() {
+      const solution = solveBoard(state.board, state.size);
+      if (!solution || solution.length === 0) {
+        state.hintIndex = null;
+        renderBoard();
+        if (isSolved(state.board)) {
+          setStatus('No hint needed. The board is already dark.');
+        } else {
+          setStatus('No hint could be derived.');
+        }
+        return;
+      }
+      state.hintIndex = solution[0];
+      state.solvePath = [];
+      renderBoard();
+      const pos = indexToRowCol(solution[0], state.size);
+      setStatus('Suggested press: row ' + (pos.row + 1) + ', column ' + (pos.col + 1) + '.');
+      addChronicle('Hint revealed for row ' + (pos.row + 1) + ', column ' + (pos.col + 1) + '.');
+      updateStats();
+    }
+
+    function showSolvePath() {
+      const solution = solveBoard(state.board, state.size);
+      if (!solution) {
+        setStatus('This position could not be solved by the current solver.');
+        return;
+      }
+      state.hintIndex = null;
+      state.solvePath = solution;
+      renderBoard();
+      if (solution.length === 0) {
+        setStatus('The board is already solved.');
+        addChronicle('Solve path requested; no presses remain.');
+      } else {
+        setStatus('Highlighted ' + solution.length + ' required press' + (solution.length === 1 ? '' : 'es') + '.');
+        addChronicle('Solve path displayed with ' + solution.length + ' marked press' + (solution.length === 1 ? '' : 'es') + '.');
+      }
+      updateStats();
+    }
+
+    sizeButtonsEl.addEventListener('click', (event) => {
+      const button = event.target.closest('button[data-size]');
+      if (!button) return;
+      state.size = Number(button.dataset.size);
+      applyButtonStates(sizeButtonsEl, 'size', button.dataset.size);
+      clearMarks();
+      newPuzzle();
+    });
+
+    difficultyButtonsEl.addEventListener('click', (event) => {
+      const button = event.target.closest('button[data-difficulty]');
+      if (!button) return;
+      state.difficulty = button.dataset.difficulty;
+      applyButtonStates(difficultyButtonsEl, 'difficulty', button.dataset.difficulty);
+      clearMarks();
+      newPuzzle();
+    });
+
+    document.getElementById('new-puzzle-btn').addEventListener('click', newPuzzle);
+    document.getElementById('reset-btn').addEventListener('click', resetPuzzle);
+    document.getElementById('hint-btn').addEventListener('click', showHint);
+    document.getElementById('solve-btn').addEventListener('click', showSolvePath);
+    document.getElementById('clear-marks-btn').addEventListener('click', () => {
+      clearMarks();
+      setStatus('Hints and solve marks cleared.');
+      addChronicle('Board markings cleared.');
+      updateStats();
+    });
+
+    document.getElementById('year').textContent = new Date().getFullYear();
+    applyButtonStates(sizeButtonsEl, 'size', String(state.size));
+    applyButtonStates(difficultyButtonsEl, 'difficulty', state.difficulty);
+    newPuzzle();
+  </script>
+</body>
+</html>
