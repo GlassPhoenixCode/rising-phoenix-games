@@ -30,8 +30,8 @@
 
 body {
   min-height: 100vh;
-  color: var(--text);
-  font-family: var(--font-body);
+  color: #e8dfc8;
+  font-family: 'IM Fell English', Georgia, serif;
   background: #0f0c07;
   background:
     radial-gradient(ellipse at 20% 50%, rgba(26,16,5,0.8) 0%, transparent 60%),
@@ -39,6 +39,95 @@ body {
     radial-gradient(ellipse at 60% 80%, rgba(15,10,2,0.7) 0%, transparent 55%),
     #0f0c07;
   background-attachment: fixed;
+}
+
+/* Force shared.css class overrides with hard hex so no var() can fail */
+.rpg-back {
+  font-family: 'Cinzel', serif !important;
+  font-size: 11px !important;
+  letter-spacing: 1.5px !important;
+  text-transform: uppercase !important;
+  color: #c8a878 !important;
+  text-decoration: none !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+  transition: color 0.15s !important;
+  padding: 4px 0 !important;
+}
+.rpg-back:hover { color: #f0d080 !important; }
+.rpg-back::before { content: '←'; }
+
+.rpg-statusbar {
+  margin: 0.5rem 0;
+  min-height: 2.2rem;
+  display: flex;
+  align-items: center;
+  padding: 7px 14px 7px 28px !important;
+  background: rgba(0,0,0,0.35) !important;
+  border: 1px solid rgba(200,149,42,0.18) !important;
+  border-radius: 4px !important;
+  font-family: 'Cinzel', serif !important;
+  font-size: 13px !important;
+  letter-spacing: 1.5px !important;
+  color: #f0d080 !important;
+  position: relative !important;
+}
+.rpg-statusbar::before {
+  content: '⚜';
+  position: absolute;
+  left: 10px;
+  font-size: 10px;
+  color: #c8952a;
+  opacity: 0.7;
+}
+
+.rpg-footer {
+  padding: 10px 20px 14px !important;
+  border-top: 1px solid rgba(200,149,42,0.2) !important;
+  font-family: 'IM Fell English', Georgia, serif !important;
+  font-style: italic !important;
+  font-size: 12px !important;
+  color: #c8a878 !important;
+  letter-spacing: 0.5px !important;
+  display: flex !important;
+  justify-content: space-between !important;
+  align-items: center !important;
+  flex-wrap: wrap !important;
+  gap: 8px !important;
+  margin-top: 2rem !important;
+}
+
+/* ── Bulletproof ID/tag overrides — nothing beats these ───── */
+#status-bar,
+div#status-bar,
+div.rpg-statusbar#status-bar {
+  color: #f0d080 !important;
+  font-family: 'Cinzel', serif !important;
+}
+
+footer,
+footer.rpg-footer,
+.rpg-footer,
+.page-wrap footer {
+  color: #c8a878 !important;
+  font-family: 'IM Fell English', Georgia, serif !important;
+}
+
+.cnt-btn,
+button.cnt-btn {
+  color: #f0d080 !important;
+  background: #261c0a !important;
+  border-color: rgba(200,149,42,0.55) !important;
+}
+
+#player-count-display {
+  color: #f0d080 !important;
+  font-family: 'Cinzel Decorative', 'Cinzel', serif !important;
+}
+
+.player-count-row label {
+  color: #f0d080 !important;
 }
 
 /* ── Layout ───────────────────────────────────────────────── */
@@ -64,16 +153,19 @@ body {
   transform: translateY(-50%);
 }
 .phoenix-mark {
-  width: 44px;
-  height: 44px;
+  width: 52px;
+  height: 52px;
   flex-shrink: 0;
+  object-fit: contain;
+  filter: drop-shadow(0 0 6px rgba(200,149,42,0.4));
 }
 .title-block {
   text-align: center;
 }
 .game-title {
-  font-family: var(--font-display);
+  font-family: 'Cinzel Decorative', 'Cinzel', serif;
   font-size: clamp(1.4rem, 4vw, 2.1rem);
+  color: #f0d080; /* fallback if background-clip not supported */
   background: linear-gradient(135deg, #f0d080 0%, #c8952a 50%, #f0d080 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
@@ -82,9 +174,9 @@ body {
   letter-spacing: 0.04em;
 }
 .game-tagline {
-  font-family: var(--font-body);
+  font-family: 'IM Fell English', Georgia, serif;
   font-style: italic;
-  color: var(--text-muted);
+  color: #c8a878;
   font-size: 0.82rem;
   margin-top: 0.2rem;
 }
@@ -92,19 +184,79 @@ body {
 /* ── rpg-rule ─────────────────────────────────────────────── */
 .rpg-rule { margin: 0.5rem 0; }
 
-/* ── Mode Setup Panel ─────────────────────────────────────── */
+/* ── ALL buttons gold with black text ─────────────────────── */
+.rpg-btn,
+.rpg-btn-sage,
+.rpg-btn-crimson,
+button.rpg-btn,
+button.rpg-btn-sage,
+button.rpg-btn-crimson {
+  background: linear-gradient(180deg, #f0d080 0%, #c8952a 60%, #a07020 100%) !important;
+  color: #1a1000 !important;
+  border-color: #f0d080 !important;
+  border-bottom-color: #a07020 !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.12em;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,200,0.3) !important;
+  transition: transform 0.15s ease, box-shadow 0.15s ease, filter 0.15s ease !important;
+  text-shadow: none !important;
+}
+.rpg-btn:hover,
+.rpg-btn-sage:hover,
+.rpg-btn-crimson:hover,
+button.rpg-btn:hover,
+button.rpg-btn-sage:hover,
+button.rpg-btn-crimson:hover {
+  transform: scale(1.06) translateY(-2px) !important;
+  box-shadow:
+    0 0 18px 4px rgba(200,149,42,0.55),
+    0 0 48px 10px rgba(180,120,20,0.3),
+    0 4px 14px rgba(0,0,0,0.4),
+    inset 0 1px 0 rgba(255,255,200,0.4) !important;
+  filter: brightness(1.12);
+  color: #0f0c07 !important;
+  background: linear-gradient(180deg, #fff0a0 0%, #d8a030 60%, #b07828 100%) !important;
+}
+.rpg-btn:active,
+.rpg-btn-sage:active,
+.rpg-btn-crimson:active {
+  transform: scale(1.02) translateY(0) !important;
+}
+#btn-flip[disabled],
+button[disabled].rpg-btn,
+button[disabled].rpg-btn-sage {
+  background: linear-gradient(180deg, #3a2c10 0%, #221a06 100%) !important;
+  color: #6a5828 !important;
+  border-color: rgba(200,149,42,0.3) !important;
+  box-shadow: none !important;
+  cursor: not-allowed !important;
+  filter: none !important;
+  transform: none !important;
+}
+
+/* ── Chronicle label ──────────────────────────────────────── */
+.chronicle-label {
+  color: #c8952a !important;
+  font-family: 'Cinzel', serif;
+  font-size: 0.65rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  margin-bottom: 0.35rem;
+}
+
+/* ── Mode buttons — brighter ──────────────────────────────── */
 #setup-panel {
-  background: var(--surface);
-  border: 1px solid var(--border);
+  background: #1e1608;
+  border: 1px solid rgba(200,149,42,0.25);
   border-radius: 10px;
   padding: 1.6rem;
   margin: 1rem 0;
   text-align: center;
 }
 #setup-panel h2 {
-  font-family: var(--font-ui);
+  font-family: 'Cinzel', serif;
   font-size: 1rem;
-  color: var(--gold-light);
+  color: #f0d080;
   letter-spacing: 0.12em;
   margin-bottom: 1.1rem;
   text-transform: uppercase;
@@ -117,24 +269,50 @@ body {
   margin-bottom: 1.2rem;
 }
 .mode-btn {
-  font-family: var(--font-ui);
-  font-size: 0.78rem;
-  letter-spacing: 0.1em;
+  font-family: 'Cinzel', serif;
+  font-size: 0.85rem;
+  letter-spacing: 0.12em;
   text-transform: uppercase;
-  padding: 0.55rem 1.2rem;
-  border: 1px solid var(--border-bright);
-  background: var(--surface-2);
-  color: var(--gold);
+  padding: 0.6rem 1.6rem;
+  border: 2px solid #c8952a;
+  background: #261c0a;
+  color: #f0d080;
   border-radius: 6px;
   cursor: pointer;
   transition: all 0.2s;
+  font-weight: 600;
 }
-.mode-btn:hover { background: rgba(200,149,42,0.12); box-shadow: 0 0 18px 2px rgba(200,149,42,0.25); }
+.mode-btn:hover {
+  background: rgba(200,149,42,0.18);
+  box-shadow: 0 0 18px 2px rgba(200,149,42,0.35);
+  color: #fff8e0;
+}
 .mode-btn.active {
-  background: rgba(200,149,42,0.2);
-  border-color: var(--gold);
-  color: var(--gold-light);
-  box-shadow: 0 0 18px 2px rgba(200,149,42,0.3);
+  background: rgba(200,149,42,0.25);
+  border-color: #f0d080;
+  color: #fff8e0;
+  box-shadow: 0 0 22px 4px rgba(200,149,42,0.4);
+}
+
+.player-name-input {
+  background: #2a1e08;
+  border: 1px solid #c8952a;
+  border-radius: 5px;
+  padding: 0.5rem 0.8rem;
+  color: #f0d080;
+  font-family: 'Cinzel', serif;
+  font-size: 0.85rem;
+  width: 150px;
+  text-align: center;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  caret-color: #f0d080;
+}
+.player-name-input::placeholder { color: rgba(200,149,42,0.45); }
+.player-name-input:focus {
+  outline: none;
+  border-color: #f0d080;
+  box-shadow: 0 0 12px rgba(200,149,42,0.35);
+  color: #fff8e0;
 }
 
 .player-setup { margin-bottom: 1.2rem; }
@@ -147,30 +325,30 @@ body {
   flex-wrap: wrap;
 }
 .player-count-row label {
-  font-family: var(--font-ui);
+  font-family: 'Cinzel', serif;
   font-size: 0.75rem;
   letter-spacing: 0.1em;
   text-transform: uppercase;
-  color: var(--gold);
+  color: #f0d080;
 }
 .cnt-btn {
   width: 34px;
   height: 34px;
-  border: 1px solid var(--border-bright);
-  background: var(--surface-2);
-  color: var(--gold-light);
-  font-family: var(--font-ui);
+  border: 1px solid rgba(200,149,42,0.55);
+  background: #261c0a;
+  color: #f0d080;
+  font-family: 'Cinzel', serif;
   font-size: 1.1rem;
   border-radius: 5px;
   cursor: pointer;
   transition: all 0.2s;
   display: flex; align-items: center; justify-content: center;
 }
-.cnt-btn:hover { background: rgba(200,149,42,0.15); }
+.cnt-btn:hover { background: rgba(200,149,42,0.2); }
 #player-count-display {
-  font-family: var(--font-display);
+  font-family: 'Cinzel Decorative', 'Cinzel', serif;
   font-size: 1.3rem;
-  color: var(--gold-light);
+  color: #f0d080;
   min-width: 2ch;
   text-align: center;
 }
@@ -179,23 +357,6 @@ body {
   gap: 0.6rem;
   justify-content: center;
   flex-wrap: wrap;
-}
-.player-name-input {
-  background: var(--surface-2);
-  border: 1px solid var(--border);
-  border-radius: 5px;
-  padding: 0.4rem 0.7rem;
-  color: var(--text);
-  font-family: var(--font-ui);
-  font-size: 0.8rem;
-  width: 130px;
-  text-align: center;
-  transition: border-color 0.2s;
-}
-.player-name-input:focus {
-  outline: none;
-  border-color: var(--gold);
-  box-shadow: 0 0 8px rgba(200,149,42,0.2);
 }
 
 /* ── Main Game Area ───────────────────────────────────────── */
@@ -210,23 +371,23 @@ body {
   margin: 0.6rem 0;
 }
 .score-chip {
-  font-family: var(--font-ui);
+  font-family: 'Cinzel', serif;
   font-size: 0.7rem;
   letter-spacing: 0.08em;
   padding: 0.3rem 0.8rem;
-  border: 1px solid var(--border);
+  border: 1px solid #c8952a;
   border-radius: 20px;
-  background: var(--surface);
-  color: var(--text-muted);
+  background: #1e1608;
+  color: #c8a878;
   transition: all 0.3s;
 }
 .score-chip.active-player {
-  border-color: var(--gold);
-  color: var(--gold-light);
+  border-color: #c8952a;
+  color: #f0d080;
   background: rgba(200,149,42,0.12);
   box-shadow: 0 0 12px rgba(200,149,42,0.25);
 }
-.score-chip .chip-score { color: var(--gold); margin-left: 0.4em; }
+.score-chip .chip-score { color: #f0d080; margin-left: 0.4em; }
 
 /* ── Board ────────────────────────────────────────────────── */
 .board-frame {
@@ -243,11 +404,11 @@ body {
 }
 .board-label {
   text-align: center;
-  font-family: var(--font-ui);
+  font-family: 'Cinzel', serif;
   font-size: 0.65rem;
   letter-spacing: 0.18em;
   text-transform: uppercase;
-  color: rgba(200,149,42,0.4);
+  color: #c8952a;
   margin-bottom: 0.7rem;
 }
 
@@ -302,27 +463,10 @@ body {
     inset 0 1px 0 rgba(255,220,120,0.25),
     inset 0 -2px 4px rgba(0,0,0,0.4),
     0 3px 10px rgba(0,0,0,0.5);
-}
-.tile-face::before {
-  /* wood grain shimmer sweep */
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(
-    135deg,
-    transparent 0%,
-    rgba(255,220,100,0.07) 40%,
-    rgba(255,240,160,0.18) 50%,
-    rgba(255,220,100,0.07) 60%,
-    transparent 100%
-  );
-  background-size: 300% 300%;
-  opacity: 0;
-  pointer-events: none;
-  border-radius: 6px;
+  overflow: hidden;
 }
 .tile-face .tile-number {
-  font-family: var(--font-display);
+  font-family: 'Cinzel Decorative', 'Cinzel', serif;
   font-size: 1.55rem;
   color: var(--pip-color, #f0d080);
   line-height: 1;
@@ -346,7 +490,7 @@ body {
 
 /* tile states */
 .tile.open:not(.flipped):hover .tile-face {
-  border-color: var(--gold);
+  border-color: #c8952a;
   box-shadow:
     inset 0 1px 0 rgba(255,220,120,0.35),
     inset 0 -2px 4px rgba(0,0,0,0.4),
@@ -356,7 +500,7 @@ body {
   transition: all 0.15s;
 }
 .tile.selected .tile-face {
-  border-color: var(--gold-light) !important;
+  border-color: #f0d080 !important;
   box-shadow:
     inset 0 1px 0 rgba(255,240,180,0.5),
     0 0 20px 4px rgba(200,149,42,0.5),
@@ -368,17 +512,43 @@ body {
 .tile.flipped { cursor: default; animation: none !important; }
 .tile.invalid-flash .tile-face {
   animation: invalid-shake 0.35s ease-in-out;
-  border-color: var(--crimson-light);
+  border-color: #c04040;
 }
 
-/* shimmer keyframe (applied per-tile via JS) */
+/* shimmer keyframe — sweeps diagonally across ::before, tile face always visible */
 @keyframes tile-shimmer {
-  0%   { background-position: 150% 150%; opacity: 0; }
-  48%  { opacity: 0; }
-  50%  { background-position: -50% -50%; opacity: 1; }
-  55%  { opacity: 0; }
-  100% { background-position: -50% -50%; opacity: 0; }
+  0%   { transform: translateX(-150%) translateY(-150%) rotate(35deg); opacity: 0; }
+  10%  { opacity: 1; }
+  30%  { opacity: 0; }
+  100% { transform: translateX(150%) translateY(150%) rotate(35deg); opacity: 0; }
 }
+/* Each tile gets a .shimmer-N class (0-8) with different delays */
+.tile-face::before {
+  content: '';
+  position: absolute;
+  inset: -20px;
+  background: linear-gradient(
+    105deg,
+    transparent 35%,
+    rgba(255,240,160,0.35) 50%,
+    rgba(255,255,200,0.5) 52%,
+    rgba(255,240,160,0.35) 54%,
+    transparent 65%
+  );
+  pointer-events: none;
+  border-radius: 6px;
+  opacity: 0;
+  transform: translateX(-150%) translateY(-150%) rotate(35deg);
+}
+.tile.shimmer-0 .tile-face::before { animation: tile-shimmer 1.2s ease-in-out 0s 1; }
+.tile.shimmer-1 .tile-face::before { animation: tile-shimmer 1.2s ease-in-out 0s 1; }
+.tile.shimmer-2 .tile-face::before { animation: tile-shimmer 1.2s ease-in-out 0s 1; }
+.tile.shimmer-3 .tile-face::before { animation: tile-shimmer 1.2s ease-in-out 0s 1; }
+.tile.shimmer-4 .tile-face::before { animation: tile-shimmer 1.2s ease-in-out 0s 1; }
+.tile.shimmer-5 .tile-face::before { animation: tile-shimmer 1.2s ease-in-out 0s 1; }
+.tile.shimmer-6 .tile-face::before { animation: tile-shimmer 1.2s ease-in-out 0s 1; }
+.tile.shimmer-7 .tile-face::before { animation: tile-shimmer 1.2s ease-in-out 0s 1; }
+.tile.shimmer-8 .tile-face::before { animation: tile-shimmer 1.2s ease-in-out 0s 1; }
 @keyframes breathe {
   0%, 100% { transform: translateY(0) scale(1); }
   50%       { transform: translateY(-3px) scale(1.02); }
@@ -428,10 +598,10 @@ body {
   100% { transform: rotate(0deg) scale(1); }
 }
 .single-die-label {
-  font-family: var(--font-ui);
+  font-family: 'Cinzel', serif;
   font-size: 0.68rem;
   letter-spacing: 0.1em;
-  color: var(--gold);
+  color: #c8952a;
   text-transform: uppercase;
   text-align: center;
   margin-top: 0.2rem;
@@ -454,9 +624,9 @@ body {
   -webkit-appearance: none;
   width: 16px;
   height: 16px;
-  border: 1px solid var(--border-bright);
+  border: 1px solid rgba(200,149,42,0.55);
   border-radius: 3px;
-  background: var(--surface-2);
+  background: #261c0a;
   cursor: pointer;
   position: relative;
 }
@@ -468,31 +638,31 @@ body {
   align-items: center;
   justify-content: center;
   font-size: 0.7rem;
-  color: var(--gold-light);
+  color: #f0d080;
   line-height: 1;
-  font-family: var(--font-ui);
+  font-family: 'Cinzel', serif;
 }
 .single-die-toggle span {
-  font-family: var(--font-body);
+  font-family: 'IM Fell English', Georgia, serif;
   font-style: italic;
   font-size: 0.78rem;
-  color: var(--text-muted);
+  color: #c8a878;
 }
 #die-total-display {
-  font-family: var(--font-display);
+  font-family: 'Cinzel Decorative', 'Cinzel', serif;
   font-size: 1.5rem;
-  color: var(--gold-light);
-  text-shadow: 0 0 12px rgba(240,208,128,0.4);
+  color: #f0d080;
+  text-shadow: 0 0 12px rgba(240,208,128,0.5);
   min-width: 3ch;
   text-align: center;
   line-height: 1;
 }
 .total-label {
-  font-family: var(--font-ui);
+  font-family: 'Cinzel', serif;
   font-size: 0.62rem;
   letter-spacing: 0.1em;
   text-transform: uppercase;
-  color: var(--text-muted);
+  color: #c8952a;
 }
 
 /* ── Selection Info ───────────────────────────────────────── */
@@ -502,26 +672,26 @@ body {
   justify-content: center;
   gap: 1rem;
   padding: 0.5rem 1rem;
-  background: var(--surface);
-  border: 1px solid var(--border);
+  background: #1e1608;
+  border: 1px solid rgba(200,149,42,0.25);
   border-radius: 8px;
   margin: 0.5rem 0;
   flex-wrap: wrap;
 }
 .sel-item {
-  font-family: var(--font-ui);
+  font-family: 'Cinzel', serif;
   font-size: 0.72rem;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: var(--text-muted);
+  color: #c8a878;
 }
 .sel-item span {
-  color: var(--gold-light);
+  color: #f0d080;
   font-size: 1rem;
   margin-left: 0.3em;
 }
 .sel-item span.match { color: #7aff7a; }
-.sel-item span.over  { color: var(--crimson-light); }
+.sel-item span.over  { color: #c04040; }
 
 /* ── Buttons row ──────────────────────────────────────────── */
 .action-row {
@@ -545,11 +715,11 @@ body {
   margin: 0.6rem 0;
 }
 .chronicle-label {
-  font-family: var(--font-ui);
+  font-family: 'Cinzel', serif;
   font-size: 0.65rem;
   letter-spacing: 0.14em;
   text-transform: uppercase;
-  color: var(--text-dim);
+  color: #c8952a;
   margin-bottom: 0.35rem;
 }
 #chronicle {
@@ -561,7 +731,7 @@ body {
   gap: 0.45rem;
   padding: 0.3rem 0.4rem;
   background: rgba(0,0,0,0.3);
-  border: 1px solid var(--border);
+  border: 1px solid rgba(200,149,42,0.25);
   border-radius: 6px;
   scrollbar-width: thin;
   scrollbar-color: rgba(200,149,42,0.3) transparent;
@@ -570,35 +740,35 @@ body {
 #chronicle::-webkit-scrollbar-thumb { background: rgba(200,149,42,0.3); border-radius: 2px; }
 .chronicle-pill {
   flex-shrink: 0;
-  font-family: var(--font-ui);
+  font-family: 'Cinzel', serif;
   font-size: 0.68rem;
   letter-spacing: 0.06em;
   padding: 0.22rem 0.7rem;
   border-radius: 20px;
-  border: 1px solid var(--border);
-  background: var(--surface-2);
-  color: var(--text-muted);
+  border: 1px solid rgba(200,149,42,0.25);
+  background: #261c0a;
+  color: #a09070;
   white-space: nowrap;
 }
-.chronicle-pill.roll  { border-color: rgba(200,149,42,0.4); color: var(--gold); }
-.chronicle-pill.flip  { border-color: rgba(74,122,58,0.5);  color: var(--sage-light); }
-.chronicle-pill.stuck { border-color: rgba(139,26,26,0.5);  color: var(--crimson-light); }
-.chronicle-pill.win   { border-color: rgba(240,208,128,0.7); color: var(--gold-light); font-style: italic; }
+.chronicle-pill.roll  { border-color: rgba(200,149,42,0.4); color: #c8952a; }
+.chronicle-pill.flip  { border-color: rgba(74,122,58,0.5);  color: #7aaa5a; }
+.chronicle-pill.stuck { border-color: rgba(139,26,26,0.5);  color: #c04040; }
+.chronicle-pill.win   { border-color: rgba(240,208,128,0.7); color: #f0d080; font-style: italic; }
 
 /* ── Results Panel ────────────────────────────────────────── */
 #results-panel {
   display: none;
-  background: var(--surface);
-  border: 1px solid var(--border-bright);
+  background: #1e1608;
+  border: 1px solid rgba(200,149,42,0.55);
   border-radius: 10px;
   padding: 1.4rem;
   margin: 1rem 0;
   text-align: center;
 }
 #results-panel h2 {
-  font-family: var(--font-display);
+  font-family: 'Cinzel Decorative', 'Cinzel', serif;
   font-size: clamp(1rem, 3vw, 1.5rem);
-  color: var(--gold-light);
+  color: #f0d080;
   margin-bottom: 0.8rem;
 }
 .results-table {
@@ -607,23 +777,23 @@ body {
   margin: 0.8rem 0;
 }
 .results-table th {
-  font-family: var(--font-ui);
+  font-family: 'Cinzel', serif;
   font-size: 0.68rem;
   letter-spacing: 0.12em;
   text-transform: uppercase;
-  color: var(--gold);
-  border-bottom: 1px solid var(--border);
+  color: #c8952a;
+  border-bottom: 1px solid rgba(200,149,42,0.25);
   padding: 0.4rem 0.6rem;
 }
 .results-table td {
-  font-family: var(--font-body);
-  color: var(--text);
+  font-family: 'IM Fell English', Georgia, serif;
+  color: #e8dfc8;
   padding: 0.5rem 0.6rem;
   border-bottom: 1px solid rgba(200,149,42,0.1);
   font-size: 0.9rem;
 }
 .results-table tr.winner td {
-  color: var(--gold-light);
+  color: #f0d080;
   font-style: italic;
 }
 .results-table tr.winner td:first-child::after { content: ' ⚜'; }
@@ -632,8 +802,8 @@ body {
   animation: score-flash 1.5s ease-out;
 }
 @keyframes score-flash {
-  0%   { color: var(--gold-light); text-shadow: 0 0 20px rgba(240,208,128,0.8); }
-  100% { color: var(--gold-light); text-shadow: none; }
+  0%   { color: #f0d080; text-shadow: 0 0 20px rgba(240,208,128,0.8); }
+  100% { color: #f0d080; text-shadow: none; }
 }
 
 /* ── Perfect game celebration ─────────────────────────────── */
@@ -652,7 +822,7 @@ body {
 }
 #celebration.show { display: flex; }
 #celebration h1 {
-  font-family: var(--font-display);
+  font-family: 'Cinzel Decorative', 'Cinzel', serif;
   font-size: clamp(1.6rem, 5vw, 3rem);
   background: linear-gradient(135deg, #f0d080, #c8952a, #f0d080, #fff8c0);
   background-size: 200% 200%;
@@ -666,9 +836,9 @@ body {
   100% { background-position: 200% 50%; }
 }
 #celebration p {
-  font-family: var(--font-body);
+  font-family: 'IM Fell English', Georgia, serif;
   font-style: italic;
-  color: var(--text-muted);
+  color: #c8a878;
   font-size: 1rem;
   max-width: 360px;
 }
@@ -695,16 +865,16 @@ body {
   padding: 0.3rem 0;
 }
 .appearance-toggle span {
-  font-family: var(--font-ui);
+  font-family: 'Cinzel', serif;
   font-size: 0.7rem;
   letter-spacing: 0.12em;
   text-transform: uppercase;
-  color: var(--text-muted);
+  color: #c8a878;
   transition: color 0.2s;
 }
-.appearance-toggle:hover span { color: var(--gold); }
+.appearance-toggle:hover span { color: #f0d080; }
 .appearance-toggle .arrow {
-  color: var(--gold-dim);
+  color: #8a6818;
   font-size: 0.65rem;
   transition: transform 0.2s;
 }
@@ -715,20 +885,20 @@ body {
 }
 .appearance-drawer.open { display: flex; gap: 0.5rem; flex-wrap: wrap; }
 .preset-btn {
-  font-family: var(--font-ui);
+  font-family: 'Cinzel', serif;
   font-size: 0.65rem;
   letter-spacing: 0.08em;
   padding: 0.4rem 0.8rem;
   border-radius: 5px;
-  border: 1px solid var(--border);
-  background: var(--surface-2);
-  color: var(--text-muted);
+  border: 1px solid #c8952a;
+  background: #261c0a;
+  color: #c8a878;
   cursor: pointer;
   transition: all 0.2s;
   text-transform: uppercase;
 }
-.preset-btn:hover { border-color: var(--gold-dim); color: var(--gold); }
-.preset-btn.active { border-color: var(--gold); color: var(--gold-light); background: rgba(200,149,42,0.12); }
+.preset-btn:hover { border-color: #f0d080; color: #f0d080; }
+.preset-btn.active { border-color: #f0d080; color: #f0d080; background: rgba(200,149,42,0.15); }
 
 /* ── Personal Best ────────────────────────────────────────── */
 .best-row {
@@ -736,14 +906,14 @@ body {
   align-items: center;
   justify-content: center;
   gap: 0.5rem;
-  font-family: var(--font-ui);
+  font-family: 'Cinzel', serif;
   font-size: 0.72rem;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: var(--text-muted);
+  color: #c8a878;
   margin: 0.3rem 0;
 }
-.best-row strong { color: var(--gold); }
+.best-row strong { color: #f0d080; }
 
 /* ── Footer ───────────────────────────────────────────────── */
 .rpg-footer {
@@ -775,16 +945,16 @@ body {
   padding: 0.5rem 0;
   width: fit-content;
 }
-.rules-toggle:hover .rules-toggle-label { color: var(--gold); }
+.rules-toggle:hover .rules-toggle-label { color: #c8952a; }
 .rules-toggle-arrow {
   font-size: 0.65rem;
-  color: var(--gold-dim);
+  color: #8a6818;
   transition: transform 0.25s ease;
   display: inline-block;
 }
 .rules-toggle.open .rules-toggle-arrow { transform: rotate(90deg); }
 .rules-toggle-label {
-  font-family: var(--font-ui);
+  font-family: 'Cinzel', serif;
   font-size: 0.78rem;
   letter-spacing: 0.14em;
   text-transform: uppercase;
@@ -806,8 +976,8 @@ body {
   margin-bottom: 1rem;
 }
 .rules-card {
-  background: var(--surface);
-  border: 1px solid var(--border);
+  background: #1e1608;
+  border: 1px solid rgba(200,149,42,0.25);
   border-radius: 9px;
   padding: 1rem 1.1rem 1.1rem;
   position: relative;
@@ -826,7 +996,7 @@ body {
   line-height: 1;
 }
 .rules-card-title {
-  font-family: var(--font-ui);
+  font-family: 'Cinzel', serif;
   font-size: 0.72rem;
   letter-spacing: 0.12em;
   text-transform: uppercase;
@@ -834,7 +1004,7 @@ body {
   margin-bottom: 0.5rem;
 }
 .rules-card-text {
-  font-family: var(--font-body);
+  font-family: 'IM Fell English', Georgia, serif;
   font-size: 0.88rem;
   line-height: 1.65;
   color: #c8a878 !important;
@@ -845,12 +1015,12 @@ body {
 /* quick reference strip */
 .rules-quick-ref {
   background: rgba(0,0,0,0.3);
-  border: 1px solid var(--border);
+  border: 1px solid rgba(200,149,42,0.25);
   border-radius: 8px;
   padding: 0.8rem 1rem;
 }
 .rules-qr-title {
-  font-family: var(--font-ui);
+  font-family: 'Cinzel', serif;
   font-size: 0.65rem;
   letter-spacing: 0.16em;
   text-transform: uppercase;
@@ -866,7 +1036,7 @@ body {
   display: flex;
   align-items: baseline;
   gap: 0.5rem;
-  font-family: var(--font-ui);
+  font-family: 'Cinzel', serif;
   font-size: 0.7rem;
   letter-spacing: 0.05em;
 }
@@ -903,35 +1073,8 @@ body {
   <header class="game-header rpg-fadein">
     <a href="index.html" class="rpg-back">Hub</a>
 
-    <!-- Phoenix Mark SVG -->
-    <svg class="phoenix-mark" viewBox="0 0 44 44" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-      <defs>
-        <radialGradient id="phx-grd" cx="50%" cy="60%" r="55%">
-          <stop offset="0%" stop-color="#f0d080"/>
-          <stop offset="60%" stop-color="#c8952a"/>
-          <stop offset="100%" stop-color="#8a6818"/>
-        </radialGradient>
-      </defs>
-      <!-- tail flames -->
-      <path d="M22 40 C18 35 10 32 12 24 C14 18 18 20 20 26 C21 29 22 32 22 40Z" fill="url(#phx-grd)" opacity="0.7"/>
-      <path d="M22 40 C26 35 34 32 32 24 C30 18 26 20 24 26 C23 29 22 32 22 40Z" fill="url(#phx-grd)" opacity="0.7"/>
-      <path d="M22 38 C22 30 22 26 22 22" stroke="url(#phx-grd)" stroke-width="1.5" stroke-linecap="round"/>
-      <!-- wings -->
-      <path d="M22 20 C16 16 7 17 6 12 C5 8 12 9 16 13 C18 15 20 17 22 20Z" fill="url(#phx-grd)"/>
-      <path d="M22 20 C28 16 37 17 38 12 C39 8 32 9 28 13 C26 15 24 17 22 20Z" fill="url(#phx-grd)"/>
-      <!-- body -->
-      <ellipse cx="22" cy="19" rx="5" ry="6" fill="url(#phx-grd)"/>
-      <!-- head -->
-      <circle cx="22" cy="12" r="4" fill="url(#phx-grd)"/>
-      <!-- beak -->
-      <path d="M22 10 L24 8 L22 9Z" fill="#f0d080"/>
-      <!-- eye -->
-      <circle cx="23" cy="11.5" r="1" fill="#0f0c07"/>
-      <circle cx="23.3" cy="11.2" r="0.35" fill="#f0d080"/>
-      <!-- crest -->
-      <path d="M20 9 C19 6 21 4 22 7" stroke="#f0d080" stroke-width="0.8" fill="none" stroke-linecap="round"/>
-      <path d="M22 8 C22 5 23 3 23 6" stroke="#f0d080" stroke-width="0.8" fill="none" stroke-linecap="round"/>
-    </svg>
+    <!-- Phoenix Mark PNG -->
+    <img src="RPG_Favicon_no_background.png" class="phoenix-mark" alt="Rising Phoenix Games logo" width="52" height="52">
 
     <div class="title-block">
       <div class="game-title">Shut the Box</div>
@@ -985,7 +1128,7 @@ body {
     </div>
 
     <!-- Status bar -->
-    <div class="rpg-statusbar" id="status-bar">⚜ Roll the dice to begin.</div>
+    <div class="rpg-statusbar" id="status-bar" style="color:#f0d080;font-family:'Cinzel',serif;">⚜ Roll the dice to begin.</div>
 
     <!-- Selection info -->
     <div class="selection-bar" id="selection-bar">
@@ -1159,8 +1302,8 @@ body {
   </section>
 
   <hr class="rpg-rule">
-  <footer class="rpg-footer">
-    © <span id="year"></span> Rising Phoenix Gallery · Michigan City, IN · Crafted by John Ryszka II
+  <footer class="rpg-footer" style="color:#c8a878;font-family:'IM Fell English',Georgia,serif;font-style:italic;">
+    © <span id="year" style="color:#c8a878;"></span> Rising Phoenix Gallery · Michigan City, IN · Crafted by John Ryszka II
   </footer>
 </div><!-- /.page-wrap -->
 
@@ -1375,19 +1518,18 @@ function buildTileRow() {
       </div>`;
     tile.addEventListener('click', () => toggleTile(i));
 
-    // shimmer
+    // Shimmer: randomly fire a CSS class that plays the sweep animation
     if (!reduced) {
-      const shimmerPeriod = (7 + Math.random() * 8).toFixed(1);
-      const shimmerDelay  = -(Math.random() * parseFloat(shimmerPeriod)).toFixed(1);
-      const face = tile.querySelector('.tile-face');
-      face.style.setProperty('--shimmer-period', shimmerPeriod + 's');
-      face.style.setProperty('--shimmer-delay', shimmerDelay + 's');
-      face.style.animation = `tile-shimmer ${shimmerPeriod}s linear ${shimmerDelay}s infinite`;
-      face.style.backgroundImage = `linear-gradient(
-        135deg,
-        transparent 0%, rgba(255,220,100,0.07) 40%, rgba(255,240,160,0.18) 50%,
-        rgba(255,220,100,0.07) 60%, transparent 100%)`;
-      face.style.backgroundSize = '300% 300%';
+      const fireShimmer = () => {
+        if (tile.classList.contains('flipped')) return;
+        tile.classList.remove('shimmer-' + i);
+        void tile.offsetWidth; // force reflow to restart animation
+        tile.classList.add('shimmer-' + i);
+        // Schedule next shimmer in 7–18 seconds
+        setTimeout(fireShimmer, 7000 + Math.random() * 11000);
+      };
+      // Start first shimmer after a random initial delay
+      setTimeout(fireShimmer, Math.random() * 8000);
     }
 
     row.appendChild(tile);
@@ -1729,7 +1871,9 @@ function clearChronicle() {
 
 // ─── Status Bar ─────────────────────────────────────────────
 function setStatus(msg) {
-  document.getElementById('status-bar').textContent = msg;
+  const el = document.getElementById('status-bar');
+  el.textContent = msg;
+  el.style.color = '#f0d080';
 }
 
 // ─── Dice reset ─────────────────────────────────────────────
@@ -1824,6 +1968,60 @@ setMode = function(m) {
   if (m === 'multi') buildNameInputs();
 };
 setMode('solo'); // initial call to show solo row
+
+// Force rules section text colors via JS — beats any external CSS including !important
+(function forceRulesColors() {
+  function apply() {
+    // All p tags inside rules section
+    document.querySelectorAll('.rules-section p').forEach(el => {
+      el.style.setProperty('color', '#c8a878', 'important');
+      el.style.setProperty('font-family', "'IM Fell English', Georgia, serif", 'important');
+    });
+    // All h3 tags inside rules section
+    document.querySelectorAll('.rules-section h3').forEach(el => {
+      el.style.setProperty('color', '#c8952a', 'important');
+      el.style.setProperty('font-family', "'Cinzel', serif", 'important');
+    });
+    // All spans inside rules section
+    document.querySelectorAll('.rules-section span').forEach(el => {
+      if (!el.classList.contains('rules-toggle-arrow')) {
+        el.style.setProperty('color', '#c8a878', 'important');
+      }
+    });
+    // Toggle label
+    const lbl = document.querySelector('.rules-toggle-label');
+    if (lbl) lbl.style.setProperty('color', '#a09070', 'important');
+    // Quick ref labels (first span in each qr-item)
+    document.querySelectorAll('.rules-qr-item span:first-child').forEach(el => {
+      el.style.setProperty('color', '#a09070', 'important');
+    });
+    // Quick ref values (second span in each qr-item)
+    document.querySelectorAll('.rules-qr-item span:last-child').forEach(el => {
+      el.style.setProperty('color', '#c8a878', 'important');
+    });
+    // em/strong inside p
+    document.querySelectorAll('.rules-section p em').forEach(el => {
+      el.style.setProperty('color', '#d8b888', 'important');
+    });
+    document.querySelectorAll('.rules-section p span').forEach(el => {
+      if (el.getAttribute('style') && el.getAttribute('style').includes('#f0d080')) {
+        el.style.setProperty('color', '#f0d080', 'important');
+      }
+    });
+  }
+  // Run on DOMContentLoaded and also when rules are opened
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', apply);
+  } else {
+    apply();
+  }
+  // Patch toggleRules to re-apply after opening
+  const _orig = window.toggleRules;
+  window.toggleRules = function() {
+    if (_orig) _orig();
+    setTimeout(apply, 10);
+  };
+})();
 </script>
 </body>
 </html>
