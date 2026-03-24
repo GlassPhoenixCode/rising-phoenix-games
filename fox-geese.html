@@ -123,6 +123,68 @@ header::before {
   padding: 14px 20px 12px;
 }
 
+.header-row {
+  display:flex;
+  align-items:center;
+  margin-bottom:4px;
+}
+
+.rpg-back {
+  display:inline-block;
+  font-family:'Cinzel', serif;
+  font-size:0.78rem;
+  letter-spacing:0.08em;
+  color:var(--gold);
+  text-decoration:none;
+  padding:0.55rem 1.1rem 0.55rem 2rem;
+  border:1px solid rgba(200,149,42,0.25);
+  border-radius:3px;
+  background:linear-gradient(180deg, #2a2010 0%, #1a1508 100%);
+  position:relative;
+  transition:border-color 0.2s, box-shadow 0.2s, color 0.2s;
+  margin:0;
+  flex:0 0 auto;
+}
+.rpg-back::before {
+  content:'\2190';
+  position:absolute;
+  left:0.7rem;
+}
+.rpg-back:hover {
+  border-color:var(--gold-light);
+  box-shadow:0 0 18px 2px var(--gold-glow);
+  color:var(--gold-light);
+}
+
+.header-center {
+  flex:1 1 0;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:0.75rem;
+}
+
+.header-spacer {
+  visibility:hidden;
+  pointer-events:none;
+}
+
+.phoenix-mark {
+  width:52px;
+  height:52px;
+  flex-shrink:0;
+  object-fit:contain;
+  filter: drop-shadow(0 0 10px rgba(200,149,42,0.5));
+}
+
+.title-block {
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  text-align:center;
+}
+
 h1{
   margin:0 0 4px 0;
   font-family:'Cinzel Decorative', 'Cinzel', serif;
@@ -142,10 +204,12 @@ h1{
   font-family:'IM Fell English', serif;
   font-style:italic;
   font-size:12px;
-  color:var(--parch-dark);
+  color:#c8a878;
   letter-spacing:2px;
-  margin-bottom:12px;
-  opacity:0.7;
+  margin:2px 0 0;
+  opacity:0.85;
+  text-align:center;
+  width:100%;
 }
 
 .controls{
@@ -218,6 +282,32 @@ button.primary{
 button.primary:hover{
   background: linear-gradient(180deg, #8b2828 0%, #4d1616 100%);
   box-shadow: 0 2px 14px rgba(180,40,40,0.4);
+}
+
+
+@media (max-width: 640px){
+  .header-row {
+    display:grid;
+    grid-template-columns:auto 1fr auto;
+    gap:8px;
+    align-items:center;
+  }
+  .header-center {
+    min-width:0;
+    gap:0.55rem;
+  }
+  h1 {
+    letter-spacing:2px;
+    font-size:clamp(16px, 5vw, 24px);
+  }
+  .title-sub {
+    letter-spacing:1px;
+    font-size:11px;
+  }
+  .rpg-back {
+    padding:0.5rem 0.8rem 0.5rem 1.7rem;
+    font-size:0.72rem;
+  }
 }
 
 .icon-btn{
@@ -735,9 +825,17 @@ footer p {
   <div id="app">
     <header>
       <div class="header-inner">
-        <a href="index.html" class="rpg-back">Back to Game Hub</a>
-        <h1>Fox &amp; Geese</h1>
-        <div class="title-sub">The Ancient Hunt &mdash; 33-point Cross Board</div>
+        <div class="header-row">
+          <a href="index.html" class="rpg-back">Hub</a>
+          <div class="header-center">
+            <img class="phoenix-mark" src="RPG Favicon no background copy.png" alt="Rising Phoenix Games" />
+            <div class="title-block">
+              <h1>Fox &amp; Geese</h1>
+              <div class="title-sub">The Ancient Hunt &mdash; 33-point Cross Board</div>
+            </div>
+          </div>
+          <a href="index.html" class="rpg-back header-spacer">Hub</a>
+        </div>
         <div class="controls">
           <div class="toggles">
             <label title="If on, geese can only move towards the fox's side (downwards). Default: off">
