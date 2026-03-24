@@ -1,0 +1,899 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Connect Four — Rising Phoenix Games</title>
+  <link rel="stylesheet" href="shared.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700&family=Cinzel:wght@400;600;700&family=IM+Fell+English:ital@0;1&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:            #0f0c07;
+      --bg-warm:       #1a1005;
+      --surface:       #1e1608;
+      --surface-2:     #261c0a;
+      --border:        rgba(200,149,42,0.25);
+      --border-bright: rgba(200,149,42,0.55);
+      --gold-dim:      #8a6818;
+      --gold:          #c8952a;
+      --gold-light:    #f0d080;
+      --gold-glow:     rgba(200,149,42,0.35);
+      --crimson:       #8b1a1a;
+      --crimson-light: #c04040;
+      --sage:          #4a7a3a;
+      --sage-light:    #7aaa5a;
+      --text:          #e8dfc8;
+      --text-muted:    #a09070;
+      --text-dim:      rgba(200,170,100,0.45);
+      --font-display:  'Cinzel Decorative', 'Cinzel', serif;
+      --font-ui:       'Cinzel', serif;
+      --font-body:     'IM Fell English', Georgia, serif;
+      --p1-a: #c04040; --p1-b: #8b1a1a;
+      --p2-a: #f0d080; --p2-b: #c8952a;
+    }
+
+    body {
+      font-family: var(--font-body);
+      color: var(--text);
+      min-height: 100vh;
+      background:
+        radial-gradient(ellipse at 20% 10%,  rgba(80,45,8,0.55)  0%, transparent 55%),
+        radial-gradient(ellipse at 80% 90%,  rgba(60,30,5,0.50)  0%, transparent 55%),
+        radial-gradient(ellipse at 60% 40%,  rgba(40,20,3,0.40)  0%, transparent 60%),
+        linear-gradient(160deg, #1a1005 0%, #0f0c07 50%, #0a0804 100%);
+      background-attachment: fixed;
+      padding-bottom: 3rem;
+    }
+
+    .page-wrap { max-width: 860px; margin: 0 auto; padding: 0 1rem; }
+
+    /* ── Back link ── */
+    .rpg-back {
+      display: inline-block;
+      font-family: var(--font-ui);
+      font-size: 0.78rem;
+      letter-spacing: 0.08em;
+      color: var(--gold);
+      text-decoration: none;
+      padding: 0.55rem 1.1rem 0.55rem 2rem;
+      border: 1px solid var(--border);
+      border-radius: 3px;
+      background: var(--surface);
+      position: relative;
+      transition: border-color 0.2s, box-shadow 0.2s;
+      margin: 0;
+    }
+    .rpg-back::before { content: '\2190'; position: absolute; left: 0.7rem; }
+    .rpg-back:hover {
+      border-color: var(--border-bright);
+      box-shadow: 0 0 18px 2px var(--gold-glow);
+      color: var(--gold-light);
+    }
+
+    /* ── Header ── */
+    .site-header { padding: 1rem 0 0.6rem; }
+    .header-row {
+      display: flex;
+      align-items: center;
+      margin-bottom: 0.4rem;
+    }
+    /* Hub sticks to the left */
+    .header-row > .rpg-back { flex: 0 0 auto; }
+    /* Center block: logo + title, truly centered */
+    .header-center {
+      flex: 1 1 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.75rem;
+    }
+    /* Invisible spacer mirrors Hub width to keep center balanced */
+    .header-spacer {
+      flex: 0 0 auto;
+      visibility: hidden;
+      pointer-events: none;
+    }
+    .phoenix-mark {
+      width: 52px; height: 52px;
+      flex-shrink: 0;
+      filter: drop-shadow(0 0 10px rgba(200,149,42,0.5));
+    }
+    .rpg-title {
+      font-family: var(--font-display);
+      font-size: clamp(1.3rem, 4vw, 2rem);
+      font-weight: 700;
+      background: linear-gradient(180deg, var(--gold-light) 0%, var(--gold) 60%, var(--gold-dim) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      line-height: 1.2;
+      letter-spacing: 0.04em;
+    }
+    .rpg-subtitle {
+      font-family: var(--font-body);
+      font-style: italic;
+      color: var(--text-muted);
+      font-size: 0.95rem;
+      margin-top: 0.25rem;
+      text-align: center;
+    }
+    .rpg-rule { border: none; border-top: 1px solid var(--border); margin: 0.9rem 0; }
+
+    /* ── Status bar ── */
+    .rpg-statusbar {
+      font-family: var(--font-ui);
+      font-size: 0.82rem;
+      letter-spacing: 0.06em;
+      color: var(--gold);
+      text-align: center;
+      padding: 0.45rem 1rem;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      margin-bottom: 1.1rem;
+      min-height: 2.2rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      transition: color 0.3s;
+    }
+    .rpg-statusbar.p1-turn { color: #e87070; }
+    .rpg-statusbar.p2-turn { color: var(--gold-light); }
+    .rpg-statusbar.win     { color: #fff; font-size: 0.95rem; }
+    .rpg-statusbar.draw    { color: var(--text-muted); }
+
+    /* ── Board frame ── */
+    .board-frame {
+      background: linear-gradient(160deg, #2a1e08, #1a1005, #0f0c07);
+      border: 2px solid var(--border-bright);
+      border-radius: 8px;
+      padding: 1rem;
+      box-shadow: inset 0 2px 12px rgba(0,0,0,0.6), 0 0 28px 4px rgba(200,149,42,0.08);
+      position: relative;
+      margin-bottom: 1rem;
+    }
+
+    /* column hover zones */
+    .col-zones {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 6px;
+      margin-bottom: 4px;
+    }
+    .col-zone {
+      height: 24px;
+      cursor: pointer;
+      border-radius: 4px 4px 0 0;
+      transition: background 0.15s;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .col-zone:hover { background: rgba(200,149,42,0.12); }
+    .col-zone .drop-arrow { color: var(--gold); font-size: 1rem; opacity: 0; transition: opacity 0.15s; }
+    .col-zone:hover .drop-arrow { opacity: 0.8; }
+
+    /* grid */
+    .game-board {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      grid-template-rows: repeat(6, 1fr);
+      gap: 6px;
+      aspect-ratio: 7/6;
+      width: 100%;
+      position: relative;
+    }
+
+    /* cells */
+    .cell {
+      border-radius: 50%;
+      background: radial-gradient(circle at 38% 35%, #2e2210, #0f0c07 80%);
+      border: 1px solid rgba(200,149,42,0.15);
+      box-shadow: inset 0 2px 6px rgba(0,0,0,0.7), inset 0 -1px 2px rgba(200,149,42,0.05);
+      cursor: pointer;
+      position: relative;
+      overflow: hidden;
+      transition: box-shadow 0.15s;
+    }
+    .cell:hover {
+      box-shadow: inset 0 2px 6px rgba(0,0,0,0.7), 0 0 8px 2px rgba(200,149,42,0.18);
+    }
+
+    /* piece slot — hidden until disc lands */
+    .piece {
+      position: absolute;
+      inset: 0;
+      border-radius: 50%;
+      opacity: 0;
+    }
+    .piece.p1 {
+      background: radial-gradient(circle at 35% 30%, #e87070, var(--p1-a) 55%, var(--p1-b));
+      box-shadow: inset 0 -3px 8px rgba(0,0,0,0.5), 0 0 10px 2px rgba(176,40,40,0.35);
+    }
+    .piece.p2 {
+      background: radial-gradient(circle at 35% 30%, #fff6c0, var(--p2-a) 55%, var(--p2-b));
+      box-shadow: inset 0 -3px 8px rgba(0,0,0,0.4), 0 0 10px 2px rgba(200,149,42,0.45);
+    }
+    .piece.visible { opacity: 1; }
+
+    /* winning glow */
+    .piece.win-piece.p1 {
+      box-shadow: inset 0 -3px 8px rgba(0,0,0,0.4), 0 0 22px 6px rgba(220,60,60,0.75);
+      animation: winPulse 0.9s ease-in-out infinite alternate !important;
+    }
+    .piece.win-piece.p2 {
+      box-shadow: inset 0 -3px 8px rgba(0,0,0,0.3), 0 0 22px 6px rgba(240,200,80,0.8);
+      animation: winPulse 0.9s ease-in-out infinite alternate !important;
+    }
+    @keyframes winPulse {
+      from { filter: brightness(1); }
+      to   { filter: brightness(1.4); }
+    }
+
+    /* ── Flying disc ── */
+    .flying-disc {
+      position: fixed;
+      border-radius: 50%;
+      pointer-events: none;
+      z-index: 500;
+      will-change: top, transform;
+    }
+    .flying-disc.p1 {
+      background: radial-gradient(circle at 35% 30%, #e87070, var(--p1-a) 55%, var(--p1-b));
+      box-shadow: inset 0 -3px 8px rgba(0,0,0,0.5), 0 0 16px 4px rgba(176,40,40,0.55);
+    }
+    .flying-disc.p2 {
+      background: radial-gradient(circle at 35% 30%, #fff6c0, var(--p2-a) 55%, var(--p2-b));
+      box-shadow: inset 0 -3px 8px rgba(0,0,0,0.4), 0 0 16px 4px rgba(200,149,42,0.65);
+    }
+
+    /* ── Breathing & shimmer ── */
+    @keyframes breathe {
+      0%,100% { transform: scale(1) translateY(0); }
+      50%      { transform: scale(1.035) translateY(-1px); }
+    }
+    @keyframes shimmer {
+      0%   { background-position: -200% -200%; opacity: 0; }
+      10%  { opacity: 0.55; }
+      90%  { opacity: 0.35; }
+      100% { background-position: 300% 300%; opacity: 0; }
+    }
+    .shimmer-overlay {
+      position: absolute;
+      inset: 0;
+      border-radius: 50%;
+      background: linear-gradient(135deg, transparent 30%, rgba(255,255,255,0.55) 50%, transparent 70%);
+      background-size: 300% 300%;
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    /* ── Win banner ── */
+    #winBanner {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%) scale(0.06);
+      z-index: 600;
+      display: none;
+      white-space: nowrap;
+      font-family: var(--font-display);
+      font-size: clamp(1rem, 4vw, 1.6rem);
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      padding: 0.45em 1em;
+      border-radius: 6px;
+      border: 2px solid;
+      text-align: center;
+      pointer-events: none;
+      opacity: 1;
+    }
+    #winBanner.p1 {
+      color: #fff;
+      background: linear-gradient(135deg, rgba(139,26,26,0.97), rgba(80,10,10,0.99));
+      border-color: #e87070;
+      box-shadow: 0 0 40px 10px rgba(192,64,64,0.55), inset 0 1px 0 rgba(255,150,150,0.2);
+    }
+    #winBanner.p2 {
+      color: #1a1005;
+      background: linear-gradient(135deg, rgba(240,208,80,0.97), rgba(200,149,42,0.99));
+      border-color: #fff6c0;
+      box-shadow: 0 0 40px 10px rgba(200,149,42,0.65), inset 0 1px 0 rgba(255,255,200,0.35);
+    }
+
+    /* ── Confetti canvas ── */
+    #confettiCanvas {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      pointer-events: none;
+      z-index: 550;
+    }
+
+    /* ── Controls ── */
+    .controls { display: flex; gap: 0.75rem; justify-content: center; flex-wrap: wrap; margin-bottom: 1.1rem; }
+    .rpg-btn {
+      font-family: var(--font-ui);
+      font-size: 0.78rem;
+      letter-spacing: 0.09em;
+      font-weight: 600;
+      color: var(--gold-light);
+      background: linear-gradient(180deg, var(--surface-2), var(--surface));
+      border: 1px solid var(--border-bright);
+      border-radius: 4px;
+      padding: 0.55rem 1.4rem;
+      cursor: pointer;
+      text-transform: uppercase;
+      transition: box-shadow 0.2s, border-color 0.2s, color 0.2s;
+      box-shadow: inset 0 1px 0 rgba(200,149,42,0.1);
+    }
+    .rpg-btn:hover {
+      border-color: var(--gold);
+      color: #fff;
+      box-shadow: 0 0 18px 2px rgba(200,149,42,0.25), 0 0 48px 8px rgba(180,120,20,0.15), inset 0 1px 0 rgba(200,149,42,0.15);
+    }
+
+    /* player pills */
+    .player-labels { display: flex; gap: 1rem; justify-content: center; margin-bottom: 0.9rem; flex-wrap: wrap; }
+    .player-pill {
+      font-family: var(--font-ui);
+      font-size: 0.75rem;
+      letter-spacing: 0.07em;
+      padding: 0.3rem 1rem;
+      border-radius: 20px;
+      border: 1px solid transparent;
+      transition: border-color 0.3s, box-shadow 0.3s, opacity 0.3s;
+      opacity: 0.45;
+    }
+    .player-pill.p1 { background: linear-gradient(135deg, #3d1010, #1e0808); color: #e87070; border-color: rgba(176,40,40,0.3); }
+    .player-pill.p2 { background: linear-gradient(135deg, #3d2e08, #1e1a04); color: var(--gold-light); border-color: rgba(200,149,42,0.3); }
+    .player-pill.active { opacity: 1; }
+    .player-pill.active.p1 { border-color: #c04040; box-shadow: 0 0 12px 2px rgba(192,64,64,0.35); }
+    .player-pill.active.p2 { border-color: var(--gold); box-shadow: 0 0 12px 2px var(--gold-glow); }
+
+    /* Chronicle */
+    .chronicle-wrap { background: var(--surface); border: 1px solid var(--border); border-radius: 6px; padding: 0.6rem 0.8rem; margin-bottom: 1.1rem; }
+    .chronicle-title { font-family: var(--font-ui); font-size: 0.7rem; letter-spacing: 0.12em; color: var(--text-dim); text-transform: uppercase; margin-bottom: 0.4rem; }
+    .chronicle-scroll { display: flex; gap: 0.5rem; overflow-x: auto; padding-bottom: 4px; scrollbar-width: thin; scrollbar-color: var(--gold-dim) transparent; }
+    .chronicle-scroll::-webkit-scrollbar { height: 4px; }
+    .chronicle-scroll::-webkit-scrollbar-thumb { background: var(--gold-dim); border-radius: 2px; }
+    .chron-pill {
+      flex-shrink: 0;
+      font-family: var(--font-ui);
+      font-size: 0.68rem;
+      letter-spacing: 0.05em;
+      padding: 0.25rem 0.65rem;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+      white-space: nowrap;
+      background: var(--surface-2);
+    }
+    .chron-pill.p1-pill   { color: #e87070; border-color: rgba(176,40,40,0.35); }
+    .chron-pill.p2-pill   { color: var(--gold-light); border-color: rgba(200,149,42,0.35); }
+    .chron-pill.event-pill { color: var(--gold); border-color: var(--border-bright); }
+
+    /* Footer */
+    .rpg-footer {
+      text-align: center;
+      font-family: var(--font-body);
+      font-style: italic;
+      font-size: 0.78rem;
+      color: var(--text-dim);
+      margin-top: 2rem;
+      padding-top: 1rem;
+      border-top: 1px solid var(--border);
+    }
+
+    @media (max-width: 480px) {
+      .board-frame { padding: 0.6rem; }
+      .game-board  { gap: 4px; }
+      .col-zones   { gap: 4px; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .piece { animation: none !important; }
+      .shimmer-overlay { display: none; }
+    }
+  </style>
+</head>
+<body style="background:
+  radial-gradient(ellipse at 20% 10%, rgba(80,45,8,0.55) 0%, transparent 55%),
+  radial-gradient(ellipse at 80% 90%, rgba(60,30,5,0.50) 0%, transparent 55%),
+  radial-gradient(ellipse at 60% 40%, rgba(40,20,3,0.40) 0%, transparent 60%),
+  linear-gradient(160deg,#1a1005 0%,#0f0c07 50%,#0a0804 100%);">
+
+<canvas id="confettiCanvas"></canvas>
+
+<div class="page-wrap">
+  <header class="site-header">
+    <div class="header-row">
+      <a href="index.html" class="rpg-back">Hub</a>
+      <div class="header-center">
+        <img class="phoenix-mark" src="data:image/png;base64,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" alt="Rising Phoenix Games" />
+      <h1 class="rpg-title">Connect Four</h1>
+      </div><!-- /header-center -->
+      <a href="index.html" class="rpg-back header-spacer">Hub</a>
+    </div>
+    <p class="rpg-subtitle">Four in a row wins the crown — vertically, horizontally, or diagonally.</p>
+    <hr class="rpg-rule">
+  </header>
+
+  <div class="player-labels">
+    <div class="player-pill p1 active" id="pill1">&#11044;&thinsp;Player One &mdash; Crimson</div>
+    <div class="player-pill p2"        id="pill2">&#11044;&thinsp;Player Two &mdash; Gold</div>
+  </div>
+
+  <div class="rpg-statusbar p1-turn" id="statusBar">
+    &#10172;&nbsp; Player One's move &mdash; drop a disc into a column
+  </div>
+
+  <div class="board-frame" id="boardFrame">
+    <div class="col-zones" id="colZones"></div>
+    <div class="game-board" id="gameBoard">
+      <div id="winBanner"></div>
+    </div>
+  </div>
+
+  <div class="controls">
+    <button class="rpg-btn" id="newGameBtn">&#9876; New Game</button>
+  </div>
+
+  <div class="chronicle-wrap">
+    <div class="chronicle-title">&#10172; Chronicle of Moves</div>
+    <div class="chronicle-scroll" id="chronicle"></div>
+  </div>
+
+  <footer class="rpg-footer">
+    &copy; <span id="year"></span> Rising Phoenix Gallery &middot; Michigan City, IN &middot; Crafted by John Ryszka II
+  </footer>
+</div>
+
+<script>
+(function () {
+  'use strict';
+
+  var ROWS = 6, COLS = 7;
+  var NAMES = ['', 'Player One', 'Player Two'];
+
+  var board, currentPlayer, gameOver, moveCount, dropping;
+
+  var gameBoardEl    = document.getElementById('gameBoard');
+  var colZonesEl     = document.getElementById('colZones');
+  var statusBar      = document.getElementById('statusBar');
+  var chronicle      = document.getElementById('chronicle');
+  var pill1          = document.getElementById('pill1');
+  var pill2          = document.getElementById('pill2');
+  var winBanner      = document.getElementById('winBanner');
+  var confettiCanvas = document.getElementById('confettiCanvas');
+  var ctx            = confettiCanvas.getContext('2d');
+
+  document.getElementById('year').textContent = new Date().getFullYear();
+
+  /* ══════════════════════════════════════════
+     INIT
+  ══════════════════════════════════════════ */
+  function init() {
+    board         = [];
+    currentPlayer = 1;
+    gameOver      = false;
+    moveCount     = 0;
+    dropping      = false;
+
+    for (var r = 0; r < ROWS; r++) {
+      board[r] = [];
+      for (var c = 0; c < COLS; c++) board[r][c] = 0;
+    }
+
+    buildDOM();
+    setStatus('p1-turn', '\u26dc\u00a0 ' + NAMES[1] + '\u2019s move \u2014 drop a disc into a column');
+    setPills(1);
+    chronicle.innerHTML = '';
+    addChronPill('A new game begins\u2026', 'event-pill');
+    winBanner.style.display = 'none';
+    winBanner.className = '';
+    stopConfetti();
+  }
+
+  /* ══════════════════════════════════════════
+     BUILD DOM
+  ══════════════════════════════════════════ */
+  function buildDOM() {
+    // preserve win banner through innerHTML clear
+    gameBoardEl.innerHTML = '';
+    colZonesEl.innerHTML  = '';
+    gameBoardEl.appendChild(winBanner);
+
+    var c, row, col;
+
+    for (c = 0; c < COLS; c++) {
+      var zone = document.createElement('div');
+      zone.className = 'col-zone';
+      zone.innerHTML = '<span class="drop-arrow">\u25bc</span>';
+      (function (cl) {
+        zone.addEventListener('click',    function ()  { dropDisc(cl); });
+        zone.addEventListener('touchend', function (e) { e.preventDefault(); dropDisc(cl); });
+      }(c));
+      colZonesEl.appendChild(zone);
+    }
+
+    for (row = 0; row < ROWS; row++) {
+      for (col = 0; col < COLS; col++) {
+        var cell = document.createElement('div');
+        cell.className = 'cell';
+        cell.setAttribute('data-row', row);
+        cell.setAttribute('data-col', col);
+        (function (cl) {
+          cell.addEventListener('click',    function ()  { dropDisc(cl); });
+          cell.addEventListener('touchend', function (e) { e.preventDefault(); dropDisc(cl); });
+        }(col));
+
+        var piece = document.createElement('div');
+        piece.className = 'piece';
+        piece.setAttribute('data-row', row);
+        piece.setAttribute('data-col', col);
+
+        var shimmer = document.createElement('div');
+        shimmer.className = 'shimmer-overlay';
+        piece.appendChild(shimmer);
+        cell.appendChild(piece);
+        gameBoardEl.appendChild(cell);
+      }
+    }
+  }
+
+  /* ══════════════════════════════════════════
+     DROP DISC — entry point
+  ══════════════════════════════════════════ */
+  function dropDisc(col) {
+    if (gameOver || dropping) return;
+
+    var landRow = -1;
+    for (var r = ROWS - 1; r >= 0; r--) {
+      if (board[r][col] === 0) { landRow = r; break; }
+    }
+    if (landRow === -1) return; // column full
+
+    dropping = true;
+    board[landRow][col] = currentPlayer;
+    moveCount++;
+
+    var player   = currentPlayer;
+    var colLabel = String.fromCharCode(65 + col);
+    addChronPill('Move ' + moveCount + ': ' + NAMES[player] + ' \u2192 Col ' + colLabel, 'p' + player + '-pill');
+
+    animateDrop(col, landRow, player, function () {
+      dropping = false;
+
+      // show the real piece in the cell
+      var piece = getPiece(landRow, col);
+      piece.classList.add('p' + player, 'visible');
+      startBreathing(piece);
+      scheduleShimmer(piece);
+
+      // win?
+      if (checkWin(landRow, col, player)) {
+        gameOver = true;
+        highlightWin(landRow, col, player);
+        setStatus('win', '\u26dc\u00a0 ' + NAMES[player] + ' claims victory \u2014 four in a row!');
+        addChronPill('\uD83C\uDFC6 ' + NAMES[player] + ' wins!', 'event-pill');
+        setTimeout(function () {
+          launchConfetti(player);
+          setTimeout(function () { showWinBanner(player); }, 280);
+        }, 220);
+        return;
+      }
+
+      // draw?
+      if (checkDraw()) {
+        gameOver = true;
+        setStatus('draw', '\u26dc\u00a0 The board is full \u2014 an honourable draw.');
+        addChronPill('A draw \u2014 well played by both.', 'event-pill');
+        return;
+      }
+
+      // next player
+      currentPlayer = player === 1 ? 2 : 1;
+      setStatus('p' + currentPlayer + '-turn',
+        '\u26dc\u00a0 ' + NAMES[currentPlayer] + '\u2019s move \u2014 choose your column');
+      setPills(currentPlayer);
+    });
+  }
+
+  /* ══════════════════════════════════════════
+     ANIMATE DROP  (fixed-position flying disc)
+  ══════════════════════════════════════════ */
+  function animateDrop(col, landRow, player, onDone) {
+    var topCell    = getCellEl(0, col);
+    var targetCell = getCellEl(landRow, col);
+    if (!topCell || !targetCell) { onDone(); return; }
+
+    var topRect    = topCell.getBoundingClientRect();
+    var targetRect = targetCell.getBoundingClientRect();
+    var size       = topRect.width;
+
+    // Create the flying disc at fixed screen position of top cell
+    var disc = document.createElement('div');
+    disc.className = 'flying-disc p' + player;
+    disc.style.width  = size + 'px';
+    disc.style.height = size + 'px';
+    disc.style.left   = topRect.left + 'px';
+    disc.style.top    = topRect.top  + 'px';
+    document.body.appendChild(disc);
+
+    var startY    = topRect.top;
+    var finalY    = targetRect.top;
+    var totalDist = finalY - startY;
+
+    // Scale fall duration by distance so it feels physical
+    var fallDur = Math.max(160, Math.min(500, totalDist * 1.05));
+
+    var startTime = null;
+    function fallStep(ts) {
+      if (!startTime) startTime = ts;
+      var t = Math.min((ts - startTime) / fallDur, 1);
+      var eased = t * t; // easeInQuad — gravity feel
+      disc.style.top = (startY + totalDist * eased) + 'px';
+      if (t < 1) {
+        requestAnimationFrame(fallStep);
+      } else {
+        disc.style.top = finalY + 'px';
+        bounceSettle(disc, finalY, Math.min(size * 0.17, 10), 165, function () {
+          document.body.removeChild(disc);
+          onDone();
+        });
+      }
+    }
+    requestAnimationFrame(fallStep);
+  }
+
+  /* Mini spring bounce on landing */
+  function bounceSettle(disc, finalY, bounceH, dur, onDone) {
+    var startTime = null;
+    function step(ts) {
+      if (!startTime) startTime = ts;
+      var t = Math.min((ts - startTime) / dur, 1);
+      // Decaying sine: up then settles
+      var bounce  = Math.sin(t * Math.PI * 2) * (1 - t);
+      var squish  = t < 0.15 ? (1 + (1 - t / 0.15) * 0.12) : 1;
+      disc.style.top       = (finalY - bounceH * bounce) + 'px';
+      disc.style.transform = 'scaleX(' + squish + ') scaleY(' + (2 - squish) + ')';
+      if (t < 1) {
+        requestAnimationFrame(step);
+      } else {
+        disc.style.transform = '';
+        onDone();
+      }
+    }
+    requestAnimationFrame(step);
+  }
+
+  /* ══════════════════════════════════════════
+     WIN BANNER
+     Grows from scale(0.06) → scale(fit board width)
+     over 750ms, holds 1 000ms, then fades 400ms.
+  ══════════════════════════════════════════ */
+  function showWinBanner(player) {
+    var label = player === 1 ? 'Crimson Wins!' : 'Gold Wins!';
+    winBanner.textContent  = label;
+    winBanner.className    = 'p' + player;
+    winBanner.style.transition = 'none';
+    winBanner.style.opacity    = '1';
+    winBanner.style.transform  = 'translate(-50%, -50%) scale(0.06)';
+    winBanner.style.display    = 'block';
+
+    // Two rAF ticks: first to paint at tiny scale, second to measure & grow
+    requestAnimationFrame(function () {
+      requestAnimationFrame(function () {
+        var boardW   = gameBoardEl.getBoundingClientRect().width;
+        // Measure banner at scale(1) equivalent: current width / 0.06
+        var naturalW = winBanner.getBoundingClientRect().width / 0.06;
+        var target   = boardW / naturalW;
+
+        winBanner.style.transition = 'transform 750ms cubic-bezier(0.22,1,0.36,1)';
+        winBanner.style.transform  = 'translate(-50%, -50%) scale(' + target + ')';
+
+        // Hold then fade
+        setTimeout(function () {
+          winBanner.style.transition = 'opacity 400ms ease';
+          winBanner.style.opacity    = '0';
+          setTimeout(function () { winBanner.style.display = 'none'; }, 420);
+        }, 750 + 1000);
+      });
+    });
+  }
+
+  /* ══════════════════════════════════════════
+     CONFETTI
+  ══════════════════════════════════════════ */
+  var particles  = [];
+  var confettiRaf = null;
+
+  var PAL1 = ['#e87070','#c04040','#8b1a1a','#ff9999','#ffffff','#ffbbbb'];
+  var PAL2 = ['#f0d080','#c8952a','#8a6818','#fffac0','#ffffff','#ffe070'];
+
+  function launchConfetti(player) {
+    var pal = player === 1 ? PAL1 : PAL2;
+    confettiCanvas.width  = window.innerWidth;
+    confettiCanvas.height = window.innerHeight;
+    particles = [];
+
+    var origins = [
+      {x:0.15,y:0.35},{x:0.35,y:0.20},{x:0.50,y:0.15},
+      {x:0.65,y:0.20},{x:0.85,y:0.35},{x:0.30,y:0.55},{x:0.70,y:0.55}
+    ];
+    var perBurst = 26;
+
+    for (var b = 0; b < origins.length; b++) {
+      for (var i = 0; i < perBurst; i++) {
+        var angle = Math.random() * Math.PI * 2;
+        var speed = 3.5 + Math.random() * 9;
+        particles.push({
+          x:     origins[b].x * confettiCanvas.width,
+          y:     origins[b].y * confettiCanvas.height,
+          vx:    Math.cos(angle) * speed,
+          vy:    Math.sin(angle) * speed - (2 + Math.random() * 5),
+          rot:   Math.random() * 360,
+          rotV:  (Math.random() - 0.5) * 14,
+          w:     5 + Math.random() * 9,
+          h:     3 + Math.random() * 6,
+          color: pal[Math.floor(Math.random() * pal.length)],
+          life:  1,
+          decay: 0.010 + Math.random() * 0.006,
+          grav:  0.22 + Math.random() * 0.16,
+          shape: Math.random() < 0.45 ? 'circle' : 'rect'
+        });
+      }
+    }
+
+    if (confettiRaf) cancelAnimationFrame(confettiRaf);
+    tickConfetti();
+  }
+
+  function tickConfetti() {
+    ctx.clearRect(0, 0, confettiCanvas.width, confettiCanvas.height);
+    var anyAlive = false;
+
+    for (var i = 0; i < particles.length; i++) {
+      var p = particles[i];
+      p.x  += p.vx;
+      p.y  += p.vy;
+      p.vy += p.grav;
+      p.vx *= 0.99;
+      p.rot += p.rotV;
+      p.life -= p.decay;
+      if (p.life <= 0) continue;
+      anyAlive = true;
+
+      ctx.save();
+      ctx.globalAlpha = p.life;
+      ctx.translate(p.x, p.y);
+      ctx.rotate(p.rot * Math.PI / 180);
+      ctx.fillStyle = p.color;
+      if (p.shape === 'circle') {
+        ctx.beginPath();
+        ctx.arc(0, 0, p.w * 0.5, 0, Math.PI * 2);
+        ctx.fill();
+      } else {
+        ctx.fillRect(-p.w * 0.5, -p.h * 0.5, p.w, p.h);
+      }
+      ctx.restore();
+    }
+
+    if (anyAlive) {
+      confettiRaf = requestAnimationFrame(tickConfetti);
+    } else {
+      ctx.clearRect(0, 0, confettiCanvas.width, confettiCanvas.height);
+      confettiRaf = null;
+    }
+  }
+
+  function stopConfetti() {
+    if (confettiRaf) { cancelAnimationFrame(confettiRaf); confettiRaf = null; }
+    ctx.clearRect(0, 0, confettiCanvas.width, confettiCanvas.height);
+    particles = [];
+  }
+
+  /* ══════════════════════════════════════════
+     GAME LOGIC
+  ══════════════════════════════════════════ */
+  function checkWin(row, col, player) {
+    var dirs = [[0,1],[1,0],[1,1],[1,-1]];
+    for (var d = 0; d < dirs.length; d++) {
+      if (countDir(row, col, player, dirs[d][0], dirs[d][1]) >= 4) return true;
+    }
+    return false;
+  }
+
+  function countDir(row, col, player, dr, dc) {
+    return 1 + streak(row, col, player, dr, dc) + streak(row, col, player, -dr, -dc);
+  }
+
+  function streak(row, col, player, dr, dc) {
+    var n = 0, r = row + dr, c = col + dc;
+    while (r >= 0 && r < ROWS && c >= 0 && c < COLS && board[r][c] === player) { n++; r += dr; c += dc; }
+    return n;
+  }
+
+  function checkDraw() {
+    for (var c = 0; c < COLS; c++) { if (board[0][c] === 0) return false; }
+    return true;
+  }
+
+  function highlightWin(row, col, player) {
+    var dirs = [[0,1],[1,0],[1,1],[1,-1]];
+    for (var d = 0; d < dirs.length; d++) {
+      var dr = dirs[d][0], dc = dirs[d][1];
+      if (countDir(row, col, player, dr, dc) >= 4) {
+        var cells = [[row, col]], r, c, i;
+        r = row + dr; c = col + dc;
+        while (r >= 0 && r < ROWS && c >= 0 && c < COLS && board[r][c] === player) { cells.push([r,c]); r+=dr; c+=dc; }
+        r = row - dr; c = col - dc;
+        while (r >= 0 && r < ROWS && c >= 0 && c < COLS && board[r][c] === player) { cells.push([r,c]); r-=dr; c-=dc; }
+        for (i = 0; i < cells.length; i++) {
+          var p = getPiece(cells[i][0], cells[i][1]);
+          if (p) p.classList.add('win-piece');
+        }
+        return;
+      }
+    }
+  }
+
+  /* ══════════════════════════════════════════
+     DOM HELPERS
+  ══════════════════════════════════════════ */
+  function getCellEl(row, col) {
+    return gameBoardEl.querySelector('.cell[data-row="' + row + '"][data-col="' + col + '"]');
+  }
+  function getPiece(row, col) {
+    return gameBoardEl.querySelector('.piece[data-row="' + row + '"][data-col="' + col + '"]');
+  }
+  function setStatus(cls, msg) {
+    statusBar.className = 'rpg-statusbar ' + cls;
+    statusBar.innerHTML = msg;
+  }
+  function setPills(active) {
+    pill1.classList.toggle('active', active === 1);
+    pill2.classList.toggle('active', active === 2);
+  }
+  function addChronPill(text, cls) {
+    var pill = document.createElement('div');
+    pill.className = 'chron-pill ' + (cls || '');
+    pill.textContent = text;
+    chronicle.appendChild(pill);
+    chronicle.scrollLeft = chronicle.scrollWidth;
+  }
+
+  /* ══════════════════════════════════════════
+     BREATHING + SHIMMER
+  ══════════════════════════════════════════ */
+  function startBreathing(piece) {
+    var dur   = (3600 + Math.random() * 2200).toFixed(0) + 'ms';
+    var delay = '-' + (Math.random() * 3000).toFixed(0) + 'ms';
+    piece.style.animation = 'breathe ' + dur + ' ease-in-out ' + delay + ' infinite';
+  }
+
+  function scheduleShimmer(piece) {
+    var overlay = piece.querySelector('.shimmer-overlay');
+    if (!overlay) return;
+    function fire() {
+      setTimeout(function () {
+        overlay.style.animation = 'shimmer 1.2s ease-in-out forwards';
+        setTimeout(function () { overlay.style.animation = ''; fire(); }, 1300);
+      }, 7000 + Math.random() * 8000);
+    }
+    fire();
+  }
+
+  /* ══════════════════════════════════════════
+     BOOT
+  ══════════════════════════════════════════ */
+  document.getElementById('newGameBtn').addEventListener('click', init);
+  init();
+
+}());
+</script>
+</body>
+</html>
