@@ -1,0 +1,1829 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Shut the Box · Rising Phoenix Games</title>
+<link rel="stylesheet" href="shared.css">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700&family=Cinzel:wght@400;600;700&family=IM+Fell+English:ital@0;1&display=swap" rel="stylesheet">
+<style>
+/* ── Rules section nuclear color override ─────────────────── */
+/* shared.css may set dark colors on p/h2/h3/span — defeat it  */
+.rules-section,
+.rules-section p,
+.rules-section h3,
+.rules-section span,
+.rules-section div,
+.rules-section em,
+.rules-section strong {
+  color: #c8a878 !important;
+}
+.rules-card h3                     { color: #c8952a !important; }
+.rules-card p span[style]          { color: inherit; }
+.rules-toggle-label                { color: #a09070 !important; }
+.rules-qr-title, [class*="qr-"]   { color: #c8a878 !important; }
+
+/* ── Reset & Base ─────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  min-height: 100vh;
+  color: var(--text);
+  font-family: var(--font-body);
+  background: #0f0c07;
+  background:
+    radial-gradient(ellipse at 20% 50%, rgba(26,16,5,0.8) 0%, transparent 60%),
+    radial-gradient(ellipse at 80% 20%, rgba(20,12,3,0.6) 0%, transparent 50%),
+    radial-gradient(ellipse at 60% 80%, rgba(15,10,2,0.7) 0%, transparent 55%),
+    #0f0c07;
+  background-attachment: fixed;
+}
+
+/* ── Layout ───────────────────────────────────────────────── */
+.page-wrap {
+  max-width: 820px;
+  margin: 0 auto;
+  padding: 0 1rem 2rem;
+}
+
+/* ── Header ───────────────────────────────────────────────── */
+.game-header {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  padding: 1.4rem 0 0.8rem;
+  position: relative;
+}
+.game-header .rpg-back {
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+}
+.phoenix-mark {
+  width: 44px;
+  height: 44px;
+  flex-shrink: 0;
+}
+.title-block {
+  text-align: center;
+}
+.game-title {
+  font-family: var(--font-display);
+  font-size: clamp(1.4rem, 4vw, 2.1rem);
+  background: linear-gradient(135deg, #f0d080 0%, #c8952a 50%, #f0d080 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  line-height: 1.1;
+  letter-spacing: 0.04em;
+}
+.game-tagline {
+  font-family: var(--font-body);
+  font-style: italic;
+  color: var(--text-muted);
+  font-size: 0.82rem;
+  margin-top: 0.2rem;
+}
+
+/* ── rpg-rule ─────────────────────────────────────────────── */
+.rpg-rule { margin: 0.5rem 0; }
+
+/* ── Mode Setup Panel ─────────────────────────────────────── */
+#setup-panel {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 1.6rem;
+  margin: 1rem 0;
+  text-align: center;
+}
+#setup-panel h2 {
+  font-family: var(--font-ui);
+  font-size: 1rem;
+  color: var(--gold-light);
+  letter-spacing: 0.12em;
+  margin-bottom: 1.1rem;
+  text-transform: uppercase;
+}
+.mode-btns {
+  display: flex;
+  gap: 0.8rem;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin-bottom: 1.2rem;
+}
+.mode-btn {
+  font-family: var(--font-ui);
+  font-size: 0.78rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  padding: 0.55rem 1.2rem;
+  border: 1px solid var(--border-bright);
+  background: var(--surface-2);
+  color: var(--gold);
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.mode-btn:hover { background: rgba(200,149,42,0.12); box-shadow: 0 0 18px 2px rgba(200,149,42,0.25); }
+.mode-btn.active {
+  background: rgba(200,149,42,0.2);
+  border-color: var(--gold);
+  color: var(--gold-light);
+  box-shadow: 0 0 18px 2px rgba(200,149,42,0.3);
+}
+
+.player-setup { margin-bottom: 1.2rem; }
+.player-count-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.7rem;
+  margin-bottom: 0.9rem;
+  flex-wrap: wrap;
+}
+.player-count-row label {
+  font-family: var(--font-ui);
+  font-size: 0.75rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--gold);
+}
+.cnt-btn {
+  width: 34px;
+  height: 34px;
+  border: 1px solid var(--border-bright);
+  background: var(--surface-2);
+  color: var(--gold-light);
+  font-family: var(--font-ui);
+  font-size: 1.1rem;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex; align-items: center; justify-content: center;
+}
+.cnt-btn:hover { background: rgba(200,149,42,0.15); }
+#player-count-display {
+  font-family: var(--font-display);
+  font-size: 1.3rem;
+  color: var(--gold-light);
+  min-width: 2ch;
+  text-align: center;
+}
+.player-names-grid {
+  display: flex;
+  gap: 0.6rem;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+.player-name-input {
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  padding: 0.4rem 0.7rem;
+  color: var(--text);
+  font-family: var(--font-ui);
+  font-size: 0.8rem;
+  width: 130px;
+  text-align: center;
+  transition: border-color 0.2s;
+}
+.player-name-input:focus {
+  outline: none;
+  border-color: var(--gold);
+  box-shadow: 0 0 8px rgba(200,149,42,0.2);
+}
+
+/* ── Main Game Area ───────────────────────────────────────── */
+#game-area { display: none; }
+
+/* ── Player scoreboard strip (multiplayer) ────────────────── */
+#scoreboard {
+  display: none;
+  gap: 0.5rem;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin: 0.6rem 0;
+}
+.score-chip {
+  font-family: var(--font-ui);
+  font-size: 0.7rem;
+  letter-spacing: 0.08em;
+  padding: 0.3rem 0.8rem;
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  background: var(--surface);
+  color: var(--text-muted);
+  transition: all 0.3s;
+}
+.score-chip.active-player {
+  border-color: var(--gold);
+  color: var(--gold-light);
+  background: rgba(200,149,42,0.12);
+  box-shadow: 0 0 12px rgba(200,149,42,0.25);
+}
+.score-chip .chip-score { color: var(--gold); margin-left: 0.4em; }
+
+/* ── Board ────────────────────────────────────────────────── */
+.board-frame {
+  background: var(--board-bg, #3d2010);
+  border: 2px solid rgba(200,149,42,0.4);
+  border-radius: 12px;
+  padding: 1rem 1rem 1.2rem;
+  margin: 0.8rem 0;
+  box-shadow:
+    inset 0 2px 8px rgba(0,0,0,0.6),
+    inset 0 -1px 3px rgba(200,149,42,0.08),
+    0 4px 24px rgba(0,0,0,0.5);
+  position: relative;
+}
+.board-label {
+  text-align: center;
+  font-family: var(--font-ui);
+  font-size: 0.65rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: rgba(200,149,42,0.4);
+  margin-bottom: 0.7rem;
+}
+
+/* ── Tile Row ─────────────────────────────────────────────── */
+#tile-row {
+  display: flex;
+  gap: 0.45rem;
+  justify-content: center;
+  flex-wrap: wrap;
+  padding: 0.3rem 0;
+}
+
+.tile {
+  width: 62px;
+  height: 72px;
+  position: relative;
+  cursor: pointer;
+  perspective: 300px;
+  flex-shrink: 0;
+  /* breathing animation applied per-tile via JS */
+}
+
+.tile-inner {
+  width: 100%;
+  height: 100%;
+  position: relative;
+  transform-style: preserve-3d;
+  transition: transform 0.4s ease-in-out;
+}
+
+.tile.flipped .tile-inner {
+  transform: rotateY(180deg);
+}
+
+.tile-face, .tile-back {
+  position: absolute;
+  inset: 0;
+  border-radius: 8px;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid;
+  overflow: hidden;
+}
+
+.tile-face {
+  background: var(--tile-bg, #8B5E3C);
+  border-color: rgba(200,149,42,0.55);
+  box-shadow:
+    inset 0 1px 0 rgba(255,220,120,0.25),
+    inset 0 -2px 4px rgba(0,0,0,0.4),
+    0 3px 10px rgba(0,0,0,0.5);
+}
+.tile-face::before {
+  /* wood grain shimmer sweep */
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    135deg,
+    transparent 0%,
+    rgba(255,220,100,0.07) 40%,
+    rgba(255,240,160,0.18) 50%,
+    rgba(255,220,100,0.07) 60%,
+    transparent 100%
+  );
+  background-size: 300% 300%;
+  opacity: 0;
+  pointer-events: none;
+  border-radius: 6px;
+}
+.tile-face .tile-number {
+  font-family: var(--font-display);
+  font-size: 1.55rem;
+  color: var(--pip-color, #f0d080);
+  line-height: 1;
+  text-shadow: 0 1px 3px rgba(0,0,0,0.6), 0 0 8px rgba(240,208,128,0.3);
+  user-select: none;
+  position: relative;
+  z-index: 1;
+}
+
+.tile-back {
+  background: var(--tile-back, #221408);
+  border-color: rgba(200,149,42,0.2);
+  transform: rotateY(180deg);
+  box-shadow: inset 0 2px 8px rgba(0,0,0,0.7);
+}
+.tile-back .phoenix-mini {
+  opacity: 0.25;
+  width: 32px;
+  height: 32px;
+}
+
+/* tile states */
+.tile.open:not(.flipped):hover .tile-face {
+  border-color: var(--gold);
+  box-shadow:
+    inset 0 1px 0 rgba(255,220,120,0.35),
+    inset 0 -2px 4px rgba(0,0,0,0.4),
+    0 0 18px 2px rgba(200,149,42,0.4),
+    0 0 48px 8px rgba(180,120,20,0.2);
+  transform: scale(1.05);
+  transition: all 0.15s;
+}
+.tile.selected .tile-face {
+  border-color: var(--gold-light) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255,240,180,0.5),
+    0 0 20px 4px rgba(200,149,42,0.5),
+    0 0 50px 10px rgba(180,120,20,0.25) !important;
+}
+.tile.selected .tile-face .tile-number {
+  color: #fff8e0;
+}
+.tile.flipped { cursor: default; animation: none !important; }
+.tile.invalid-flash .tile-face {
+  animation: invalid-shake 0.35s ease-in-out;
+  border-color: var(--crimson-light);
+}
+
+/* shimmer keyframe (applied per-tile via JS) */
+@keyframes tile-shimmer {
+  0%   { background-position: 150% 150%; opacity: 0; }
+  48%  { opacity: 0; }
+  50%  { background-position: -50% -50%; opacity: 1; }
+  55%  { opacity: 0; }
+  100% { background-position: -50% -50%; opacity: 0; }
+}
+@keyframes breathe {
+  0%, 100% { transform: translateY(0) scale(1); }
+  50%       { transform: translateY(-3px) scale(1.02); }
+}
+@keyframes invalid-shake {
+  0%,100% { transform: translateX(0); }
+  20%     { transform: translateX(-5px); }
+  40%     { transform: translateX(5px); }
+  60%     { transform: translateX(-4px); }
+  80%     { transform: translateX(4px); }
+}
+
+/* ── Dice Area ────────────────────────────────────────────── */
+.dice-section {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1.5rem;
+  margin: 0.9rem 0;
+  flex-wrap: wrap;
+}
+.dice-container {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+}
+.die-wrap {
+  position: relative;
+}
+.die-svg {
+  width: 68px;
+  height: 68px;
+  border-radius: 12px;
+  filter: drop-shadow(0 4px 12px rgba(0,0,0,0.6));
+  transition: transform 0.1s;
+}
+.die-wrap.rolling .die-svg {
+  animation: dice-roll 0.6s ease-out forwards;
+}
+@keyframes dice-roll {
+  0%   { transform: rotate(0deg) scale(1); }
+  15%  { transform: rotate(-18deg) scale(1.1); }
+  30%  { transform: rotate(22deg) scale(0.95); }
+  45%  { transform: rotate(-14deg) scale(1.08); }
+  60%  { transform: rotate(10deg) scale(0.97); }
+  80%  { transform: rotate(-5deg) scale(1.02); }
+  100% { transform: rotate(0deg) scale(1); }
+}
+.single-die-label {
+  font-family: var(--font-ui);
+  font-size: 0.68rem;
+  letter-spacing: 0.1em;
+  color: var(--gold);
+  text-transform: uppercase;
+  text-align: center;
+  margin-top: 0.2rem;
+}
+.dice-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+  align-items: flex-start;
+}
+.single-die-toggle {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  cursor: pointer;
+  user-select: none;
+}
+.single-die-toggle input[type=checkbox] {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 16px;
+  height: 16px;
+  border: 1px solid var(--border-bright);
+  border-radius: 3px;
+  background: var(--surface-2);
+  cursor: pointer;
+  position: relative;
+}
+.single-die-toggle input:checked::after {
+  content: '✓';
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.7rem;
+  color: var(--gold-light);
+  line-height: 1;
+  font-family: var(--font-ui);
+}
+.single-die-toggle span {
+  font-family: var(--font-body);
+  font-style: italic;
+  font-size: 0.78rem;
+  color: var(--text-muted);
+}
+#die-total-display {
+  font-family: var(--font-display);
+  font-size: 1.5rem;
+  color: var(--gold-light);
+  text-shadow: 0 0 12px rgba(240,208,128,0.4);
+  min-width: 3ch;
+  text-align: center;
+  line-height: 1;
+}
+.total-label {
+  font-family: var(--font-ui);
+  font-size: 0.62rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+/* ── Selection Info ───────────────────────────────────────── */
+.selection-bar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  padding: 0.5rem 1rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  margin: 0.5rem 0;
+  flex-wrap: wrap;
+}
+.sel-item {
+  font-family: var(--font-ui);
+  font-size: 0.72rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+.sel-item span {
+  color: var(--gold-light);
+  font-size: 1rem;
+  margin-left: 0.3em;
+}
+.sel-item span.match { color: #7aff7a; }
+.sel-item span.over  { color: var(--crimson-light); }
+
+/* ── Buttons row ──────────────────────────────────────────── */
+.action-row {
+  display: flex;
+  gap: 0.7rem;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin: 0.6rem 0;
+}
+
+/* ── Status bar ───────────────────────────────────────────── */
+.rpg-statusbar {
+  margin: 0.5rem 0;
+  min-height: 2.2rem;
+  display: flex;
+  align-items: center;
+}
+
+/* ── Chronicle ────────────────────────────────────────────── */
+.chronicle-wrap {
+  margin: 0.6rem 0;
+}
+.chronicle-label {
+  font-family: var(--font-ui);
+  font-size: 0.65rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  margin-bottom: 0.35rem;
+}
+#chronicle {
+  height: 52px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.3rem 0.4rem;
+  background: rgba(0,0,0,0.3);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(200,149,42,0.3) transparent;
+}
+#chronicle::-webkit-scrollbar { height: 4px; }
+#chronicle::-webkit-scrollbar-thumb { background: rgba(200,149,42,0.3); border-radius: 2px; }
+.chronicle-pill {
+  flex-shrink: 0;
+  font-family: var(--font-ui);
+  font-size: 0.68rem;
+  letter-spacing: 0.06em;
+  padding: 0.22rem 0.7rem;
+  border-radius: 20px;
+  border: 1px solid var(--border);
+  background: var(--surface-2);
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+.chronicle-pill.roll  { border-color: rgba(200,149,42,0.4); color: var(--gold); }
+.chronicle-pill.flip  { border-color: rgba(74,122,58,0.5);  color: var(--sage-light); }
+.chronicle-pill.stuck { border-color: rgba(139,26,26,0.5);  color: var(--crimson-light); }
+.chronicle-pill.win   { border-color: rgba(240,208,128,0.7); color: var(--gold-light); font-style: italic; }
+
+/* ── Results Panel ────────────────────────────────────────── */
+#results-panel {
+  display: none;
+  background: var(--surface);
+  border: 1px solid var(--border-bright);
+  border-radius: 10px;
+  padding: 1.4rem;
+  margin: 1rem 0;
+  text-align: center;
+}
+#results-panel h2 {
+  font-family: var(--font-display);
+  font-size: clamp(1rem, 3vw, 1.5rem);
+  color: var(--gold-light);
+  margin-bottom: 0.8rem;
+}
+.results-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 0.8rem 0;
+}
+.results-table th {
+  font-family: var(--font-ui);
+  font-size: 0.68rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--gold);
+  border-bottom: 1px solid var(--border);
+  padding: 0.4rem 0.6rem;
+}
+.results-table td {
+  font-family: var(--font-body);
+  color: var(--text);
+  padding: 0.5rem 0.6rem;
+  border-bottom: 1px solid rgba(200,149,42,0.1);
+  font-size: 0.9rem;
+}
+.results-table tr.winner td {
+  color: var(--gold-light);
+  font-style: italic;
+}
+.results-table tr.winner td:first-child::after { content: ' ⚜'; }
+
+.best-score-flash {
+  animation: score-flash 1.5s ease-out;
+}
+@keyframes score-flash {
+  0%   { color: var(--gold-light); text-shadow: 0 0 20px rgba(240,208,128,0.8); }
+  100% { color: var(--gold-light); text-shadow: none; }
+}
+
+/* ── Perfect game celebration ─────────────────────────────── */
+#celebration {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(10,8,2,0.92);
+  z-index: 1000;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  gap: 1rem;
+  text-align: center;
+  padding: 2rem;
+}
+#celebration.show { display: flex; }
+#celebration h1 {
+  font-family: var(--font-display);
+  font-size: clamp(1.6rem, 5vw, 3rem);
+  background: linear-gradient(135deg, #f0d080, #c8952a, #f0d080, #fff8c0);
+  background-size: 200% 200%;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  animation: gold-shimmer 2s linear infinite;
+}
+@keyframes gold-shimmer {
+  0%   { background-position: 0% 50%; }
+  100% { background-position: 200% 50%; }
+}
+#celebration p {
+  font-family: var(--font-body);
+  font-style: italic;
+  color: var(--text-muted);
+  font-size: 1rem;
+  max-width: 360px;
+}
+.celebration-sparkles {
+  font-size: 2.5rem;
+  animation: sparkle-pulse 0.8s ease-in-out infinite alternate;
+}
+@keyframes sparkle-pulse {
+  from { transform: scale(1) rotate(-5deg); opacity: 0.8; }
+  to   { transform: scale(1.15) rotate(5deg); opacity: 1; }
+}
+
+/* ── Appearance drawer ────────────────────────────────────── */
+.appearance-section {
+  margin: 0.7rem 0;
+}
+.appearance-toggle {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+  user-select: none;
+  width: fit-content;
+  padding: 0.3rem 0;
+}
+.appearance-toggle span {
+  font-family: var(--font-ui);
+  font-size: 0.7rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  transition: color 0.2s;
+}
+.appearance-toggle:hover span { color: var(--gold); }
+.appearance-toggle .arrow {
+  color: var(--gold-dim);
+  font-size: 0.65rem;
+  transition: transform 0.2s;
+}
+.appearance-toggle.open .arrow { transform: rotate(90deg); }
+.appearance-drawer {
+  display: none;
+  padding: 0.7rem 0;
+}
+.appearance-drawer.open { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+.preset-btn {
+  font-family: var(--font-ui);
+  font-size: 0.65rem;
+  letter-spacing: 0.08em;
+  padding: 0.4rem 0.8rem;
+  border-radius: 5px;
+  border: 1px solid var(--border);
+  background: var(--surface-2);
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all 0.2s;
+  text-transform: uppercase;
+}
+.preset-btn:hover { border-color: var(--gold-dim); color: var(--gold); }
+.preset-btn.active { border-color: var(--gold); color: var(--gold-light); background: rgba(200,149,42,0.12); }
+
+/* ── Personal Best ────────────────────────────────────────── */
+.best-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  font-family: var(--font-ui);
+  font-size: 0.72rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  margin: 0.3rem 0;
+}
+.best-row strong { color: var(--gold); }
+
+/* ── Footer ───────────────────────────────────────────────── */
+.rpg-footer {
+  margin-top: 2rem;
+}
+
+/* ── Responsive ───────────────────────────────────────────── */
+@media (max-width: 520px) {
+  .tile { width: 52px; height: 62px; }
+  .tile-face .tile-number { font-size: 1.3rem; }
+  .die-svg { width: 56px; height: 56px; }
+  #tile-row { gap: 0.3rem; }
+}
+@media (max-width: 380px) {
+  .tile { width: 44px; height: 54px; }
+  .tile-face .tile-number { font-size: 1.1rem; }
+}
+
+/* ── Rules Section ────────────────────────────────────────── */
+.rules-section {
+  margin: 1.2rem 0 0.4rem;
+}
+.rules-toggle {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  cursor: pointer;
+  user-select: none;
+  padding: 0.5rem 0;
+  width: fit-content;
+}
+.rules-toggle:hover .rules-toggle-label { color: var(--gold); }
+.rules-toggle-arrow {
+  font-size: 0.65rem;
+  color: var(--gold-dim);
+  transition: transform 0.25s ease;
+  display: inline-block;
+}
+.rules-toggle.open .rules-toggle-arrow { transform: rotate(90deg); }
+.rules-toggle-label {
+  font-family: var(--font-ui);
+  font-size: 0.78rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #a09070 !important;
+  transition: color 0.2s;
+}
+.rules-toggle:hover .rules-toggle-label { color: #c8952a !important; }
+
+.rules-body {
+  display: none;
+  padding: 0.8rem 0 0.4rem;
+}
+.rules-body.open { display: block; }
+
+.rules-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 0.8rem;
+  margin-bottom: 1rem;
+}
+.rules-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 9px;
+  padding: 1rem 1.1rem 1.1rem;
+  position: relative;
+  overflow: hidden;
+}
+.rules-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, rgba(200,149,42,0.35), transparent);
+}
+.rules-card-icon {
+  font-size: 1.3rem;
+  margin-bottom: 0.45rem;
+  line-height: 1;
+}
+.rules-card-title {
+  font-family: var(--font-ui);
+  font-size: 0.72rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #c8952a !important;
+  margin-bottom: 0.5rem;
+}
+.rules-card-text {
+  font-family: var(--font-body);
+  font-size: 0.88rem;
+  line-height: 1.65;
+  color: #c8a878 !important;
+}
+.rules-card-text em  { font-style: italic; color: #d8b888 !important; }
+.rules-card-text strong { color: #f0d080 !important; font-style: normal; font-weight: normal; }
+
+/* quick reference strip */
+.rules-quick-ref {
+  background: rgba(0,0,0,0.3);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 0.8rem 1rem;
+}
+.rules-qr-title {
+  font-family: var(--font-ui);
+  font-size: 0.65rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: rgba(200,170,100,0.6) !important;
+  margin-bottom: 0.6rem;
+}
+.rules-qr-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 0.35rem 1.2rem;
+}
+.rules-qr-item {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+  font-family: var(--font-ui);
+  font-size: 0.7rem;
+  letter-spacing: 0.05em;
+}
+.qr-label {
+  color: #a09070 !important;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  font-size: 0.64rem;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+.qr-label::after { content: ':'; margin-left: 1px; }
+.qr-val {
+  color: #c8a878 !important;
+}
+
+/* ── Reduced motion ───────────────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  .tile { animation: none !important; }
+  .tile-face::before { animation: none !important; }
+  .die-wrap.rolling .die-svg { animation: none !important; }
+  .tile.flipped .tile-inner { transition: none; }
+  #celebration h1 { animation: none; background-position: 0% 50%; }
+  .celebration-sparkles { animation: none; }
+}
+</style>
+</head>
+<body>
+
+<!-- ══════════════════════════════════════════════════════════
+     HEADER
+════════════════════════════════════════════════════════════ -->
+<div class="page-wrap">
+  <header class="game-header rpg-fadein">
+    <a href="index.html" class="rpg-back">Hub</a>
+
+    <!-- Phoenix Mark SVG -->
+    <svg class="phoenix-mark" viewBox="0 0 44 44" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+      <defs>
+        <radialGradient id="phx-grd" cx="50%" cy="60%" r="55%">
+          <stop offset="0%" stop-color="#f0d080"/>
+          <stop offset="60%" stop-color="#c8952a"/>
+          <stop offset="100%" stop-color="#8a6818"/>
+        </radialGradient>
+      </defs>
+      <!-- tail flames -->
+      <path d="M22 40 C18 35 10 32 12 24 C14 18 18 20 20 26 C21 29 22 32 22 40Z" fill="url(#phx-grd)" opacity="0.7"/>
+      <path d="M22 40 C26 35 34 32 32 24 C30 18 26 20 24 26 C23 29 22 32 22 40Z" fill="url(#phx-grd)" opacity="0.7"/>
+      <path d="M22 38 C22 30 22 26 22 22" stroke="url(#phx-grd)" stroke-width="1.5" stroke-linecap="round"/>
+      <!-- wings -->
+      <path d="M22 20 C16 16 7 17 6 12 C5 8 12 9 16 13 C18 15 20 17 22 20Z" fill="url(#phx-grd)"/>
+      <path d="M22 20 C28 16 37 17 38 12 C39 8 32 9 28 13 C26 15 24 17 22 20Z" fill="url(#phx-grd)"/>
+      <!-- body -->
+      <ellipse cx="22" cy="19" rx="5" ry="6" fill="url(#phx-grd)"/>
+      <!-- head -->
+      <circle cx="22" cy="12" r="4" fill="url(#phx-grd)"/>
+      <!-- beak -->
+      <path d="M22 10 L24 8 L22 9Z" fill="#f0d080"/>
+      <!-- eye -->
+      <circle cx="23" cy="11.5" r="1" fill="#0f0c07"/>
+      <circle cx="23.3" cy="11.2" r="0.35" fill="#f0d080"/>
+      <!-- crest -->
+      <path d="M20 9 C19 6 21 4 22 7" stroke="#f0d080" stroke-width="0.8" fill="none" stroke-linecap="round"/>
+      <path d="M22 8 C22 5 23 3 23 6" stroke="#f0d080" stroke-width="0.8" fill="none" stroke-linecap="round"/>
+    </svg>
+
+    <div class="title-block">
+      <div class="game-title">Shut the Box</div>
+      <div class="game-tagline">A Tavern Dice Game for 1–4 Players</div>
+    </div>
+  </header>
+
+  <hr class="rpg-rule">
+
+  <!-- ══ SETUP PANEL ════════════════════════════════════════ -->
+  <div id="setup-panel" class="rpg-fadein">
+    <h2>Game Setup</h2>
+
+    <div class="mode-btns">
+      <button class="mode-btn active" id="btn-solo" onclick="setMode('solo')">Solo</button>
+      <button class="mode-btn" id="btn-multi" onclick="setMode('multi')">Multiplayer</button>
+    </div>
+
+    <div class="player-setup" id="player-setup" style="display:none">
+      <div class="player-count-row">
+        <label>Players</label>
+        <button class="cnt-btn" onclick="adjustCount(-1)">−</button>
+        <span id="player-count-display">2</span>
+        <button class="cnt-btn" onclick="adjustCount(1)">+</button>
+      </div>
+      <div class="player-names-grid" id="player-names-grid"></div>
+    </div>
+
+    <div style="margin-top:0.5rem">
+      <button class="rpg-btn rpg-btn-sage" onclick="startGame()" style="font-size:0.8rem;padding:0.6rem 1.8rem">
+        ⚜ Begin Game
+      </button>
+    </div>
+  </div>
+
+  <!-- ══ GAME AREA ══════════════════════════════════════════ -->
+  <div id="game-area">
+
+    <!-- Scoreboard (multiplayer) -->
+    <div id="scoreboard"></div>
+
+    <!-- Best score (solo) -->
+    <div class="best-row" id="best-row" style="display:none">
+      Personal Best: <strong id="best-display">—</strong>
+    </div>
+
+    <!-- Board -->
+    <div class="board-frame" id="board-frame">
+      <div class="board-label">⚜ Shut the Box ⚜</div>
+      <div id="tile-row"></div>
+    </div>
+
+    <!-- Status bar -->
+    <div class="rpg-statusbar" id="status-bar">⚜ Roll the dice to begin.</div>
+
+    <!-- Selection info -->
+    <div class="selection-bar" id="selection-bar">
+      <div class="sel-item">Selected: <span id="sel-sum">0</span></div>
+      <div class="sel-item">Target: <span id="sel-target">—</span></div>
+      <div class="sel-item">Remaining: <span id="open-sum">45</span></div>
+    </div>
+
+    <!-- Dice section -->
+    <div class="dice-section">
+      <div>
+        <div class="dice-container" id="dice-container">
+          <div class="die-wrap" id="die1-wrap">
+            <svg class="die-svg" id="die1-svg" viewBox="0 0 68 68" xmlns="http://www.w3.org/2000/svg"></svg>
+          </div>
+          <div class="die-wrap" id="die2-wrap">
+            <svg class="die-svg" id="die2-svg" viewBox="0 0 68 68" xmlns="http://www.w3.org/2000/svg"></svg>
+          </div>
+        </div>
+        <div class="single-die-label" id="single-die-label" style="display:none">Single Die</div>
+      </div>
+
+      <div class="dice-controls">
+        <div style="text-align:center">
+          <div class="total-label">Total</div>
+          <div id="die-total-display">—</div>
+        </div>
+        <label class="single-die-toggle" id="single-toggle" style="display:none">
+          <input type="checkbox" id="single-die-cb">
+          <span>Roll one die</span>
+        </label>
+      </div>
+    </div>
+
+    <!-- Action buttons -->
+    <div class="action-row">
+      <button class="rpg-btn" id="btn-roll" onclick="rollDice()">🎲 Roll Dice</button>
+      <button class="rpg-btn rpg-btn-sage" id="btn-flip" onclick="flipSelected()" disabled>✔ Flip Tiles</button>
+      <button class="rpg-btn rpg-btn-crimson" id="btn-clear" onclick="clearSelection()">✕ Clear</button>
+    </div>
+    <div class="action-row">
+      <button class="rpg-btn" id="btn-newgame" onclick="goSetup()">↺ New Game</button>
+      <button class="rpg-btn" id="btn-nextplayer" style="display:none" onclick="nextPlayer()">⚜ Next Player →</button>
+    </div>
+
+    <!-- Chronicle -->
+    <div class="chronicle-wrap">
+      <div class="chronicle-label">⚜ Chronicle</div>
+      <div id="chronicle"></div>
+    </div>
+
+    <!-- Appearance -->
+    <div class="appearance-section">
+      <div class="appearance-toggle" id="appearance-toggle" onclick="toggleAppearance()">
+        <span class="arrow">▶</span>
+        <span>Appearance</span>
+      </div>
+      <div class="appearance-drawer" id="appearance-drawer">
+        <button class="preset-btn active" data-preset="tavern"    onclick="applyPreset('tavern')">Tavern Oak</button>
+        <button class="preset-btn"        data-preset="ivory"     onclick="applyPreset('ivory')">Ivory & Ebony</button>
+        <button class="preset-btn"        data-preset="forest"    onclick="applyPreset('forest')">Forest Glade</button>
+        <button class="preset-btn"        data-preset="midnight"  onclick="applyPreset('midnight')">Royal Midnight</button>
+      </div>
+    </div>
+
+  </div><!-- /#game-area -->
+
+  <!-- ══ RESULTS PANEL ═════════════════════════════════════ -->
+  <div id="results-panel">
+    <h2 id="results-heading">Game Over</h2>
+    <table class="results-table" id="results-table">
+      <thead><tr><th>Player</th><th>Score</th><th>Open Tiles</th></tr></thead>
+      <tbody id="results-tbody"></tbody>
+    </table>
+    <div class="action-row" style="margin-top:1rem">
+      <button class="rpg-btn rpg-btn-sage" onclick="goSetup()">⚜ Play Again</button>
+    </div>
+  </div>
+
+  <!-- ══ RULES SECTION ════════════════════════════════════════ -->
+  <section class="rules-section rpg-fadein" aria-label="Game Rules">
+    <div class="rules-toggle" id="rules-toggle" onclick="toggleRules()" role="button" tabindex="0"
+         onkeydown="if(event.key==='Enter'||event.key===' ')toggleRules()">
+      <span class="rules-toggle-arrow">▶</span>
+      <span class="rules-toggle-label" style="color:#a09070;font-family:'Cinzel',serif;font-size:0.78rem;letter-spacing:0.14em;text-transform:uppercase;">⚜ How to Play</span>
+    </div>
+
+    <div class="rules-body" id="rules-body">
+      <div class="rules-grid">
+
+        <div class="rules-card">
+          <div class="rules-card-icon">🎲</div>
+          <h3 style="font-family:'Cinzel',serif;font-size:0.72rem;letter-spacing:0.12em;text-transform:uppercase;color:#c8952a;margin-bottom:0.5rem;">The Goal</h3>
+          <p style="font-family:'IM Fell English',Georgia,serif;font-size:0.88rem;line-height:1.65;color:#c8a878;">
+            Nine numbered tiles — 1 through 9 — stand open at the start of every turn. Roll the dice
+            and flip tiles down until you are stuck. The <em style="color:#d8b888;">lower</em> your final score the better.
+            Flip every last tile and you <span style="color:#f0d080;">Shut the Box</span> — a perfect score of zero.
+          </p>
+        </div>
+
+        <div class="rules-card">
+          <div class="rules-card-icon">🔢</div>
+          <h3 style="font-family:'Cinzel',serif;font-size:0.72rem;letter-spacing:0.12em;text-transform:uppercase;color:#c8952a;margin-bottom:0.5rem;">Rolling &amp; Flipping</h3>
+          <p style="font-family:'IM Fell English',Georgia,serif;font-size:0.88rem;line-height:1.65;color:#c8a878;">
+            Each turn, roll both dice and add them together. Select any combination of
+            still-open tiles whose values sum <em style="color:#d8b888;">exactly</em> to the dice total, then
+            press <span style="color:#f0d080;">Flip Tiles</span> to close them. You may use any number of tiles —
+            e.g. a roll of 8 could close the 8, or the 5+3, or the 6+2, or the 1+3+4, and so on.
+          </p>
+        </div>
+
+        <div class="rules-card">
+          <div class="rules-card-icon">🎯</div>
+          <h3 style="font-family:'Cinzel',serif;font-size:0.72rem;letter-spacing:0.12em;text-transform:uppercase;color:#c8952a;margin-bottom:0.5rem;">Scoring Your Turn</h3>
+          <p style="font-family:'IM Fell English',Georgia,serif;font-size:0.88rem;line-height:1.65;color:#c8a878;">
+            After flipping, roll again and repeat. Your turn ends the moment no valid
+            combination of open tiles matches the current roll. Your <span style="color:#f0d080;">score</span>
+            is the sum of all tiles still standing. In multiplayer the player with the
+            lowest score after everyone has had a turn wins.
+          </p>
+        </div>
+
+        <div class="rules-card">
+          <div class="rules-card-icon">🎲</div>
+          <h3 style="font-family:'Cinzel',serif;font-size:0.72rem;letter-spacing:0.12em;text-transform:uppercase;color:#c8952a;margin-bottom:0.5rem;">The Single-Die Rule</h3>
+          <p style="font-family:'IM Fell English',Georgia,serif;font-size:0.88rem;line-height:1.65;color:#c8a878;">
+            When the total of all remaining open tiles is <span style="color:#f0d080;">6 or less</span>,
+            you may choose to roll only a single die before your next toss.
+            A checkbox will appear automatically offering you this option — use it to
+            avoid overshooting the small numbers that remain.
+          </p>
+        </div>
+
+        <div class="rules-card">
+          <div class="rules-card-icon">🏆</div>
+          <h3 style="font-family:'Cinzel',serif;font-size:0.72rem;letter-spacing:0.12em;text-transform:uppercase;color:#c8952a;margin-bottom:0.5rem;">Multiplayer</h3>
+          <p style="font-family:'IM Fell English',Georgia,serif;font-size:0.88rem;line-height:1.65;color:#c8a878;">
+            Choose 2–4 players in the setup screen. Players take turns one at a time —
+            each completes their full run before handing off. Press
+            <span style="color:#f0d080;">Next Player →</span> to pass the box. The results table at the end
+            ranks everyone by score; lowest wins. Ties share the victory.
+          </p>
+        </div>
+
+        <div class="rules-card">
+          <div class="rules-card-icon">🔥</div>
+          <h3 style="font-family:'Cinzel',serif;font-size:0.72rem;letter-spacing:0.12em;text-transform:uppercase;color:#c8952a;margin-bottom:0.5rem;">Perfect Game</h3>
+          <p style="font-family:'IM Fell English',Georgia,serif;font-size:0.88rem;line-height:1.65;color:#c8a878;">
+            Shut every tile before your turn ends and you score a glorious <span style="color:#f0d080;">zero</span>.
+            The box is sealed, the tavern erupts — a full celebration plays and your
+            personal best is recorded forever. In multiplayer the other players still
+            finish their turns; the lowest score still wins.
+          </p>
+        </div>
+
+      </div><!-- /.rules-grid -->
+
+      <div class="rules-quick-ref">
+        <div style="font-family:'Cinzel',serif;font-size:0.65rem;letter-spacing:0.16em;text-transform:uppercase;color:rgba(200,170,100,0.6);margin-bottom:0.6rem;">Quick Reference</div>
+        <div class="rules-qr-row">
+          <div class="rules-qr-item"><span style="color:#a09070;font-family:'Cinzel',serif;font-size:0.64rem;letter-spacing:0.1em;text-transform:uppercase;white-space:nowrap;flex-shrink:0;">Open tiles:</span><span style="color:#c8a878;font-family:'Cinzel',serif;font-size:0.7rem;">1 – 9 (all face up)</span></div>
+          <div class="rules-qr-item"><span style="color:#a09070;font-family:'Cinzel',serif;font-size:0.64rem;letter-spacing:0.1em;text-transform:uppercase;white-space:nowrap;flex-shrink:0;">Dice:</span><span style="color:#c8a878;font-family:'Cinzel',serif;font-size:0.7rem;">Two d6 (one if remaining ≤ 6)</span></div>
+          <div class="rules-qr-item"><span style="color:#a09070;font-family:'Cinzel',serif;font-size:0.64rem;letter-spacing:0.1em;text-transform:uppercase;white-space:nowrap;flex-shrink:0;">Valid flip:</span><span style="color:#c8a878;font-family:'Cinzel',serif;font-size:0.7rem;">Any subset summing to the roll</span></div>
+          <div class="rules-qr-item"><span style="color:#a09070;font-family:'Cinzel',serif;font-size:0.64rem;letter-spacing:0.1em;text-transform:uppercase;white-space:nowrap;flex-shrink:0;">Turn ends:</span><span style="color:#c8a878;font-family:'Cinzel',serif;font-size:0.7rem;">No valid subset exists</span></div>
+          <div class="rules-qr-item"><span style="color:#a09070;font-family:'Cinzel',serif;font-size:0.64rem;letter-spacing:0.1em;text-transform:uppercase;white-space:nowrap;flex-shrink:0;">Score:</span><span style="color:#c8a878;font-family:'Cinzel',serif;font-size:0.7rem;">Sum of remaining open tiles</span></div>
+          <div class="rules-qr-item"><span style="color:#a09070;font-family:'Cinzel',serif;font-size:0.64rem;letter-spacing:0.1em;text-transform:uppercase;white-space:nowrap;flex-shrink:0;">Perfect:</span><span style="color:#f0d080;font-family:'Cinzel',serif;font-size:0.7rem;">Score 0 — Shut the Box!</span></div>
+        </div>
+      </div>
+
+    </div><!-- /.rules-body -->
+  </section>
+
+  <hr class="rpg-rule">
+  <footer class="rpg-footer">
+    © <span id="year"></span> Rising Phoenix Gallery · Michigan City, IN · Crafted by John Ryszka II
+  </footer>
+</div><!-- /.page-wrap -->
+
+<!-- ══ PERFECT GAME CELEBRATION ══════════════════════════════ -->
+<div id="celebration">
+  <div class="celebration-sparkles">✨🔥✨</div>
+  <h1>Shut the Box!</h1>
+  <p id="celebration-msg">A perfect game! Every tile felled, the box sealed tight. The tavern erupts!</p>
+  <div class="celebration-sparkles" style="animation-delay:0.4s">🏆⚜🏆</div>
+  <div class="action-row" style="margin-top:1rem">
+    <button class="rpg-btn rpg-btn-sage" onclick="closeCelebration()">⚜ Revel In Glory</button>
+  </div>
+</div>
+
+<script>
+// ─── Colour Presets ────────────────────────────────────────
+const PRESETS = {
+  tavern:   { tileBg:'#8B5E3C', boardBg:'#3d2010', tileback:'#221408', pip:'#f0d080', dieBg:'#5a3018', diePip:'#f0d080' },
+  ivory:    { tileBg:'#f5f0e0', boardBg:'#1a1a1a', tileback:'#2a2015', pip:'#2a2015', dieBg:'#e8e0cc', diePip:'#2a2015' },
+  forest:   { tileBg:'#3a5e2a', boardBg:'#1a2a10', tileback:'#0e1a08', pip:'#c8e890', dieBg:'#2a4a1a', diePip:'#c8e890' },
+  midnight: { tileBg:'#2a2060', boardBg:'#0a0820', tileback:'#06051a', pip:'#c8b8f0', dieBg:'#1a1845', diePip:'#c8b8f0' }
+};
+let currentPreset = localStorage.getItem('rpg_shutbox_theme') || 'tavern';
+
+function applyPreset(name) {
+  currentPreset = name;
+  localStorage.setItem('rpg_shutbox_theme', name);
+  const p = PRESETS[name];
+  const root = document.documentElement;
+  root.style.setProperty('--tile-bg',   p.tileBg);
+  root.style.setProperty('--tile-back', p.tileback);
+  root.style.setProperty('--pip-color', p.pip);
+  root.style.setProperty('--board-bg',  p.boardBg);
+  root.style.setProperty('--die-bg',    p.dieBg);
+  root.style.setProperty('--die-pip',   p.diePip);
+  document.querySelectorAll('.preset-btn').forEach(b =>
+    b.classList.toggle('active', b.dataset.preset === name));
+  // refresh dice faces with new pip colour
+  if (typeof lastD1 !== 'undefined') {
+    renderDie('die1-svg', lastD1);
+    if (!singleDieMode) renderDie('die2-svg', lastD2);
+  }
+}
+
+// ─── Die SVG rendering ─────────────────────────────────────
+// pip positions indexed by face value
+const PIP_POSITIONS = {
+  1: [[34,34]],
+  2: [[18,18],[50,50]],
+  3: [[18,18],[34,34],[50,50]],
+  4: [[18,18],[50,18],[18,50],[50,50]],
+  5: [[18,18],[50,18],[34,34],[18,50],[50,50]],
+  6: [[18,16],[50,16],[18,34],[50,34],[18,52],[50,52]]
+};
+
+function renderDie(svgId, value) {
+  const svg = document.getElementById(svgId);
+  if (!svg) return;
+  const p = PRESETS[currentPreset];
+  const bg = p ? p.dieBg : '#5a3018';
+  const pip = p ? p.diePip : '#f0d080';
+  const r = value && PIP_POSITIONS[value] ? PIP_POSITIONS[value] : [];
+  let dots = r.map(([cx,cy]) =>
+    `<circle cx="${cx}" cy="${cy}" r="5" fill="${pip}"/>`).join('');
+  svg.innerHTML = `
+    <rect x="2" y="2" width="64" height="64" rx="12" ry="12"
+      fill="${bg}" stroke="rgba(200,149,42,0.5)" stroke-width="1.5"/>
+    <rect x="4" y="4" width="60" height="60" rx="10" ry="10"
+      fill="none" stroke="rgba(255,220,100,0.08)" stroke-width="1"/>
+    ${dots}`;
+}
+
+function renderBlankDie(svgId) {
+  const svg = document.getElementById(svgId);
+  if (!svg) return;
+  const p = PRESETS[currentPreset];
+  const bg = p ? p.dieBg : '#5a3018';
+  svg.innerHTML = `
+    <rect x="2" y="2" width="64" height="64" rx="12" ry="12"
+      fill="${bg}" stroke="rgba(200,149,42,0.3)" stroke-width="1.5"/>
+    <text x="34" y="38" text-anchor="middle" font-size="18"
+      fill="rgba(200,149,42,0.3)" font-family="serif">?</text>`;
+}
+
+// ─── Game State ─────────────────────────────────────────────
+let gameMode = 'solo';
+let playerCount = 2;
+let playerNames = [];
+let currentPlayerIdx = 0;
+let players = []; // { name, tiles:[bool x9], score:null }
+let tiles = [];   // [bool] true=open
+let selected = [];
+let diceTotal = 0;
+let rolled = false;
+let singleDieMode = false;
+let lastD1 = null, lastD2 = null;
+let gameActive = false;
+
+// ─── Setup UI ──────────────────────────────────────────────
+function setMode(m) {
+  gameMode = m;
+  document.getElementById('btn-solo').classList.toggle('active', m==='solo');
+  document.getElementById('btn-multi').classList.toggle('active', m==='multi');
+  document.getElementById('player-setup').style.display = m==='multi' ? 'block' : 'none';
+}
+
+function adjustCount(delta) {
+  playerCount = Math.max(2, Math.min(4, playerCount + delta));
+  document.getElementById('player-count-display').textContent = playerCount;
+  buildNameInputs();
+}
+
+function buildNameInputs() {
+  const grid = document.getElementById('player-names-grid');
+  grid.innerHTML = '';
+  for (let i = 0; i < playerCount; i++) {
+    const inp = document.createElement('input');
+    inp.type = 'text';
+    inp.className = 'player-name-input';
+    inp.placeholder = 'Player ' + (i+1);
+    inp.value = (playerNames[i] || '');
+    inp.addEventListener('input', () => { playerNames[i] = inp.value; });
+    grid.appendChild(inp);
+  }
+}
+
+// ─── Start Game ─────────────────────────────────────────────
+function startGame() {
+  document.getElementById('setup-panel').style.display = 'none';
+  document.getElementById('results-panel').style.display = 'none';
+  document.getElementById('game-area').style.display = 'block';
+
+  if (gameMode === 'solo') {
+    const n = document.querySelector('.player-name-input');
+    players = [{ name: n && n.value.trim() ? n.value.trim() : 'Tavern Keeper', tiles: [], score: null }];
+    document.getElementById('best-row').style.display = 'flex';
+    document.getElementById('scoreboard').style.display = 'none';
+    updateBestDisplay();
+  } else {
+    const inputs = document.querySelectorAll('.player-name-input');
+    players = [];
+    for (let i = 0; i < playerCount; i++) {
+      const name = (inputs[i] && inputs[i].value.trim()) ? inputs[i].value.trim() : 'Player ' + (i+1);
+      players.push({ name, tiles: [], score: null });
+    }
+    document.getElementById('best-row').style.display = 'none';
+    document.getElementById('scoreboard').style.display = 'flex';
+  }
+  currentPlayerIdx = 0;
+  beginPlayerTurn();
+}
+
+function beginPlayerTurn() {
+  tiles = Array(9).fill(true); // 1–9 all open
+  selected = [];
+  diceTotal = 0;
+  rolled = false;
+  singleDieMode = false;
+  gameActive = true;
+
+  buildTileRow();
+  updateScoreboard();
+  resetDiceDisplay();
+  updateSelectionBar();
+  updateBtnStates();
+  clearChronicle();
+
+  const p = players[currentPlayerIdx];
+  setStatus(`⚜ ${p.name}'s turn — roll the dice!`);
+
+  document.getElementById('btn-nextplayer').style.display = 'none';
+  document.getElementById('btn-flip').disabled = true;
+  document.getElementById('btn-roll').disabled = false;
+
+  // single-die option
+  checkSingleDieOption();
+}
+
+// ─── Tiles ──────────────────────────────────────────────────
+function buildTileRow() {
+  const row = document.getElementById('tile-row');
+  row.innerHTML = '';
+  const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  for (let i = 0; i < 9; i++) {
+    const tile = document.createElement('div');
+    tile.className = 'tile open';
+    tile.id = 'tile-' + i;
+    tile.setAttribute('role', 'button');
+    tile.setAttribute('aria-label', 'Tile ' + (i+1));
+
+    if (!reduced) {
+      const period = (3.6 + Math.random() * 2.2).toFixed(2);
+      const delay  = -(Math.random() * parseFloat(period)).toFixed(2);
+      tile.style.animation = `breathe ${period}s ease-in-out ${delay}s infinite`;
+    }
+
+    tile.innerHTML = `
+      <div class="tile-inner">
+        <div class="tile-face">
+          <span class="tile-number">${i+1}</span>
+        </div>
+        <div class="tile-back">
+          <svg class="phoenix-mini" viewBox="0 0 44 44" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M22 40 C18 35 10 32 12 24 C14 18 18 20 20 26 C22 32 22 40 22 40Z" fill="rgba(200,149,42,0.5)"/>
+            <path d="M22 40 C26 35 34 32 32 24 C30 18 26 20 24 26 C22 32 22 40 22 40Z" fill="rgba(200,149,42,0.5)"/>
+            <path d="M22 20 C16 16 7 17 6 12 C5 8 12 9 16 13 C18 15 20 17 22 20Z" fill="rgba(200,149,42,0.5)"/>
+            <path d="M22 20 C28 16 37 17 38 12 C39 8 32 9 28 13 C26 15 24 17 22 20Z" fill="rgba(200,149,42,0.5)"/>
+            <ellipse cx="22" cy="19" rx="4" ry="5" fill="rgba(200,149,42,0.5)"/>
+            <circle cx="22" cy="12" r="3.5" fill="rgba(200,149,42,0.5)"/>
+          </svg>
+        </div>
+      </div>`;
+    tile.addEventListener('click', () => toggleTile(i));
+
+    // shimmer
+    if (!reduced) {
+      const shimmerPeriod = (7 + Math.random() * 8).toFixed(1);
+      const shimmerDelay  = -(Math.random() * parseFloat(shimmerPeriod)).toFixed(1);
+      const face = tile.querySelector('.tile-face');
+      face.style.setProperty('--shimmer-period', shimmerPeriod + 's');
+      face.style.setProperty('--shimmer-delay', shimmerDelay + 's');
+      face.style.animation = `tile-shimmer ${shimmerPeriod}s linear ${shimmerDelay}s infinite`;
+      face.style.backgroundImage = `linear-gradient(
+        135deg,
+        transparent 0%, rgba(255,220,100,0.07) 40%, rgba(255,240,160,0.18) 50%,
+        rgba(255,220,100,0.07) 60%, transparent 100%)`;
+      face.style.backgroundSize = '300% 300%';
+    }
+
+    row.appendChild(tile);
+  }
+}
+
+function toggleTile(idx) {
+  if (!gameActive || !rolled) return;
+  if (!tiles[idx]) return; // already flipped
+  const el = document.getElementById('tile-' + idx);
+  if (el.classList.contains('flipped')) return;
+
+  if (selected.includes(idx)) {
+    selected = selected.filter(i => i !== idx);
+    el.classList.remove('selected');
+  } else {
+    selected.push(idx);
+    el.classList.add('selected');
+  }
+  updateSelectionBar();
+  updateBtnStates();
+}
+
+function clearSelection() {
+  selected.forEach(i => {
+    const el = document.getElementById('tile-' + i);
+    if (el) el.classList.remove('selected');
+  });
+  selected = [];
+  updateSelectionBar();
+  updateBtnStates();
+}
+
+// ─── Flip ───────────────────────────────────────────────────
+function flipSelected() {
+  if (!gameActive) return;
+  const sum = selected.reduce((a,i) => a + (i+1), 0);
+  if (sum !== diceTotal) return;
+
+  const toFlip = [...selected];
+  clearSelection();
+
+  toFlip.forEach(idx => {
+    tiles[idx] = false;
+    const el = document.getElementById('tile-' + idx);
+    el.classList.remove('open', 'selected');
+    el.classList.add('flipped');
+    el.style.animation = 'none';
+  });
+
+  const tileNums = toFlip.map(i => i+1).join('+');
+  addChronicle(`Flipped ${tileNums} = ${diceTotal}`, 'flip');
+
+  // check perfect game
+  if (tiles.every(t => !t)) {
+    triggerPerfectGame();
+    return;
+  }
+
+  rolled = false;
+  diceTotal = 0;
+  document.getElementById('die-total-display').textContent = '—';
+  document.getElementById('sel-target').textContent = '—';
+  updateSelectionBar();
+  updateBtnStates();
+  checkSingleDieOption();
+
+  const openSum = openTileSum();
+  setStatus(`⚜ Tiles flipped — roll again! Remaining: ${openSum}`);
+}
+
+// ─── Roll Dice ──────────────────────────────────────────────
+function rollDice() {
+  if (!gameActive || rolled) return;
+
+  document.getElementById('btn-roll').disabled = true;
+
+  const useSingle = singleDieMode &&
+    document.getElementById('single-die-cb').checked;
+
+  const d1 = Math.floor(Math.random() * 6) + 1;
+  const d2 = useSingle ? 0 : Math.floor(Math.random() * 6) + 1;
+  lastD1 = d1; lastD2 = useSingle ? null : d2;
+
+  // animate
+  const w1 = document.getElementById('die1-wrap');
+  const w2 = document.getElementById('die2-wrap');
+  w1.classList.add('rolling');
+  if (!useSingle) w2.classList.add('rolling');
+
+  renderBlankDie('die1-svg');
+  if (!useSingle) renderBlankDie('die2-svg');
+
+  setTimeout(() => {
+    w1.classList.remove('rolling');
+    w2.classList.remove('rolling');
+    renderDie('die1-svg', d1);
+
+    if (useSingle) {
+      document.getElementById('die2-wrap').style.display = 'none';
+      document.getElementById('single-die-label').style.display = 'block';
+    } else {
+      renderDie('die2-svg', d2);
+      document.getElementById('die2-wrap').style.display = 'block';
+      document.getElementById('single-die-label').style.display = 'none';
+    }
+
+    diceTotal = useSingle ? d1 : d1 + d2;
+    rolled = true;
+
+    document.getElementById('die-total-display').textContent = diceTotal;
+    document.getElementById('sel-target').textContent = diceTotal;
+
+    addChronicle(`Rolled ${useSingle ? d1 : d1+'+'+d2} = ${diceTotal}`, 'roll');
+
+    // check for valid moves
+    if (!hasValidMove()) {
+      const openSum = openTileSum();
+      setStatus(`⚜ No valid moves! Score: ${openSum}`);
+      addChronicle(`Stuck — score ${openSum}`, 'stuck');
+      endPlayerTurn(openSum);
+    } else {
+      setStatus(`⚜ Rolled ${diceTotal} — select tiles that sum to ${diceTotal}`);
+      updateBtnStates();
+    }
+  }, 620);
+}
+
+// ─── Valid Move Detection (bitmask subset enumeration) ──────
+function hasValidMove() {
+  const openIdx = [];
+  for (let i = 0; i < 9; i++) if (tiles[i]) openIdx.push(i);
+  const n = openIdx.length;
+  const total = 1 << n;
+  for (let mask = 1; mask < total; mask++) {
+    let sum = 0;
+    for (let b = 0; b < n; b++) {
+      if (mask & (1 << b)) sum += openIdx[b] + 1;
+    }
+    if (sum === diceTotal) return true;
+  }
+  return false;
+}
+
+// ─── End Player Turn ────────────────────────────────────────
+function endPlayerTurn(score) {
+  gameActive = false;
+  players[currentPlayerIdx].score = score;
+  players[currentPlayerIdx].tiles = [...tiles];
+
+  document.getElementById('btn-roll').disabled = true;
+  document.getElementById('btn-flip').disabled = true;
+
+  // grey out open tiles visually
+  for (let i = 0; i < 9; i++) {
+    if (tiles[i]) {
+      const el = document.getElementById('tile-' + i);
+      el.style.opacity = '0.45';
+      el.style.cursor = 'default';
+      el.style.animation = 'none';
+    }
+  }
+
+  if (gameMode === 'solo') {
+    endSoloGame(score);
+  } else {
+    // check if more players
+    const remaining = players.filter(p => p.score === null);
+    if (remaining.length > 0) {
+      document.getElementById('btn-nextplayer').style.display = 'inline-flex';
+      document.getElementById('btn-nextplayer').textContent =
+        `⚜ ${remaining[0].name}'s Turn →`;
+    } else {
+      showMultiResults();
+    }
+  }
+}
+
+function nextPlayer() {
+  currentPlayerIdx++;
+  document.getElementById('btn-nextplayer').style.display = 'none';
+  beginPlayerTurn();
+}
+
+// ─── Solo End ───────────────────────────────────────────────
+function endSoloGame(score) {
+  const openTiles = [];
+  for (let i = 0; i < 9; i++) if (tiles[i]) openTiles.push(i+1);
+
+  let bestKey = 'rpg_shutbox_best';
+  let prevBest = localStorage.getItem(bestKey);
+  let newBest = false;
+  if (prevBest === null || score < parseInt(prevBest)) {
+    localStorage.setItem(bestKey, score);
+    newBest = true;
+  }
+
+  document.getElementById('results-panel').style.display = 'block';
+  document.getElementById('results-heading').textContent =
+    score === 0 ? '🔥 Shut the Box! 🔥' : 'Turn Complete';
+
+  const tbody = document.getElementById('results-tbody');
+  tbody.innerHTML = `<tr>
+    <td>${players[0].name}</td>
+    <td id="solo-score-cell">${score}</td>
+    <td>${openTiles.length ? openTiles.join(', ') : 'None — perfect!'}</td>
+  </tr>`;
+
+  if (newBest && score > 0) {
+    const cell = document.getElementById('solo-score-cell');
+    cell.classList.add('best-score-flash');
+  }
+
+  updateBestDisplay();
+}
+
+// ─── Multi End ──────────────────────────────────────────────
+function showMultiResults() {
+  const sorted = [...players].sort((a,b) => a.score - b.score);
+  const winScore = sorted[0].score;
+
+  document.getElementById('results-panel').style.display = 'block';
+  document.getElementById('results-heading').textContent =
+    winScore === 0 ? '🔥 Shut the Box!' : `${sorted[0].name} Wins!`;
+
+  const tbody = document.getElementById('results-tbody');
+  tbody.innerHTML = '';
+  players.forEach(p => {
+    const openTiles = [];
+    for (let i = 0; i < 9; i++) if (p.tiles[i]) openTiles.push(i+1);
+    const tr = document.createElement('tr');
+    if (p.score === winScore) tr.classList.add('winner');
+    tr.innerHTML = `
+      <td>${p.name}</td>
+      <td>${p.score}</td>
+      <td>${openTiles.length ? openTiles.join(', ') : 'None!'}</td>`;
+    tbody.appendChild(tr);
+  });
+}
+
+// ─── Perfect Game ───────────────────────────────────────────
+function triggerPerfectGame() {
+  gameActive = false;
+  players[currentPlayerIdx].score = 0;
+  players[currentPlayerIdx].tiles = Array(9).fill(false);
+
+  addChronicle('🔥 Shut the Box! Perfect game!', 'win');
+
+  // update best
+  const bestKey = 'rpg_shutbox_best';
+  localStorage.setItem(bestKey, 0);
+  updateBestDisplay();
+
+  const p = players[currentPlayerIdx];
+  document.getElementById('celebration-msg').textContent =
+    `${p.name} shut the box! A perfect game — every tile felled. The tavern erupts in cheers!`;
+  document.getElementById('celebration').classList.add('show');
+}
+
+function closeCelebration() {
+  document.getElementById('celebration').classList.remove('show');
+  if (gameMode === 'solo') {
+    endSoloGame(0);
+  } else {
+    const remaining = players.filter(p => p.score === null);
+    if (remaining.length > 0) {
+      currentPlayerIdx++;
+      document.getElementById('btn-nextplayer').style.display = 'inline-flex';
+    } else {
+      showMultiResults();
+    }
+  }
+}
+
+// ─── Single Die Logic ───────────────────────────────────────
+function checkSingleDieOption() {
+  const s = openTileSum();
+  const toggle = document.getElementById('single-toggle');
+  if (s <= 6 && !rolled) {
+    toggle.style.display = 'flex';
+    singleDieMode = true;
+  } else {
+    toggle.style.display = 'none';
+    singleDieMode = false;
+    document.getElementById('single-die-cb').checked = false;
+  }
+}
+
+function openTileSum() {
+  return tiles.reduce((a, t, i) => a + (t ? i+1 : 0), 0);
+}
+
+// ─── Selection Bar ──────────────────────────────────────────
+function updateSelectionBar() {
+  const selSum = selected.reduce((a, i) => a + (i+1), 0);
+  document.getElementById('sel-sum').textContent = selSum;
+  document.getElementById('open-sum').textContent = openTileSum();
+
+  const sumEl = document.getElementById('sel-sum');
+  sumEl.className = '';
+  if (rolled && selSum === diceTotal) sumEl.className = 'match';
+  else if (selSum > diceTotal) sumEl.className = 'over';
+}
+
+// ─── Button States ──────────────────────────────────────────
+function updateBtnStates() {
+  const selSum = selected.reduce((a,i) => a+(i+1), 0);
+  const canFlip = rolled && selSum === diceTotal && selected.length > 0;
+  document.getElementById('btn-flip').disabled = !canFlip;
+  document.getElementById('btn-roll').disabled = !gameActive || rolled;
+}
+
+// ─── Scoreboard ─────────────────────────────────────────────
+function updateScoreboard() {
+  const sb = document.getElementById('scoreboard');
+  sb.innerHTML = '';
+  players.forEach((p, i) => {
+    const chip = document.createElement('div');
+    chip.className = 'score-chip' + (i === currentPlayerIdx ? ' active-player' : '');
+    chip.innerHTML = p.name +
+      (p.score !== null ? `<span class="chip-score">${p.score}</span>` : '');
+    sb.appendChild(chip);
+  });
+}
+
+// ─── Chronicle ──────────────────────────────────────────────
+function addChronicle(text, type) {
+  const el = document.getElementById('chronicle');
+  const pill = document.createElement('div');
+  pill.className = 'chronicle-pill ' + type;
+  pill.textContent = text;
+  el.appendChild(pill);
+  el.scrollLeft = el.scrollWidth;
+}
+
+function clearChronicle() {
+  document.getElementById('chronicle').innerHTML = '';
+}
+
+// ─── Status Bar ─────────────────────────────────────────────
+function setStatus(msg) {
+  document.getElementById('status-bar').textContent = msg;
+}
+
+// ─── Dice reset ─────────────────────────────────────────────
+function resetDiceDisplay() {
+  renderBlankDie('die1-svg');
+  renderBlankDie('die2-svg');
+  document.getElementById('die2-wrap').style.display = 'block';
+  document.getElementById('single-die-label').style.display = 'none';
+  document.getElementById('die-total-display').textContent = '—';
+  lastD1 = null; lastD2 = null;
+}
+
+// ─── Best Score ─────────────────────────────────────────────
+function updateBestDisplay() {
+  const best = localStorage.getItem('rpg_shutbox_best');
+  const el = document.getElementById('best-display');
+  if (el) el.textContent = best !== null ? best : '—';
+}
+
+// ─── Rules toggle ───────────────────────────────────────────
+function toggleRules() {
+  const toggle = document.getElementById('rules-toggle');
+  const body   = document.getElementById('rules-body');
+  toggle.classList.toggle('open');
+  body.classList.toggle('open');
+}
+
+// ─── Appearance ─────────────────────────────────────────────
+function toggleAppearance() {
+  const toggle = document.getElementById('appearance-toggle');
+  const drawer = document.getElementById('appearance-drawer');
+  toggle.classList.toggle('open');
+  drawer.classList.toggle('open');
+}
+
+// ─── Go to Setup ────────────────────────────────────────────
+function goSetup() {
+  document.getElementById('setup-panel').style.display = 'block';
+  document.getElementById('game-area').style.display = 'none';
+  document.getElementById('results-panel').style.display = 'none';
+}
+
+// ─── Init ───────────────────────────────────────────────────
+document.getElementById('year').textContent = new Date().getFullYear();
+applyPreset(currentPreset);
+renderBlankDie('die1-svg');
+renderBlankDie('die2-svg');
+setMode('solo');
+buildNameInputs();
+updateBestDisplay();
+
+// Solo mode doesn't show name grid by default; show single input
+(function() {
+  const setup = document.getElementById('player-setup');
+  setup.style.display = 'none';
+  // For solo we still want a name — add a solo name field above the mode buttons
+  const soloRow = document.createElement('div');
+  soloRow.id = 'solo-name-row';
+  soloRow.style.cssText = 'display:flex;justify-content:center;margin-bottom:0.8rem;';
+  soloRow.innerHTML = `<input class="player-name-input" id="solo-name-input" placeholder="Your Name" style="width:180px;font-size:0.85rem;">`;
+  const modeBtns = document.querySelector('.mode-btns');
+  modeBtns.insertAdjacentElement('afterend', soloRow);
+})();
+
+// Override startGame to grab solo name
+const _startGame = startGame;
+startGame = function() {
+  if (gameMode === 'solo') {
+    const soloInp = document.getElementById('solo-name-input');
+    players = [{ name: soloInp && soloInp.value.trim() ? soloInp.value.trim() : 'Tavern Keeper', tiles: [], score: null }];
+    document.getElementById('best-row').style.display = 'flex';
+    document.getElementById('scoreboard').style.display = 'none';
+    currentPlayerIdx = 0;
+
+    document.getElementById('setup-panel').style.display = 'none';
+    document.getElementById('results-panel').style.display = 'none';
+    document.getElementById('game-area').style.display = 'block';
+
+    updateBestDisplay();
+    beginPlayerTurn();
+  } else {
+    _startGame();
+  }
+};
+
+// Show/hide solo name row on mode change
+const _setMode = setMode;
+setMode = function(m) {
+  _setMode(m);
+  const soloRow = document.getElementById('solo-name-row');
+  if (soloRow) soloRow.style.display = m === 'solo' ? 'flex' : 'none';
+  if (m === 'multi') buildNameInputs();
+};
+setMode('solo'); // initial call to show solo row
+</script>
+</body>
+</html>
