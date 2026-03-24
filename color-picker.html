@@ -1,0 +1,1192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>The Alchemist's Palette — Rising Phoenix Games</title>
+<link rel="stylesheet" href="shared.css">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700&family=Cinzel:wght@400;600;700&family=IM+Fell+English:ital@0;1&display=swap" rel="stylesheet">
+<style>
+  /* ── Reset & Base ── */
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg:           #0f0c07;
+    --bg-warm:      #1a1005;
+    --surface:      #1e1608;
+    --surface-2:    #261c0a;
+    --border:       rgba(200,149,42,0.25);
+    --border-bright:rgba(200,149,42,0.55);
+    --gold-dim:     #8a6818;
+    --gold:         #c8952a;
+    --gold-light:   #f0d080;
+    --gold-glow:    rgba(200,149,42,0.35);
+    --crimson:      #8b1a1a;
+    --crimson-light:#c04040;
+    --sage:         #4a7a3a;
+    --sage-light:   #7aaa5a;
+    --text:         #e8dfc8;
+    --text-muted:   #a09070;
+    --text-dim:     rgba(200,170,100,0.45);
+    --font-display: 'Cinzel Decorative', 'Cinzel', serif;
+    --font-ui:      'Cinzel', serif;
+    --font-body:    'IM Fell English', Georgia, serif;
+  }
+
+  html, body {
+    height: 100%;
+    overflow: hidden;
+  }
+
+  body {
+    background: var(--bg);
+    background: radial-gradient(ellipse at 20% 10%, #2a1a04 0%, #0f0c07 60%),
+                radial-gradient(ellipse at 80% 90%, #1a1205 0%, transparent 50%);
+    color: var(--text);
+    font-family: var(--font-body);
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+    overflow: hidden;
+  }
+
+  /* ── Header ── */
+  .page-header {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 0.75rem 1.25rem;
+    background: linear-gradient(180deg, rgba(30,22,8,0.98) 0%, rgba(26,16,5,0.92) 100%);
+    border-bottom: 1px solid var(--border-bright);
+    box-shadow: 0 2px 24px rgba(0,0,0,0.6);
+    flex-shrink: 0;
+    position: relative;
+    z-index: 10;
+  }
+
+  .back-link {
+    font-family: var(--font-ui);
+    font-size: 0.7rem;
+    letter-spacing: 0.08em;
+    color: var(--gold);
+    text-decoration: none;
+    text-transform: uppercase;
+    opacity: 0.75;
+    transition: opacity 0.2s, color 0.2s;
+    white-space: nowrap;
+  }
+  .back-link::before { content: '← '; }
+  .back-link:hover { opacity: 1; color: var(--gold-light); }
+
+  .header-title-group {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .page-title {
+    font-family: var(--font-display);
+    font-size: clamp(0.9rem, 2.5vw, 1.3rem);
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    background: linear-gradient(135deg, var(--gold-light) 0%, var(--gold) 50%, #a87820 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    line-height: 1.2;
+  }
+
+  .page-subtitle {
+    font-family: var(--font-body);
+    font-style: italic;
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    margin-top: 0.1rem;
+  }
+
+  /* Phoenix mark */
+  .phoenix-mark {
+    width: 36px;
+    height: 36px;
+    flex-shrink: 0;
+  }
+
+  /* ── Main Layout ── */
+  .main-layout {
+    display: flex;
+    flex: 1;
+    overflow: hidden;
+    gap: 0;
+  }
+
+  /* Left pane */
+  .left-pane {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-width: 0;
+    border-right: 1px solid var(--border);
+    overflow: hidden;
+  }
+
+  /* Color display banner */
+  .color-display {
+    position: relative;
+    flex: 0 0 auto;
+    min-height: 90px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.75rem 1.25rem;
+    border-bottom: 1px solid var(--border);
+    transition: background-color 0.15s ease;
+    overflow: hidden;
+  }
+
+  .color-display::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, rgba(255,255,255,0.04) 0%, transparent 60%);
+    pointer-events: none;
+  }
+
+  .color-display-left {
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+    z-index: 1;
+  }
+
+  .color-hex-label {
+    font-family: var(--font-ui);
+    font-size: clamp(1rem, 3vw, 1.5rem);
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    color: #fff;
+    text-shadow: 0 1px 8px rgba(0,0,0,0.8), 0 0 20px rgba(0,0,0,0.5);
+  }
+
+  .color-secondary-info {
+    font-family: var(--font-body);
+    font-size: 0.75rem;
+    color: rgba(255,255,255,0.7);
+    text-shadow: 0 1px 4px rgba(0,0,0,0.9);
+    letter-spacing: 0.03em;
+  }
+
+  .color-swatch-large {
+    width: 56px;
+    height: 56px;
+    border-radius: 8px;
+    border: 2px solid rgba(255,255,255,0.25);
+    box-shadow: 0 4px 16px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.15);
+    transition: background-color 0.15s ease;
+    z-index: 1;
+    flex-shrink: 0;
+  }
+
+  /* Controls area */
+  .controls {
+    flex: 1;
+    overflow-y: auto;
+    padding: 1rem 1.25rem;
+    scrollbar-width: thin;
+    scrollbar-color: var(--gold-dim) transparent;
+  }
+  .controls::-webkit-scrollbar { width: 4px; }
+  .controls::-webkit-scrollbar-track { background: transparent; }
+  .controls::-webkit-scrollbar-thumb { background: var(--gold-dim); border-radius: 2px; }
+
+  .section-label {
+    font-family: var(--font-ui);
+    font-size: 0.62rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--gold);
+    margin-bottom: 0.6rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  .section-label::before, .section-label::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+
+  /* Sliders */
+  .slider-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.65rem;
+    margin-bottom: 1rem;
+  }
+
+  .slider-row {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+  }
+
+  .slider-name {
+    font-family: var(--font-ui);
+    font-size: 0.6rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    width: 24px;
+    flex-shrink: 0;
+    text-align: right;
+  }
+
+  .slider-track {
+    flex: 1;
+    position: relative;
+  }
+
+  input[type="range"] {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 100%;
+    height: 6px;
+    border-radius: 3px;
+    outline: none;
+    cursor: pointer;
+    border: 1px solid rgba(255,255,255,0.08);
+  }
+
+  .hue-slider {
+    background: linear-gradient(to right,
+      hsl(0,100%,50%), hsl(30,100%,50%), hsl(60,100%,50%),
+      hsl(90,100%,50%), hsl(120,100%,50%), hsl(150,100%,50%),
+      hsl(180,100%,50%), hsl(210,100%,50%), hsl(240,100%,50%),
+      hsl(270,100%,50%), hsl(300,100%,50%), hsl(330,100%,50%), hsl(360,100%,50%));
+  }
+  .saturation-slider { background: linear-gradient(to right, #6b6b6b, #ff6b35); }
+  .lightness-slider  { background: linear-gradient(to right, #000, #888, #fff); }
+
+  input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: var(--gold-light);
+    border: 2px solid var(--surface);
+    box-shadow: 0 0 0 1px var(--gold), 0 2px 6px rgba(0,0,0,0.5);
+    cursor: pointer;
+    transition: transform 0.15s, box-shadow 0.15s;
+  }
+  input[type="range"]:hover::-webkit-slider-thumb {
+    transform: scale(1.2);
+    box-shadow: 0 0 0 1px var(--gold-light), 0 0 12px var(--gold-glow), 0 2px 6px rgba(0,0,0,0.5);
+  }
+  input[type="range"].interacting::-webkit-slider-thumb {
+    transform: scale(1.3);
+    box-shadow: 0 0 0 2px var(--gold-light), 0 0 20px var(--gold-glow);
+  }
+
+  .slider-value {
+    font-family: var(--font-ui);
+    font-size: 0.62rem;
+    color: var(--text-muted);
+    width: 28px;
+    text-align: right;
+    flex-shrink: 0;
+  }
+
+  /* Numeric inputs */
+  .numeric-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+  }
+
+  .num-field {
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+  }
+
+  .num-field label {
+    font-family: var(--font-ui);
+    font-size: 0.55rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    text-align: center;
+  }
+
+  .num-field input {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    color: var(--text);
+    font-family: var(--font-ui);
+    font-size: 0.7rem;
+    text-align: center;
+    padding: 0.3rem 0.2rem;
+    width: 100%;
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+  }
+  .num-field input:focus {
+    border-color: var(--gold);
+    box-shadow: 0 0 8px var(--gold-glow);
+  }
+
+  .hex-field {
+    grid-column: span 2;
+  }
+  .hex-field input {
+    font-size: 0.8rem;
+    letter-spacing: 0.05em;
+  }
+
+  /* Rainbow canvas */
+  .rainbow-wrap {
+    margin-bottom: 1rem;
+    position: relative;
+  }
+
+  .rainbow-selector-container {
+    width: 100%;
+    height: 160px;
+    border-radius: 8px;
+    border: 1px solid var(--border-bright);
+    position: relative;
+    cursor: crosshair;
+    overflow: hidden;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.05);
+    transition: border-color 0.2s;
+  }
+  .rainbow-selector-container:hover {
+    border-color: var(--gold);
+    box-shadow: 0 4px 20px rgba(0,0,0,0.4), 0 0 12px var(--gold-glow);
+  }
+
+  @keyframes indicatorPulse {
+    0%, 100% { box-shadow: 0 0 0 2px rgba(255,255,255,0.6), 0 0 8px rgba(255,255,255,0.3); }
+    50%       { box-shadow: 0 0 0 3px rgba(255,255,255,0.9), 0 0 16px rgba(255,255,255,0.6); }
+  }
+
+  .current-color-indicator {
+    position: absolute;
+    width: 18px;
+    height: 18px;
+    border: 2px solid rgba(255,255,255,0.9);
+    border-radius: 50%;
+    pointer-events: none;
+    transform: translate(-50%, -50%);
+    animation: indicatorPulse 2.4s ease-in-out infinite;
+    z-index: 5;
+  }
+
+  /* Add to Favorites button */
+  .rpg-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    font-family: var(--font-ui);
+    font-size: 0.7rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--gold-light);
+    background: linear-gradient(180deg, var(--surface-2) 0%, var(--surface) 100%);
+    border: 1px solid var(--border-bright);
+    border-radius: 4px;
+    padding: 0.5rem 1rem;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-shadow: 0 1px 4px rgba(0,0,0,0.6);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.06);
+    width: 100%;
+    margin-bottom: 1rem;
+  }
+  .rpg-btn:hover {
+    border-color: var(--gold);
+    background: linear-gradient(180deg, #2e2210 0%, var(--surface-2) 100%);
+    box-shadow: 0 0 18px 2px rgba(200,149,42,0.25), 0 0 48px 8px rgba(180,120,20,0.15), 0 2px 8px rgba(0,0,0,0.4);
+    color: var(--gold-light);
+  }
+  .rpg-btn:active {
+    transform: translateY(1px);
+    box-shadow: 0 1px 4px rgba(0,0,0,0.4);
+  }
+
+  .rpg-btn svg {
+    width: 14px;
+    height: 14px;
+    fill: var(--gold);
+  }
+
+  /* Complementary palette */
+  .complementary-panel {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 0.75rem;
+    margin-bottom: 1rem;
+  }
+
+  .comp-swatches {
+    display: flex;
+    gap: 0.5rem;
+    justify-content: center;
+    margin-top: 0.5rem;
+    flex-wrap: wrap;
+    position: relative;
+  }
+
+  /* ── Right Pane ── */
+  .right-pane {
+    width: 200px;
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  .swatch-columns {
+    display: flex;
+    flex: 1;
+    overflow: hidden;
+  }
+
+  .swatch-col {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    padding: 0.5rem;
+    overflow-y: auto;
+    scrollbar-width: thin;
+    scrollbar-color: var(--gold-dim) transparent;
+  }
+  .swatch-col::-webkit-scrollbar { width: 3px; }
+  .swatch-col::-webkit-scrollbar-thumb { background: var(--gold-dim); border-radius: 2px; }
+
+  .swatch-col + .swatch-col {
+    border-left: 1px solid var(--border);
+  }
+
+  .col-header {
+    font-family: var(--font-ui);
+    font-size: 0.58rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--gold);
+    text-align: center;
+    padding-bottom: 0.4rem;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 0.4rem;
+    flex-shrink: 0;
+  }
+
+  .swatch-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+    flex: 1;
+  }
+
+  /* ── Swatches ── */
+  .color-swatch {
+    width: 100%;
+    aspect-ratio: 1.4 / 1;
+    border-radius: 5px;
+    border: 1px solid rgba(200,149,42,0.2);
+    cursor: pointer;
+    position: relative;
+    transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s;
+    overflow: visible;
+  }
+  .color-swatch:hover {
+    transform: scale(1.06);
+    border-color: var(--gold);
+    box-shadow: 0 0 10px var(--gold-glow), 0 2px 6px rgba(0,0,0,0.5);
+    z-index: 2;
+  }
+
+  .color-swatch[data-tooltip]:hover::after {
+    content: attr(data-tooltip);
+    position: absolute;
+    bottom: calc(100% + 6px);
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--surface-2);
+    border: 1px solid var(--border-bright);
+    color: var(--gold-light);
+    font-family: var(--font-ui);
+    font-size: 0.55rem;
+    letter-spacing: 0.05em;
+    padding: 0.25rem 0.5rem;
+    border-radius: 3px;
+    white-space: nowrap;
+    pointer-events: none;
+    z-index: 100;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+  }
+
+  /* ── Ripple effects ── */
+  @keyframes rainbowRipple {
+    0%   { width: 0; height: 0; opacity: 0.7; }
+    100% { width: 280px; height: 280px; opacity: 0; }
+  }
+
+  .selection-ripple {
+    position: absolute;
+    border-radius: 50%;
+    pointer-events: none;
+    transform: translate(-50%, -50%);
+    animation: rainbowRipple 1.6s ease-out forwards;
+    border-width: 2px;
+    border-style: solid;
+  }
+
+  @keyframes favoritesRipple {
+    0%   { width: 0; height: 0; opacity: 0.6; }
+    100% { width: 320px; height: 320px; opacity: 0; }
+  }
+
+  .favorites-ripple-container {
+    position: fixed;
+    pointer-events: none;
+    z-index: 9999;
+  }
+
+  .favorites-ripple-circle {
+    position: absolute;
+    border-radius: 50%;
+    opacity: 0;
+    border: 2px solid;
+    width: 0;
+    height: 0;
+    transform: translate(-50%, -50%);
+    animation: favoritesRipple 2s ease-out forwards;
+  }
+
+  @keyframes sliderRipple {
+    0%   { width: 0; height: 0; opacity: 0.6; }
+    100% { width: 80px; height: 80px; opacity: 0; }
+  }
+
+  .slider-ripple-container {
+    position: fixed;
+    pointer-events: none;
+    z-index: 9999;
+  }
+
+  .slider-ripple-circle {
+    position: absolute;
+    border: 2px solid var(--gold);
+    border-radius: 50%;
+    width: 0;
+    height: 0;
+    transform: translate(-50%, -50%);
+    animation: sliderRipple 0.8s ease-out forwards;
+  }
+
+  @keyframes particleFly {
+    0%   { opacity: 1; transform: translate(0,0) scale(1); }
+    100% { opacity: 0; transform: translate(var(--tx), var(--ty)) scale(0); }
+  }
+
+  .particle {
+    position: absolute;
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    pointer-events: none;
+    animation: particleFly 0.9s ease-out forwards;
+  }
+
+  /* Responsive */
+  @media (max-width: 680px) {
+    .main-layout { flex-direction: column; overflow: auto; }
+    .left-pane { border-right: none; border-bottom: 1px solid var(--border); }
+    .right-pane { width: 100%; flex-direction: row; min-height: 140px; }
+    .swatch-columns { flex-direction: row; }
+    html, body { overflow: auto; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+  }
+</style>
+</head>
+<body style="background:#0f0c07;">
+
+<!-- ══ Header ══ -->
+<header class="page-header">
+  <a class="back-link" href="index.html">Hub</a>
+
+  <div class="header-title-group">
+    <span class="page-title">The Alchemist's Palette</span>
+    <span class="page-subtitle">Craft, explore, and remember any hue</span>
+  </div>
+
+  <img class="phoenix-mark" src="data:image/png;base64,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" alt="Rising Phoenix Games" aria-hidden="true">
+</header>
+
+<!-- ══ Main ══ -->
+<div class="main-layout">
+
+  <!-- Left Pane -->
+  <div class="left-pane">
+
+    <!-- Color display banner -->
+    <div class="color-display" id="colorDisplay">
+      <div class="color-display-left">
+        <div class="color-hex-label" id="hexLabel">#ff8000</div>
+        <div class="color-secondary-info" id="rgbLabel">RGB (255, 128, 0)</div>
+        <div class="color-secondary-info" id="hslLabel">HSL (30°, 100%, 50%)</div>
+      </div>
+      <div class="color-swatch-large" id="swatchLarge"></div>
+    </div>
+
+    <!-- Controls -->
+    <div class="controls">
+
+      <!-- Sliders -->
+      <div class="section-label">Adjust Hue & Tone</div>
+      <div class="slider-group">
+        <div class="slider-row">
+          <span class="slider-name">H</span>
+          <div class="slider-track">
+            <input type="range" id="hueSlider" class="hue-slider" min="0" max="360" value="30">
+          </div>
+          <span class="slider-value" id="hueVal">30</span>
+        </div>
+        <div class="slider-row">
+          <span class="slider-name">S</span>
+          <div class="slider-track">
+            <input type="range" id="saturationSlider" class="saturation-slider" min="0" max="100" value="100">
+          </div>
+          <span class="slider-value" id="satVal">100</span>
+        </div>
+        <div class="slider-row">
+          <span class="slider-name">L</span>
+          <div class="slider-track">
+            <input type="range" id="lightnessSlider" class="lightness-slider" min="0" max="100" value="50">
+          </div>
+          <span class="slider-value" id="litVal">50</span>
+        </div>
+      </div>
+
+      <!-- Numeric inputs -->
+      <div class="section-label">Direct Entry</div>
+      <div class="numeric-grid">
+        <div class="num-field"><label>H</label><input type="number" id="hInput" min="0" max="360" value="30"></div>
+        <div class="num-field"><label>S</label><input type="number" id="sInput" min="0" max="100" value="100"></div>
+        <div class="num-field"><label>L</label><input type="number" id="lInput" min="0" max="100" value="50"></div>
+        <div class="num-field"><label>R</label><input type="number" id="rInput" min="0" max="255" value="255"></div>
+        <div class="num-field"><label>G</label><input type="number" id="gInput" min="0" max="255" value="128"></div>
+        <div class="num-field"><label>B</label><input type="number" id="bInput" min="0" max="255" value="0"></div>
+        <div class="num-field hex-field"><label>Hex</label><input type="text" id="hexInput" value="#ff8000"></div>
+      </div>
+
+      <!-- Rainbow selector -->
+      <div class="section-label">Colour Map</div>
+      <div class="rainbow-wrap">
+        <div class="rainbow-selector-container" id="rainbowContainer"></div>
+      </div>
+
+      <!-- Favourites button -->
+      <button class="rpg-btn" id="addToFavoritesBtn">
+        <svg viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09A6.495 6.495 0 0 1 16.5 3C19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
+        Save to Favourites
+      </button>
+
+      <!-- Complementary colours -->
+      <div class="section-label">Harmony</div>
+      <div class="complementary-panel">
+        <div class="comp-swatches" id="complementaryList"></div>
+      </div>
+
+    </div><!-- /controls -->
+  </div><!-- /left-pane -->
+
+  <!-- Right Pane: History + Favourites -->
+  <div class="right-pane">
+    <div class="swatch-columns">
+      <div class="swatch-col">
+        <div class="col-header">History</div>
+        <div class="swatch-list" id="historyList"></div>
+      </div>
+      <div class="swatch-col">
+        <div class="col-header">Favourites</div>
+        <div class="swatch-list" id="favoritesList"></div>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /main-layout -->
+
+<script>
+  /* ────────────────────────────────────────────
+     State
+  ──────────────────────────────────────────── */
+  let hue = 30, saturation = 100, lightness = 50;
+
+  const hueSlider        = document.getElementById('hueSlider');
+  const saturationSlider = document.getElementById('saturationSlider');
+  const lightnessSlider  = document.getElementById('lightnessSlider');
+  const colorDisplay     = document.getElementById('colorDisplay');
+  const hexLabel         = document.getElementById('hexLabel');
+  const rgbLabel         = document.getElementById('rgbLabel');
+  const hslLabel         = document.getElementById('hslLabel');
+  const swatchLarge      = document.getElementById('swatchLarge');
+  const rainbowContainer = document.getElementById('rainbowContainer');
+  const historyList      = document.getElementById('historyList');
+  const favoritesList    = document.getElementById('favoritesList');
+  const addToFavoritesBtn = document.getElementById('addToFavoritesBtn');
+  const complementaryList = document.getElementById('complementaryList');
+
+  const hueVal = document.getElementById('hueVal');
+  const satVal = document.getElementById('satVal');
+  const litVal = document.getElementById('litVal');
+
+  const hInput   = document.getElementById('hInput');
+  const sInput   = document.getElementById('sInput');
+  const lInput   = document.getElementById('lInput');
+  const rInput   = document.getElementById('rInput');
+  const gInput   = document.getElementById('gInput');
+  const bInput   = document.getElementById('bInput');
+  const hexInput = document.getElementById('hexInput');
+
+  /* ── Indicator ── */
+  const currentIndicator = document.createElement('div');
+  currentIndicator.classList.add('current-color-indicator');
+  rainbowContainer.appendChild(currentIndicator);
+
+  let dragSrcEl = null;
+
+  /* ────────────────────────────────────────────
+     Colour math
+  ──────────────────────────────────────────── */
+  function hslToRgb(h, s, l) {
+    h /= 360; s /= 100; l /= 100;
+    let r, g, b;
+    if (s === 0) {
+      r = g = b = l;
+    } else {
+      const hue2rgb = (p, q, t) => {
+        if (t < 0) t += 1;
+        if (t > 1) t -= 1;
+        if (t < 1/6) return p + (q - p) * 6 * t;
+        if (t < 1/2) return q;
+        if (t < 2/3) return p + (q - p) * (2/3 - t) * 6;
+        return p;
+      };
+      const q = l < 0.5 ? l * (1 + s) : l + s - l * s;
+      const p = 2 * l - q;
+      r = hue2rgb(p, q, h + 1/3);
+      g = hue2rgb(p, q, h);
+      b = hue2rgb(p, q, h - 1/3);
+    }
+    return [Math.round(r * 255), Math.round(g * 255), Math.round(b * 255)];
+  }
+
+  function rgbToHex(r, g, b) {
+    const h = c => (c < 16 ? '0' : '') + c.toString(16);
+    return '#' + h(r) + h(g) + h(b);
+  }
+
+  function rgbToHsl(r, g, b) {
+    r /= 255; g /= 255; b /= 255;
+    const max = Math.max(r, g, b), min = Math.min(r, g, b);
+    let h, s, l = (max + min) / 2;
+    if (max === min) { h = s = 0; } else {
+      const d = max - min;
+      s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+      switch (max) {
+        case r: h = (g - b) / d + (g < b ? 6 : 0); break;
+        case g: h = (b - r) / d + 2; break;
+        case b: h = (r - g) / d + 4; break;
+      }
+      h *= 60;
+    }
+    return [Math.round(h), Math.round(s * 100), Math.round(l * 100)];
+  }
+
+  function hexToRgb(hex) {
+    let c = hex.replace('#', '');
+    if (c.length === 3) c = c[0]+c[0]+c[1]+c[1]+c[2]+c[2];
+    if (c.length !== 6) return null;
+    return [parseInt(c.substr(0,2),16), parseInt(c.substr(2,2),16), parseInt(c.substr(4,2),16)];
+  }
+
+  /* Perceived luminance for text contrast */
+  function luminance(r, g, b) {
+    const lin = v => { v /= 255; return v <= 0.03928 ? v/12.92 : Math.pow((v+0.055)/1.055,2.4); };
+    return 0.2126*lin(r) + 0.7152*lin(g) + 0.0722*lin(b);
+  }
+
+  /* ────────────────────────────────────────────
+     Update UI
+  ──────────────────────────────────────────── */
+  function updateColorInfo() {
+    const [r, g, b] = hslToRgb(hue, saturation, lightness);
+    const hex = rgbToHex(r, g, b);
+
+    // Display banner
+    colorDisplay.style.backgroundColor = hex;
+    swatchLarge.style.backgroundColor  = hex;
+
+    const lum = luminance(r, g, b);
+    const textCol = lum > 0.22 ? 'rgba(0,0,0,0.85)' : '#ffffff';
+    hexLabel.style.color  = textCol;
+    rgbLabel.style.color  = lum > 0.22 ? 'rgba(0,0,0,0.65)' : 'rgba(255,255,255,0.7)';
+    hslLabel.style.color  = lum > 0.22 ? 'rgba(0,0,0,0.65)' : 'rgba(255,255,255,0.7)';
+
+    hexLabel.textContent = hex.toUpperCase();
+    rgbLabel.textContent = 'RGB (' + r + ', ' + g + ', ' + b + ')';
+    hslLabel.textContent = 'HSL (' + Math.round(hue) + '°, ' + Math.round(saturation) + '%, ' + Math.round(lightness) + '%)';
+
+    // Slider value labels
+    hueVal.textContent = Math.round(hue);
+    satVal.textContent = Math.round(saturation);
+    litVal.textContent = Math.round(lightness);
+
+    // Numeric inputs
+    hInput.value   = Math.round(hue);
+    sInput.value   = Math.round(saturation);
+    lInput.value   = Math.round(lightness);
+    rInput.value   = r;
+    gInput.value   = g;
+    bInput.value   = b;
+    hexInput.value = hex;
+
+    // Rainbow indicator position
+    const rw = rainbowContainer.offsetWidth;
+    const rh = rainbowContainer.offsetHeight;
+    const ix = (hue / 360) * rw;
+    const iy = ((100 - lightness) / 100) * rh;
+    currentIndicator.style.left = ix + 'px';
+    currentIndicator.style.top  = iy + 'px';
+
+    // Rainbow gradient
+    const hueStops = [0,60,120,180,240,300,360].map(h =>
+      'hsl(' + h + ',' + saturation + '%,50%)'
+    ).join(',');
+    rainbowContainer.style.background =
+      'linear-gradient(to right,' + hueStops + '),' +
+      'linear-gradient(to bottom, #ffffff, rgba(255,255,255,0) 50%, #000000)';
+    rainbowContainer.style.backgroundBlendMode = 'multiply';
+
+    // Saturation slider gradient (dynamic)
+    const [gr, gg, gb] = hslToRgb(hue, 100, lightness);
+    saturationSlider.style.background =
+      'linear-gradient(to right, hsl(' + hue + ',0%,' + lightness + '%), hsl(' + hue + ',100%,' + lightness + '%))';
+
+    updateComplementaryColors();
+  }
+
+  function updateColorFromSliders() {
+    hue        = Number(hueSlider.value);
+    saturation = Number(saturationSlider.value);
+    lightness  = Number(lightnessSlider.value);
+    updateColorInfo();
+  }
+
+  /* ────────────────────────────────────────────
+     History
+  ──────────────────────────────────────────── */
+  function addToHistory(hex) {
+    const swatch = createSwatch(hex, false);
+    if (historyList.firstChild) {
+      historyList.insertBefore(swatch, historyList.firstChild);
+    } else {
+      historyList.appendChild(swatch);
+    }
+    // Trim history to 20
+    while (historyList.children.length > 20) {
+      historyList.removeChild(historyList.lastChild);
+    }
+  }
+
+  /* ────────────────────────────────────────────
+     Select colour from hex value
+  ──────────────────────────────────────────── */
+  function selectColorFromHex(hex) {
+    const rgb = hexToRgb(hex);
+    if (!rgb) return;
+    const hsl = rgbToHsl(rgb[0], rgb[1], rgb[2]);
+    hue        = hsl[0];
+    saturation = hsl[1];
+    lightness  = hsl[2];
+    hueSlider.value        = hue;
+    saturationSlider.value = saturation;
+    lightnessSlider.value  = lightness;
+    updateColorInfo();
+    addSelectionRipple(hue, saturation, lightness);
+    addToHistory(hex);
+    showParticleEffect(rainbowContainer, hue, saturation, lightness);
+  }
+
+  /* ────────────────────────────────────────────
+     Favourites
+  ──────────────────────────────────────────── */
+  function addToFavorites() {
+    const [r, g, b] = hslToRgb(hue, saturation, lightness);
+    const hex = rgbToHex(r, g, b);
+
+    const btn = addToFavoritesBtn;
+    const rect = btn.getBoundingClientRect();
+    triggerFavoritesRipple(hex, rect.left + rect.width / 2, rect.top + rect.height / 2);
+
+    setTimeout(() => {
+      const swatch = createSwatch(hex, true);
+      if (favoritesList.firstChild) {
+        favoritesList.insertBefore(swatch, favoritesList.firstChild);
+      } else {
+        favoritesList.appendChild(swatch);
+      }
+    }, 400);
+  }
+
+  function triggerFavoritesRipple(color, x, y) {
+    const container = document.createElement('div');
+    container.classList.add('favorites-ripple-container');
+    container.style.left = x + 'px';
+    container.style.top  = y + 'px';
+    for (let i = 0; i < 3; i++) {
+      const circle = document.createElement('div');
+      circle.classList.add('favorites-ripple-circle');
+      circle.style.borderColor  = color;
+      circle.style.animationDelay = (i * 0.18) + 's';
+      container.appendChild(circle);
+    }
+    document.body.appendChild(container);
+    setTimeout(() => container.remove(), 2500);
+  }
+
+  /* ────────────────────────────────────────────
+     Rainbow picker
+  ──────────────────────────────────────────── */
+  function pickColorFromGradient(e) {
+    e.preventDefault();
+    setColorFromRainbow(e);
+
+    function moveHandler(ev) { ev.preventDefault(); setColorFromRainbow(ev); }
+    function upHandler() {
+      window.removeEventListener('mousemove', moveHandler);
+      window.removeEventListener('mouseup', upHandler);
+      window.removeEventListener('touchmove', moveHandler);
+      window.removeEventListener('touchend', upHandler);
+    }
+    window.addEventListener('mousemove', moveHandler);
+    window.addEventListener('mouseup', upHandler);
+    window.addEventListener('touchmove', moveHandler, { passive: false });
+    window.addEventListener('touchend', upHandler);
+  }
+
+  function setColorFromRainbow(e) {
+    const rect = rainbowContainer.getBoundingClientRect();
+    let cx = e.clientX, cy = e.clientY;
+    if (e.touches && e.touches[0]) { cx = e.touches[0].clientX; cy = e.touches[0].clientY; }
+    const x = cx - rect.left;
+    const y = cy - rect.top;
+    hue       = Math.max(0, Math.min(360, (x / rect.width) * 360));
+    lightness = Math.max(0, Math.min(100, 100 - (y / rect.height) * 100));
+    hueSlider.value       = hue;
+    lightnessSlider.value = lightness;
+    updateColorInfo();
+    addSelectionRipple(hue, saturation, lightness);
+    addToHistory(rgbToHex(...hslToRgb(hue, saturation, lightness)));
+  }
+
+  /* ────────────────────────────────────────────
+     Ripple effects
+  ──────────────────────────────────────────── */
+  function addSelectionRipple(h, s, l) {
+    const [r, g, b] = hslToRgb(h, s, l);
+    const hex = rgbToHex(r, g, b);
+    const ripple = document.createElement('div');
+    ripple.classList.add('selection-ripple');
+    ripple.style.borderColor = hex;
+    ripple.style.left = currentIndicator.style.left;
+    ripple.style.top  = currentIndicator.style.top;
+    rainbowContainer.appendChild(ripple);
+    setTimeout(() => ripple.remove(), 1800);
+  }
+
+  function showParticleEffect(element, h, s, l) {
+    const [r, g, b] = hslToRgb(h, s, l);
+    const hex = rgbToHex(r, g, b);
+    for (let i = 0; i < 6; i++) {
+      const p = document.createElement('div');
+      p.classList.add('particle');
+      p.style.backgroundColor = hex;
+      p.style.left = (element.offsetWidth / 2) + 'px';
+      p.style.top  = (element.offsetHeight / 2) + 'px';
+      const tx = (Math.random() * 80 - 40) + 'px';
+      const ty = (Math.random() * 80 - 40) + 'px';
+      p.style.setProperty('--tx', tx);
+      p.style.setProperty('--ty', ty);
+      p.style.animationDelay = (i * 0.07) + 's';
+      element.appendChild(p);
+      setTimeout(() => p.remove(), 1000);
+    }
+  }
+
+  /* ────────────────────────────────────────────
+     Slider ripple
+  ──────────────────────────────────────────── */
+  function showSliderRipple(x, y) {
+    const container = document.createElement('div');
+    container.classList.add('slider-ripple-container');
+    container.style.left = x + 'px';
+    container.style.top  = y + 'px';
+    for (let i = 0; i < 3; i++) {
+      const circle = document.createElement('div');
+      circle.classList.add('slider-ripple-circle');
+      circle.style.animationDelay = (i * 0.12) + 's';
+      container.appendChild(circle);
+    }
+    document.body.appendChild(container);
+    setTimeout(() => container.remove(), 1000);
+  }
+
+  /* ────────────────────────────────────────────
+     Complementary / Analogous colours
+  ──────────────────────────────────────────── */
+  function updateComplementaryColors() {
+    complementaryList.innerHTML = '';
+
+    const pairs = [
+      { h: (hue + 180) % 360,         label: 'Complement' },
+      { h: (hue + 30)  % 360,         label: 'Analogous +30°' },
+      { h: (hue - 30 + 360) % 360,    label: 'Analogous −30°' },
+      { h: (hue + 120) % 360,         label: 'Triadic +120°' },
+      { h: (hue + 240) % 360,         label: 'Triadic −120°' },
+    ];
+
+    pairs.forEach(({ h, label }) => {
+      const [r, g, b] = hslToRgb(h, saturation, lightness);
+      const hex = rgbToHex(r, g, b);
+      const sw = createSwatch(hex, false, label);
+      sw.style.width  = '32px';
+      sw.style.height = '32px';
+      sw.style.aspectRatio = '';
+      complementaryList.appendChild(sw);
+    });
+  }
+
+  /* ────────────────────────────────────────────
+     Swatch factory
+  ──────────────────────────────────────────── */
+  function createSwatch(color, draggable, tooltip) {
+    const swatch = document.createElement('div');
+    swatch.classList.add('color-swatch');
+    swatch.style.backgroundColor = color;
+    swatch.title = color;
+    if (tooltip) swatch.setAttribute('data-tooltip', tooltip);
+    swatch.addEventListener('click', () => selectColorFromHex(color));
+    if (draggable) {
+      swatch.setAttribute('draggable', 'true');
+      swatch.addEventListener('dragstart', handleDragStart);
+      swatch.addEventListener('dragover', handleDragOver);
+      swatch.addEventListener('drop', handleDrop);
+      swatch.addEventListener('dragend', handleDragEnd);
+    }
+    return swatch;
+  }
+
+  /* ────────────────────────────────────────────
+     Drag-and-drop (favourites reorder)
+  ──────────────────────────────────────────── */
+  function handleDragStart(e) {
+    dragSrcEl = e.target;
+    e.dataTransfer.effectAllowed = 'move';
+    e.dataTransfer.setData('text/html', e.target.outerHTML);
+    e.target.style.opacity = '0.4';
+  }
+  function handleDragOver(e) {
+    if (e.preventDefault) e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+    return false;
+  }
+  function handleDrop(e) {
+    if (e.stopPropagation) e.stopPropagation();
+    if (dragSrcEl !== this) {
+      dragSrcEl.parentNode.removeChild(dragSrcEl);
+      this.insertAdjacentHTML('beforebegin', e.dataTransfer.getData('text/html'));
+      const dropped = this.previousSibling;
+      dropped.addEventListener('dragstart', handleDragStart);
+      dropped.addEventListener('dragover', handleDragOver);
+      dropped.addEventListener('drop', handleDrop);
+      dropped.addEventListener('dragend', handleDragEnd);
+    }
+    return false;
+  }
+  function handleDragEnd(e) { e.target.style.opacity = '1'; }
+
+  /* ────────────────────────────────────────────
+     Numeric input handler
+  ──────────────────────────────────────────── */
+  function applyUserInputColor() {
+    if (hexInput === document.activeElement) {
+      let hex = hexInput.value.trim();
+      if (hex[0] !== '#') hex = '#' + hex;
+      const rgb = hexToRgb(hex);
+      if (rgb) {
+        const hsl = rgbToHsl(rgb[0], rgb[1], rgb[2]);
+        hue = hsl[0]; saturation = hsl[1]; lightness = hsl[2];
+      }
+    } else if ([hInput, sInput, lInput].indexOf(document.activeElement) > -1) {
+      hue        = Math.max(0, Math.min(360, Number(hInput.value)));
+      saturation = Math.max(0, Math.min(100, Number(sInput.value)));
+      lightness  = Math.max(0, Math.min(100, Number(lInput.value)));
+    } else if ([rInput, gInput, bInput].indexOf(document.activeElement) > -1) {
+      const r = Math.max(0, Math.min(255, Number(rInput.value)));
+      const g = Math.max(0, Math.min(255, Number(gInput.value)));
+      const b = Math.max(0, Math.min(255, Number(bInput.value)));
+      const hsl = rgbToHsl(r, g, b);
+      hue = hsl[0]; saturation = hsl[1]; lightness = hsl[2];
+    }
+    hueSlider.value        = hue;
+    saturationSlider.value = saturation;
+    lightnessSlider.value  = lightness;
+    updateColorInfo();
+  }
+
+  /* ────────────────────────────────────────────
+     Event listeners
+  ──────────────────────────────────────────── */
+  [hueSlider, saturationSlider, lightnessSlider].forEach(slider => {
+    slider.addEventListener('mousedown', () => slider.classList.add('interacting'));
+    slider.addEventListener('touchstart', () => slider.classList.add('interacting'));
+    slider.addEventListener('mouseup', e => endSliderInteraction(e, slider));
+    slider.addEventListener('touchend', e => endSliderInteraction(e, slider));
+    slider.addEventListener('input', updateColorFromSliders);
+  });
+
+  function endSliderInteraction(e, slider) {
+    slider.classList.remove('interacting');
+    const rect = slider.getBoundingClientRect();
+    const ratio = (slider.value - slider.min) / (slider.max - slider.min);
+    const x = rect.left + ratio * rect.width;
+    const y = rect.top + rect.height / 2;
+    showSliderRipple(x, y);
+  }
+
+  [hInput, sInput, lInput, rInput, gInput, bInput, hexInput].forEach(inp => {
+    inp.addEventListener('change', applyUserInputColor);
+  });
+
+  rainbowContainer.addEventListener('mousedown', pickColorFromGradient);
+  rainbowContainer.addEventListener('touchstart', e => { pickColorFromGradient(e); }, { passive: false });
+  addToFavoritesBtn.addEventListener('click', addToFavorites);
+
+  /* ── Init ── */
+  updateColorInfo();
+</script>
+</body>
+</html>
