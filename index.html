@@ -179,6 +179,21 @@
         0 0 48px 8px rgba(180,120,20,0.15);
       transform: translateY(-3px);
     }
+    .game-card.placeholder {
+      cursor: default;
+    }
+    .game-card.placeholder:hover {
+      transform: none;
+      border-color: rgba(200,149,42,0.32);
+      box-shadow:
+        0 4px 18px rgba(0,0,0,0.45),
+        0 0 0 1px rgba(200,149,42,0.14);
+    }
+    .game-card.placeholder .play-pill {
+      color: #b8986a;
+      border-color: rgba(200,149,42,0.18);
+      background: rgba(255,255,255,0.02);
+    }
     .game-card:nth-child(1) { animation-delay: 0.05s; }
     .game-card:nth-child(2) { animation-delay: 0.10s; }
     .game-card:nth-child(3) { animation-delay: 0.15s; }
@@ -205,6 +220,8 @@
     .thumb-c4     { background: radial-gradient(ellipse at 45% 55%, rgba(20,120,40,0.4), rgba(5,10,5,0.9)),  linear-gradient(135deg, #081208, #050805); }
     .thumb-color  { background: radial-gradient(ellipse at 50% 50%, rgba(120,20,120,0.4), rgba(8,5,12,0.9)), linear-gradient(135deg, #100818, #080510); }
     .thumb-hues   { background: radial-gradient(ellipse at 50% 50%, rgba(180,140,20,0.4), rgba(10,8,3,0.9)), linear-gradient(135deg, #1a1808, #0c0a05); }
+    .thumb-box    { background: radial-gradient(ellipse at 50% 45%, rgba(190,120,35,0.48), rgba(14,9,3,0.92)), linear-gradient(135deg, #241608, #0f0c07); }
+    .thumb-upcoming { background: radial-gradient(ellipse at 50% 45%, rgba(200,149,42,0.25), rgba(10,8,3,0.92)), linear-gradient(135deg, #171108, #0d0a06); }
 
     /* Thumb illustration — CSS-only iconic art */
     .thumb-art {
@@ -554,8 +571,33 @@
         </div>
       </a>
 
+      <!-- Shut the Box -->
+      <a class="game-card" href="shut-the-box.html">
+        <div class="card-thumb thumb-box">
+          <div class="thumb-art" style="gap:10px;">
+            <span class="thumb-emoji">🎲</span>
+            <span class="thumb-emoji">📦</span>
+            <span class="thumb-emoji">9️⃣</span>
+          </div>
+          <span class="thumb-label">Classic</span>
+        </div>
+        <div class="card-body">
+          <h3 class="card-title">Shut the Box</h3>
+          <p class="card-desc">Roll the dice, choose the matching tiles, and close the box before luck turns. A tavern classic of risk, arithmetic, and nerve.</p>
+          <div class="card-tags">
+            <span class="tag classic">Classic</span>
+            <span class="tag puzzle">Dice</span>
+            <span class="tag">1–4 Players</span>
+          </div>
+        </div>
+        <div class="card-foot">
+          <span class="card-status ready">● Ready to Play</span>
+          <span class="play-pill">Play →</span>
+        </div>
+      </a>
+
       <!-- Hues & Cues -->
-      <a class="game-card soon" href="hues-cues.html">
+      <a class="game-card" href="hues-cues.html">
         <div class="card-thumb thumb-hues">
           <div class="thumb-art">
             <span class="thumb-emoji">🎨</span>
@@ -566,19 +608,242 @@
         </div>
         <div class="card-body">
           <h3 class="card-title">Hues &amp; Cues</h3>
-          <p class="card-desc">Name a colour with a single word. Your friends place their tokens where they think you mean. Score by proximity — the spectrum is your board.</p>
+          <p class="card-desc">Name a colour with a single word. Other players place their tokens where they think you mean. Score by proximity across a luminous spectrum board.</p>
           <div class="card-tags">
             <span class="tag party">Party</span>
-            <span class="tag">3–8 Players</span>
+            <span class="tag">2–8 Players</span>
             <span class="tag">Pass &amp; Play</span>
           </div>
         </div>
         <div class="card-foot">
-          <span class="card-status soon">◌ Coming Soon</span>
-          <span class="play-pill">Soon</span>
+          <span class="card-status ready">● Ready to Play</span>
+          <span class="play-pill">Play →</span>
         </div>
       </a>
 
+      <!-- Lights Out -->
+      <article class="game-card placeholder" aria-label="Lights Out coming soon">
+        <div class="card-thumb thumb-upcoming">
+          <div class="thumb-art"><span class="thumb-emoji">💡</span><span class="thumb-emoji">⬛</span></div>
+          <span class="thumb-label">Tier 1</span>
+        </div>
+        <div class="card-body">
+          <h3 class="card-title">Lights Out</h3>
+          <p class="card-desc">Toggle one tile, affect its neighbors, and extinguish the whole grid. Minimal rules, clean logic, and a satisfying puzzle cadence.</p>
+          <div class="card-tags"><span class="tag puzzle">Puzzle</span><span class="tag">Solo</span><span class="tag">Tier 1</span></div>
+        </div>
+        <div class="card-foot"><span class="card-status soon">◌ Planned</span><span class="play-pill">Soon</span></div>
+      </article>
+
+      <!-- Mastermind -->
+      <article class="game-card placeholder" aria-label="Mastermind coming soon">
+        <div class="card-thumb thumb-upcoming">
+          <div class="thumb-art"><span class="thumb-emoji">🔴</span><span class="thumb-emoji">🔵</span><span class="thumb-emoji">🧠</span></div>
+          <span class="thumb-label">Tier 1</span>
+        </div>
+        <div class="card-body">
+          <h3 class="card-title">Mastermind</h3>
+          <p class="card-desc">Crack the hidden code through deduction, partial information, and disciplined testing of possibilities.</p>
+          <div class="card-tags"><span class="tag puzzle">Logic</span><span class="tag">Solo / 2P</span><span class="tag">Tier 1</span></div>
+        </div>
+        <div class="card-foot"><span class="card-status soon">◌ Planned</span><span class="play-pill">Soon</span></div>
+      </article>
+
+      <!-- 2048 -->
+      <article class="game-card placeholder" aria-label="2048 coming soon">
+        <div class="card-thumb thumb-upcoming">
+          <div class="thumb-art"><span class="thumb-emoji">2️⃣</span><span class="thumb-emoji">0️⃣</span><span class="thumb-emoji">4️⃣</span><span class="thumb-emoji">8️⃣</span></div>
+          <span class="thumb-label">Tier 1</span>
+        </div>
+        <div class="card-body">
+          <h3 class="card-title">2048</h3>
+          <p class="card-desc">Slide, merge, and chase larger powers of two across a tight grid where one poor move can collapse the run.</p>
+          <div class="card-tags"><span class="tag puzzle">Puzzle</span><span class="tag">Solo</span><span class="tag">Tier 1</span></div>
+        </div>
+        <div class="card-foot"><span class="card-status soon">◌ Planned</span><span class="play-pill">Soon</span></div>
+      </article>
+
+      <!-- Simon Says -->
+      <article class="game-card placeholder" aria-label="Simon Says coming soon">
+        <div class="card-thumb thumb-upcoming">
+          <div class="thumb-art"><span class="thumb-emoji">🟢</span><span class="thumb-emoji">🔴</span><span class="thumb-emoji">🟡</span><span class="thumb-emoji">🔵</span></div>
+          <span class="thumb-label">Tier 1</span>
+        </div>
+        <div class="card-body">
+          <h3 class="card-title">Simon Says</h3>
+          <p class="card-desc">Watch the sequence, remember the rhythm, and answer with perfect repetition as the chain grows longer.</p>
+          <div class="card-tags"><span class="tag classic">Memory</span><span class="tag">Solo</span><span class="tag">Tier 1</span></div>
+        </div>
+        <div class="card-foot"><span class="card-status soon">◌ Planned</span><span class="play-pill">Soon</span></div>
+      </article>
+
+      <!-- Mancala -->
+      <article class="game-card placeholder" aria-label="Mancala coming soon">
+        <div class="card-thumb thumb-upcoming">
+          <div class="thumb-art"><span class="thumb-emoji">🪨</span><span class="thumb-emoji">🕳️</span></div>
+          <span class="thumb-label">Tier 2</span>
+        </div>
+        <div class="card-body">
+          <h3 class="card-title">Mancala</h3>
+          <p class="card-desc">Sow stones around the board, plan extra turns, and time captures with elegant, looping resource play.</p>
+          <div class="card-tags"><span class="tag strategy">Strategy</span><span class="tag">2 Players</span><span class="tag">Tier 2</span></div>
+        </div>
+        <div class="card-foot"><span class="card-status soon">◌ Planned</span><span class="play-pill">Soon</span></div>
+      </article>
+
+      <!-- Reversi / Othello -->
+      <article class="game-card placeholder" aria-label="Reversi Othello coming soon">
+        <div class="card-thumb thumb-upcoming">
+          <div class="thumb-art"><span class="thumb-emoji">⚪</span><span class="thumb-emoji">⚫</span></div>
+          <span class="thumb-label">Tier 2</span>
+        </div>
+        <div class="card-body">
+          <h3 class="card-title">Reversi / Othello</h3>
+          <p class="card-desc">Claim lines, flip discs, and seize the late board with positional control and calculated restraint.</p>
+          <div class="card-tags"><span class="tag strategy">Strategy</span><span class="tag classic">Classic</span><span class="tag">Tier 2</span></div>
+        </div>
+        <div class="card-foot"><span class="card-status soon">◌ Planned</span><span class="play-pill">Soon</span></div>
+      </article>
+
+      <!-- Wordle -->
+      <article class="game-card placeholder" aria-label="Wordle clone coming soon">
+        <div class="card-thumb thumb-upcoming">
+          <div class="thumb-art"><span class="thumb-emoji">🔤</span><span class="thumb-emoji">🟩</span></div>
+          <span class="thumb-label">Tier 2</span>
+        </div>
+        <div class="card-body">
+          <h3 class="card-title">Wordle Clone</h3>
+          <p class="card-desc">Guess the hidden word, refine the search with color feedback, and narrow the solution under strict turn pressure.</p>
+          <div class="card-tags"><span class="tag puzzle">Word</span><span class="tag">Solo</span><span class="tag">Tier 2</span></div>
+        </div>
+        <div class="card-foot"><span class="card-status soon">◌ Planned</span><span class="play-pill">Soon</span></div>
+      </article>
+
+      <!-- Boggle -->
+      <article class="game-card placeholder" aria-label="Boggle style coming soon">
+        <div class="card-thumb thumb-upcoming">
+          <div class="thumb-art"><span class="thumb-emoji">🔠</span><span class="thumb-emoji">🧭</span></div>
+          <span class="thumb-label">Tier 2</span>
+        </div>
+        <div class="card-body">
+          <h3 class="card-title">Boggle-Style</h3>
+          <p class="card-desc">Trace words through a shifting letter field as speed, vocabulary, and path-finding all compete at once.</p>
+          <div class="card-tags"><span class="tag puzzle">Word</span><span class="tag">Solo / Party</span><span class="tag">Tier 2</span></div>
+        </div>
+        <div class="card-foot"><span class="card-status soon">◌ Planned</span><span class="play-pill">Soon</span></div>
+      </article>
+
+      <!-- Sudoku -->
+      <article class="game-card placeholder" aria-label="Sudoku coming soon">
+        <div class="card-thumb thumb-upcoming">
+          <div class="thumb-art"><span class="thumb-emoji">🔢</span><span class="thumb-emoji">🧩</span></div>
+          <span class="thumb-label">Tier 2</span>
+        </div>
+        <div class="card-body">
+          <h3 class="card-title">Sudoku</h3>
+          <p class="card-desc">A lattice of constraint, deduction, and patience — with difficulty driven by puzzle generation rather than ornament.</p>
+          <div class="card-tags"><span class="tag puzzle">Logic</span><span class="tag">Solo</span><span class="tag">Tier 2</span></div>
+        </div>
+        <div class="card-foot"><span class="card-status soon">◌ Planned</span><span class="play-pill">Soon</span></div>
+      </article>
+
+      <!-- Nine Men's Morris -->
+      <article class="game-card placeholder" aria-label="Nine Men's Morris coming soon">
+        <div class="card-thumb thumb-upcoming">
+          <div class="thumb-art"><span class="thumb-emoji">⚪</span><span class="thumb-emoji">⚫</span><span class="thumb-emoji">🧱</span></div>
+          <span class="thumb-label">Tier 3</span>
+        </div>
+        <div class="card-body">
+          <h3 class="card-title">Nine Men’s Morris</h3>
+          <p class="card-desc">Place, move, and capture through shifting phases of play in one of the great alignment games of the medieval world.</p>
+          <div class="card-tags"><span class="tag strategy">Strategy</span><span class="tag classic">Historical</span><span class="tag">Tier 3</span></div>
+        </div>
+        <div class="card-foot"><span class="card-status soon">◌ Planned</span><span class="play-pill">Soon</span></div>
+      </article>
+
+      <!-- Yahtzee -->
+      <article class="game-card placeholder" aria-label="Yahtzee coming soon">
+        <div class="card-thumb thumb-upcoming">
+          <div class="thumb-art"><span class="thumb-emoji">🎲</span><span class="thumb-emoji">📋</span></div>
+          <span class="thumb-label">Tier 3</span>
+        </div>
+        <div class="card-body">
+          <h3 class="card-title">Yahtzee</h3>
+          <p class="card-desc">Push your luck across a score sheet full of straights, full houses, and hard decisions about when to settle.</p>
+          <div class="card-tags"><span class="tag classic">Dice</span><span class="tag">1–4 Players</span><span class="tag">Tier 3</span></div>
+        </div>
+        <div class="card-foot"><span class="card-status soon">◌ Planned</span><span class="play-pill">Soon</span></div>
+      </article>
+
+      <!-- Solitaire -->
+      <article class="game-card placeholder" aria-label="Solitaire Klondike coming soon">
+        <div class="card-thumb thumb-upcoming">
+          <div class="thumb-art"><span class="thumb-emoji">🂡</span><span class="thumb-emoji">🂮</span></div>
+          <span class="thumb-label">Tier 3</span>
+        </div>
+        <div class="card-body">
+          <h3 class="card-title">Solitaire / Klondike</h3>
+          <p class="card-desc">Layered card movement, careful uncovering, and patient sequencing across the definitive single-player tableau.</p>
+          <div class="card-tags"><span class="tag classic">Cards</span><span class="tag">Solo</span><span class="tag">Tier 3</span></div>
+        </div>
+        <div class="card-foot"><span class="card-status soon">◌ Planned</span><span class="play-pill">Soon</span></div>
+      </article>
+
+      <!-- Hex -->
+      <article class="game-card placeholder" aria-label="Hex coming soon">
+        <div class="card-thumb thumb-upcoming">
+          <div class="thumb-art"><span class="thumb-emoji">⬡</span><span class="thumb-emoji">🔷</span></div>
+          <span class="thumb-label">Tier 3</span>
+        </div>
+        <div class="card-body">
+          <h3 class="card-title">Hex</h3>
+          <p class="card-desc">Connect opposite sides across a rhombus grid where every move hardens territory and narrows future lines.</p>
+          <div class="card-tags"><span class="tag strategy">Abstract</span><span class="tag">2 Players</span><span class="tag">Tier 3</span></div>
+        </div>
+        <div class="card-foot"><span class="card-status soon">◌ Planned</span><span class="play-pill">Soon</span></div>
+      </article>
+
+      <!-- Alquerque -->
+      <article class="game-card placeholder" aria-label="Alquerque Draughts variants coming soon">
+        <div class="card-thumb thumb-upcoming">
+          <div class="thumb-art"><span class="thumb-emoji">🦊</span><span class="thumb-emoji">⚔️</span></div>
+          <span class="thumb-label">Tier 3</span>
+        </div>
+        <div class="card-body">
+          <h3 class="card-title">Alquerque / Draughts Variants</h3>
+          <p class="card-desc">A natural next branch from Fox &amp; Geese: capture chains, positional traps, and formalized movement on historical boards.</p>
+          <div class="card-tags"><span class="tag strategy">Strategy</span><span class="tag classic">Historical</span><span class="tag">Tier 3</span></div>
+        </div>
+        <div class="card-foot"><span class="card-status soon">◌ Planned</span><span class="play-pill">Soon</span></div>
+      </article>
+
+      <!-- Cribbage -->
+      <article class="game-card placeholder" aria-label="Cribbage coming soon">
+        <div class="card-thumb thumb-upcoming">
+          <div class="thumb-art"><span class="thumb-emoji">🃏</span><span class="thumb-emoji">📍</span></div>
+          <span class="thumb-label">Tier 3</span>
+        </div>
+        <div class="card-body">
+          <h3 class="card-title">Cribbage</h3>
+          <p class="card-desc">Pegging, hand evaluation, and a famously intricate scoring grammar packed into a compact card duel.</p>
+          <div class="card-tags"><span class="tag classic">Cards</span><span class="tag">2 Players</span><span class="tag">Tier 3</span></div>
+        </div>
+        <div class="card-foot"><span class="card-status soon">◌ Planned</span><span class="play-pill">Soon</span></div>
+      </article>
+
+      <!-- Nonogram -->
+      <article class="game-card placeholder" aria-label="Nonogram Picross coming soon">
+        <div class="card-thumb thumb-upcoming">
+          <div class="thumb-art"><span class="thumb-emoji">🔲</span><span class="thumb-emoji">🖼️</span></div>
+          <span class="thumb-label">Tier 3</span>
+        </div>
+        <div class="card-body">
+          <h3 class="card-title">Nonogram / Picross</h3>
+          <p class="card-desc">Reveal hidden images through numeric clues, line logic, and the slow emergence of structure from apparent emptiness.</p>
+          <div class="card-tags"><span class="tag puzzle">Logic</span><span class="tag">Solo</span><span class="tag">Tier 3</span></div>
+        </div>
+        <div class="card-foot"><span class="card-status soon">◌ Planned</span><span class="play-pill">Soon</span></div>
+      </article>
     </div>
 
     <!-- Tools section -->
