@@ -1,0 +1,1420 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>Hangman · Rising Phoenix Games</title>
+  <link rel="stylesheet" href="shared.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700&family=Cinzel:wght@400;600;700;900&family=IM+Fell+English:ital@0;1&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; }
+    html, body { margin: 0; min-height: 100%; }
+
+    :root {
+      --message-width: 88%;
+      --mist: rgba(240,208,128,0.08);
+      --ember: rgba(200,149,42,0.18);
+      --good: #7aaa5a;
+      --bad: #c04040;
+      --ink: #f3e3b4;
+    }
+
+    body {
+      font-family: var(--font-body);
+      color: var(--text);
+      background:
+        radial-gradient(ellipse 90% 55% at 15% 8%, rgba(90,48,12,0.55) 0%, transparent 58%),
+        radial-gradient(ellipse 70% 65% at 85% 90%, rgba(50,25,6,0.60) 0%, transparent 55%),
+        radial-gradient(ellipse 60% 40% at 50% 50%, rgba(30,18,5,0.40) 0%, transparent 70%),
+        linear-gradient(160deg, #1c1106 0%, #0f0c07 45%, #13100a 100%);
+      background-attachment: fixed;
+    }
+
+    #app {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      isolation: isolate;
+    }
+
+    .site-header {
+      padding: 0;
+      background: linear-gradient(180deg, #1e1508 0%, #120e06 100%);
+      border-bottom: 2px solid var(--gold);
+      box-shadow: 0 4px 24px rgba(0,0,0,0.7), 0 1px 0 rgba(200,149,42,0.15) inset;
+      position: relative;
+      overflow: hidden;
+      flex-shrink: 0;
+    }
+    .site-header::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: repeating-linear-gradient(
+        90deg,
+        transparent 0px,
+        transparent 48px,
+        rgba(200,149,42,0.04) 48px,
+        rgba(200,149,42,0.04) 49px
+      );
+      pointer-events: none;
+    }
+    .header-inner { position: relative; padding: 14px 20px 12px; }
+    .header-row { display: flex; align-items: center; margin-bottom: 6px; }
+
+    .rpg-back {
+      display: inline-block;
+      font-family: var(--font-ui);
+      font-size: 0.78rem;
+      letter-spacing: 0.08em;
+      color: var(--gold);
+      text-decoration: none;
+      padding: 0.55rem 1.1rem 0.55rem 2rem;
+      border: 1px solid rgba(200,149,42,0.25);
+      border-radius: 3px;
+      background: linear-gradient(180deg, #2a2010 0%, #1a1508 100%);
+      position: relative;
+      transition: border-color 0.2s, box-shadow 0.2s, color 0.2s;
+      margin: 0;
+      flex: 0 0 auto;
+      z-index: 2;
+    }
+    .rpg-back::before { content: '\2190'; position: absolute; left: 0.7rem; }
+    .rpg-back:hover {
+      border-color: var(--gold-light);
+      box-shadow: 0 0 18px 2px var(--gold-glow);
+      color: var(--gold-light);
+    }
+
+    .header-center {
+      flex: 1 1 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.85rem;
+      min-width: 0;
+    }
+    .header-spacer { visibility: hidden; pointer-events: none; }
+    .phoenix-mark {
+      width: 52px;
+      height: 52px;
+      object-fit: contain;
+      flex-shrink: 0;
+      filter: drop-shadow(0 0 10px rgba(200,149,42,0.5));
+    }
+    .title-block {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      min-width: 0;
+    }
+    .game-title {
+      margin: 0;
+      font-family: var(--font-display);
+      font-size: clamp(1rem, 3.8vw, 2rem);
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      line-height: 1.1;
+      background: linear-gradient(135deg, var(--gold-light) 0%, var(--gold) 40%, #a07020 80%, var(--gold-light) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .game-subtitle {
+      margin: 0.2rem 0 0;
+      font-style: italic;
+      color: #c8a878;
+      font-size: 0.82rem;
+      letter-spacing: 0.05em;
+    }
+
+    .main-wrap {
+      width: 100%;
+      max-width: 1180px;
+      margin: 0 auto;
+      padding: 22px 16px 36px;
+      display: grid;
+      grid-template-columns: minmax(320px, 1.14fr) minmax(280px, 0.86fr);
+      gap: 20px;
+      flex: 1;
+    }
+
+    .panel {
+      background: linear-gradient(160deg, var(--surface) 0%, var(--bg-warm) 100%);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      box-shadow: inset 0 0 30px rgba(0,0,0,0.35), 0 10px 34px rgba(0,0,0,0.45);
+      overflow: hidden;
+      position: relative;
+    }
+    .panel-header {
+      padding: 14px 16px 10px;
+      border-bottom: 1px solid rgba(200,149,42,0.14);
+      background: linear-gradient(180deg, rgba(255,255,255,0.03) 0%, rgba(255,255,255,0) 100%);
+    }
+    .panel-label {
+      font-family: var(--font-ui);
+      font-size: 0.7rem;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: var(--gold);
+      margin: 0 0 0.25rem;
+    }
+    .status-bar {
+      margin: 0;
+      min-height: 2.4rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      padding: 8px 16px 8px 28px;
+      background: rgba(0,0,0,0.32);
+      border: 1px solid rgba(200,149,42,0.18);
+      border-radius: 8px;
+      font-family: var(--font-ui);
+      font-size: 0.8rem;
+      letter-spacing: 0.08em;
+      color: var(--gold-light);
+      position: relative;
+      text-align: center;
+    }
+    .status-bar::before {
+      content: '⚜';
+      position: absolute;
+      left: 10px;
+      font-size: 10px;
+      color: var(--gold);
+      opacity: 0.7;
+    }
+
+    .board-panel {
+      display: flex;
+      flex-direction: column;
+      min-height: 760px;
+    }
+    .board-area {
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 18px;
+      flex: 1;
+      position: relative;
+    }
+
+    .top-actions {
+      width: min(100%, 680px);
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 10px;
+    }
+    .metric {
+      padding: 10px 12px;
+      border-radius: 12px;
+      background: linear-gradient(180deg, rgba(255,255,255,0.04) 0%, rgba(0,0,0,0.16) 100%);
+      border: 1px solid rgba(200,149,42,0.18);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.03);
+      text-align: center;
+      min-height: 70px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      gap: 5px;
+    }
+    .metric-label {
+      font-family: var(--font-ui);
+      font-size: 0.62rem;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: var(--gold);
+    }
+    .metric-value {
+      font-family: var(--font-display);
+      color: var(--gold-light);
+      font-size: clamp(1rem, 2.5vw, 1.35rem);
+      line-height: 1;
+    }
+    .metric-sub {
+      color: var(--text-muted);
+      font-size: 0.78rem;
+      font-style: italic;
+      line-height: 1.1;
+    }
+
+    .hangman-frame {
+      width: min(100%, 680px);
+      position: relative;
+      padding: 18px;
+      border-radius: 18px;
+      background:
+        radial-gradient(circle at 50% 45%, rgba(70,40,10,0.28) 0%, rgba(20,12,4,0.96) 70%),
+        linear-gradient(160deg, #201407 0%, #100b04 100%);
+      border: 1px solid rgba(200,149,42,0.28);
+      box-shadow:
+        inset 0 1px 0 rgba(255,255,255,0.04),
+        inset 0 0 38px rgba(0,0,0,0.35),
+        0 0 0 1px rgba(0,0,0,0.35),
+        0 18px 42px rgba(0,0,0,0.45),
+        0 0 30px rgba(200,149,42,0.14);
+      overflow: hidden;
+    }
+    .hangman-frame::before,
+    .hangman-frame::after {
+      content: '◆';
+      position: absolute;
+      color: rgba(200,149,42,0.45);
+      font-size: 10px;
+      line-height: 1;
+      z-index: 2;
+    }
+    .hangman-frame::before { top: 6px; left: 8px; }
+    .hangman-frame::after { bottom: 6px; right: 8px; }
+
+    .scene-grid {
+      display: grid;
+      grid-template-columns: minmax(220px, 0.9fr) minmax(220px, 1.1fr);
+      gap: 18px;
+      align-items: stretch;
+      position: relative;
+      z-index: 1;
+    }
+
+    .canvas-wrap,
+    .word-wrap {
+      border-radius: 16px;
+      border: 1px solid rgba(200,149,42,0.15);
+      background: linear-gradient(180deg, rgba(255,255,255,0.03) 0%, rgba(0,0,0,0.18) 100%);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.03);
+    }
+
+    .canvas-wrap {
+      padding: 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      justify-content: center;
+      align-items: center;
+    }
+    .canvas-label {
+      font-family: var(--font-ui);
+      font-size: 0.64rem;
+      letter-spacing: 0.15em;
+      color: var(--gold);
+      text-transform: uppercase;
+      text-align: center;
+    }
+    #gallows-canvas {
+      width: min(100%, 280px);
+      height: auto;
+      display: block;
+      border-radius: 12px;
+      background:
+        radial-gradient(circle at 50% 12%, rgba(240,208,128,0.06) 0%, transparent 26%),
+        linear-gradient(180deg, rgba(15,12,7,0.65) 0%, rgba(8,6,3,0.8) 100%);
+      border: 1px solid rgba(200,149,42,0.14);
+    }
+
+    .word-wrap {
+      padding: 18px 16px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      gap: 16px;
+      min-height: 100%;
+    }
+    .category-badge {
+      align-self: center;
+      font-family: var(--font-ui);
+      font-size: 0.68rem;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: var(--gold-light);
+      background: rgba(200,149,42,0.10);
+      border: 1px solid rgba(200,149,42,0.22);
+      border-radius: 999px;
+      padding: 0.45rem 0.85rem;
+      text-align: center;
+    }
+    .clue-block {
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      gap: 0.35rem;
+    }
+    .clue-label {
+      font-family: var(--font-ui);
+      font-size: 0.62rem;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: var(--gold);
+    }
+    .clue-text {
+      color: #d8c7a0;
+      font-size: 1rem;
+      line-height: 1.45;
+      font-style: italic;
+    }
+
+    .word-display {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 10px 8px;
+      padding: 4px 0;
+      min-height: 96px;
+      align-content: center;
+    }
+    .letter-slot,
+    .space-slot,
+    .divider-slot {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .letter-slot {
+      width: clamp(32px, 7.2vw, 44px);
+      height: clamp(46px, 10vw, 58px);
+      border-radius: 12px;
+      border: 1px solid rgba(200,149,42,0.25);
+      background: linear-gradient(180deg, rgba(255,255,255,0.04) 0%, rgba(0,0,0,0.18) 100%), rgba(16,11,5,0.92);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.03), 0 0 0 1px rgba(0,0,0,0.18);
+      position: relative;
+      overflow: hidden;
+    }
+    .letter-slot::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(135deg, rgba(255,255,255,0.05), transparent 55%, rgba(200,149,42,0.05));
+      pointer-events: none;
+    }
+    .letter-slot.revealed {
+      border-color: rgba(240,208,128,0.55);
+      box-shadow: 0 0 14px rgba(200,149,42,0.16), inset 0 1px 0 rgba(255,255,255,0.04);
+    }
+    .space-slot {
+      width: 18px;
+      height: 58px;
+    }
+    .divider-slot {
+      width: 10px;
+      height: 58px;
+      color: rgba(240,208,128,0.35);
+      font-size: 1rem;
+    }
+    .letter-char {
+      position: relative;
+      z-index: 1;
+      font-family: var(--font-display);
+      font-size: clamp(1rem, 3.6vw, 1.55rem);
+      color: #f4e5b5;
+      text-transform: uppercase;
+      line-height: 1;
+      transform: translateY(1px);
+    }
+
+    .progress-note {
+      text-align: center;
+      color: var(--text-muted);
+      font-size: 0.9rem;
+      font-style: italic;
+    }
+
+    .keyboard-wrap {
+      width: min(100%, 680px);
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .keyboard-row {
+      display: flex;
+      justify-content: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    .key-btn {
+      width: clamp(34px, 7vw, 48px);
+      height: clamp(42px, 8vw, 52px);
+      border-radius: 12px;
+      border: 1px solid rgba(200,149,42,0.28);
+      background: linear-gradient(180deg, rgba(255,255,255,0.04) 0%, rgba(0,0,0,0.18) 100%), rgba(25,17,7,0.94);
+      color: #f0d080;
+      font-family: var(--font-ui);
+      font-size: clamp(0.9rem, 2.5vw, 1rem);
+      letter-spacing: 0.05em;
+      cursor: pointer;
+      transition: transform 0.12s ease, box-shadow 0.18s ease, border-color 0.18s ease, background 0.18s ease;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.03);
+    }
+    .key-btn:hover:not(:disabled) {
+      transform: translateY(-1px);
+      border-color: rgba(240,208,128,0.65);
+      box-shadow: 0 0 18px rgba(200,149,42,0.18);
+      color: #f8e898;
+    }
+    .key-btn:active:not(:disabled) { transform: translateY(0); }
+    .key-btn.hit {
+      border-color: rgba(122,170,90,0.72);
+      color: #dff2c8;
+      background: linear-gradient(180deg, rgba(122,170,90,0.30), rgba(30,56,18,0.92));
+      box-shadow: 0 0 18px rgba(122,170,90,0.18);
+    }
+    .key-btn.miss {
+      border-color: rgba(192,64,64,0.72);
+      color: #ffd3d3;
+      background: linear-gradient(180deg, rgba(192,64,64,0.24), rgba(70,16,16,0.94));
+      box-shadow: 0 0 18px rgba(192,64,64,0.14);
+    }
+    .key-btn:disabled { cursor: default; }
+
+    .controls-row {
+      width: min(100%, 680px);
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      justify-content: center;
+    }
+    .rpg-btn {
+      font-family: var(--font-ui);
+      font-size: 0.78rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: #f0d080;
+      background: linear-gradient(180deg,rgba(40,28,8,0.9) 0%,rgba(20,14,4,0.95) 100%);
+      border: 1px solid rgba(200,149,42,0.45);
+      padding: 10px 18px;
+      border-radius: 999px;
+      cursor: pointer;
+      transition: all 0.2s;
+      box-shadow: 0 1px 0 rgba(200,149,42,0.15), inset 0 1px 0 rgba(200,149,42,0.1);
+    }
+    .rpg-btn:hover {
+      border-color: rgba(200,149,42,0.75);
+      box-shadow: 0 0 18px 2px rgba(200,149,42,0.25),0 0 48px 8px rgba(180,120,20,0.15),inset 0 1px 0 rgba(200,149,42,0.2);
+      color: #f8e898;
+      transform: translateY(-1px);
+    }
+    .rpg-btn:active { transform: translateY(0); }
+
+    .misses-row {
+      width: min(100%, 680px);
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      justify-content: center;
+      align-items: center;
+      padding: 12px 14px;
+      border-radius: 14px;
+      border: 1px solid rgba(200,149,42,0.18);
+      background: rgba(0,0,0,0.24);
+    }
+    .misses-label {
+      font-family: var(--font-ui);
+      font-size: 0.68rem;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: var(--gold);
+    }
+    .misses-list {
+      color: #d7c6a4;
+      font-size: 1rem;
+      letter-spacing: 0.2em;
+      min-height: 1.2em;
+    }
+
+    .message-banner {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      transform: translate(-50%, -50%) scale(0.22);
+      width: 12%;
+      max-width: var(--message-width);
+      padding: 18px 20px;
+      border-radius: 16px;
+      border: 1px solid rgba(240,208,128,0.45);
+      background:
+        radial-gradient(circle at 50% 50%, rgba(85,52,12,0.96) 0%, rgba(20,12,4,0.98) 72%),
+        linear-gradient(180deg, rgba(255,255,255,0.04), rgba(0,0,0,0.20));
+      box-shadow: 0 0 0 1px rgba(0,0,0,0.28), 0 18px 36px rgba(0,0,0,0.55), 0 0 28px rgba(200,149,42,0.22);
+      text-align: center;
+      pointer-events: none;
+      opacity: 0;
+      z-index: 8;
+    }
+    .message-banner.show {
+      animation: winBanner 1.75s ease forwards;
+    }
+    .message-banner.lose {
+      border-color: rgba(192,64,64,0.46);
+      background:
+        radial-gradient(circle at 50% 50%, rgba(72,26,18,0.98) 0%, rgba(18,8,6,0.98) 72%),
+        linear-gradient(180deg, rgba(255,255,255,0.03), rgba(0,0,0,0.20));
+      box-shadow: 0 0 0 1px rgba(0,0,0,0.28), 0 18px 36px rgba(0,0,0,0.55), 0 0 24px rgba(192,64,64,0.18);
+    }
+    .message-title {
+      font-family: var(--font-display);
+      font-size: clamp(1rem, 3vw, 1.7rem);
+      line-height: 1.15;
+      background: linear-gradient(135deg, #f8e6aa 0%, #c8952a 45%, #f8e6aa 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .message-banner.lose .message-title {
+      background: linear-gradient(135deg, #ffd7d7 0%, #d57b7b 50%, #ffd7d7 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .message-subtitle {
+      margin-top: 6px;
+      color: #dfcfac;
+      font-size: 0.98rem;
+      font-style: italic;
+      line-height: 1.35;
+    }
+
+    @keyframes winBanner {
+      0% {
+        opacity: 0;
+        transform: translate(-50%, -50%) scale(0.22);
+        width: 12%;
+      }
+      42.857% {
+        opacity: 1;
+        transform: translate(-50%, -50%) scale(1);
+        width: min(var(--message-width), 92%);
+      }
+      100% {
+        opacity: 0;
+        transform: translate(-50%, -50%) scale(1);
+        width: min(var(--message-width), 92%);
+      }
+    }
+
+    .confetti-canvas {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 50;
+    }
+
+    .side-panel {
+      display: flex;
+      flex-direction: column;
+      min-height: 760px;
+    }
+    .side-body {
+      padding: 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      flex: 1;
+    }
+    .info-card {
+      border-radius: 14px;
+      border: 1px solid rgba(200,149,42,0.15);
+      background: linear-gradient(180deg, rgba(255,255,255,0.03) 0%, rgba(0,0,0,0.18) 100%);
+      padding: 14px;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.03);
+    }
+    .info-title {
+      font-family: var(--font-ui);
+      font-size: 0.68rem;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: var(--gold);
+      margin-bottom: 0.6rem;
+    }
+    .info-copy {
+      color: #d8c7a0;
+      line-height: 1.55;
+      font-size: 0.98rem;
+    }
+    .info-copy strong { color: #f0d080; font-weight: 600; }
+    .category-select {
+      width: 100%;
+      font-family: var(--font-ui);
+      font-size: 0.82rem;
+      letter-spacing: 0.06em;
+      color: var(--gold-light);
+      background: rgba(18,12,5,0.9);
+      border: 1px solid rgba(200,149,42,0.22);
+      border-radius: 10px;
+      padding: 11px 12px;
+      outline: none;
+    }
+    .category-select:focus {
+      border-color: rgba(240,208,128,0.56);
+      box-shadow: 0 0 0 3px rgba(200,149,42,0.12);
+    }
+    .legend-list {
+      display: grid;
+      gap: 8px;
+      margin: 0;
+      padding: 0;
+      list-style: none;
+    }
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      color: #d8c7a0;
+      font-size: 0.95rem;
+      line-height: 1.4;
+    }
+    .legend-swatch {
+      width: 12px;
+      height: 12px;
+      border-radius: 999px;
+      flex: 0 0 auto;
+      border: 1px solid rgba(255,255,255,0.18);
+      box-shadow: 0 0 10px rgba(0,0,0,0.25) inset;
+    }
+    .swatch-hit { background: linear-gradient(180deg, rgba(122,170,90,0.85), rgba(30,56,18,1)); }
+    .swatch-miss { background: linear-gradient(180deg, rgba(192,64,64,0.85), rgba(70,16,16,1)); }
+    .swatch-warn { background: linear-gradient(180deg, rgba(240,208,128,0.85), rgba(120,80,20,1)); }
+
+    .rpg-footer {
+      padding: 12px 16px 18px;
+      text-align: center;
+      color: var(--text-dim);
+      font-style: italic;
+      font-size: 0.84rem;
+    }
+
+    @media (max-width: 980px) {
+      .main-wrap {
+        grid-template-columns: 1fr;
+      }
+      .side-panel,
+      .board-panel {
+        min-height: unset;
+      }
+    }
+
+    @media (max-width: 760px) {
+      .top-actions {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+      .scene-grid {
+        grid-template-columns: 1fr;
+      }
+      .word-display {
+        min-height: 82px;
+      }
+    }
+
+    @media (max-width: 520px) {
+      .header-inner { padding-inline: 12px; }
+      .main-wrap { padding-inline: 12px; }
+      .board-area { padding: 14px; }
+      .side-body { padding: 14px; }
+      .top-actions { gap: 8px; }
+      .metric { min-height: 64px; padding: 9px 8px; }
+      .hangman-frame { padding: 12px; }
+      .canvas-wrap, .word-wrap { padding: 12px; }
+      .key-btn { border-radius: 10px; }
+      .message-subtitle { font-size: 0.9rem; }
+    }
+  </style>
+</head>
+<body>
+  <canvas class="confetti-canvas" id="confetti-canvas"></canvas>
+  <div id="app">
+    <header class="site-header">
+      <div class="header-inner">
+        <div class="header-row">
+          <a href="index.html" class="rpg-back">Hub</a>
+          <div class="header-center">
+            <img class="phoenix-mark" src="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/4gHYSUNDX1BST0ZJTEUAAQEAAAHIAAAAAAQwAABtbnRyUkdCIFhZWiAH4AABAAEAAAAAAABhY3NwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQAA9tYAAQAAAADTLQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAlkZXNjAAAA8AAAACRyWFlaAAABFAAAABRnWFlaAAABKAAAABRiWFlaAAABPAAAABR3dHB0AAABUAAAABRyVFJDAAABZAAAAChnVFJDAAABZAAAAChiVFJDAAABZAAAAChjcHJ0AAABjAAAADxtbHVjAAAAAAAAAAEAAAAMZW5VUwAAAAgAAAAcAHMAUgBHAEJYWVogAAAAAAAAb6IAADj1AAADkFhZWiAAAAAAAABimQAAt4UAABjaWFlaIAAAAAAAACSgAAAPhAAAts9YWVogAAAAAAAA9tYAAQAAAADTLXBhcmEAAAAAAAQAAAACZmYAAPKnAAANWQAAE9AAAApbAAAAAAAAAABtbHVjAAAAAAAAAAEAAAAMZW5VUwAAACAAAAAcAEcAbwBvAGcAbABlACAASQBuAGMALgAgADIAMAAxADb/2wBDAAUDBAQEAwUEBAQFBQUGBwwIBwcHBw8LCwkMEQ8SEhEPERETFhwXExQaFRERGCEYGh0dHx8fExciJCIeJBweHx7/2wBDAQUFBQcGBw4ICA4eFBEUHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh7/wAARCABAAEADASIAAhEBAxEB/8QAHAAAAwEAAgMAAAAAAAAAAAAABQYHCAAEAQID/8QAMBAAAQMDAwIFAwMFAQAAAAAAAQIDBAUGEQAhMQcSExQiQVEIFXEyQpEjUmGBobH/xAAZAQEBAQEBAQAAAAAAAAAAAAAGBQADBwH/xAAvEQABAwMDAgQFBAMAAAAAAAABAgMRAAQFITFBElEGYXGBFCORobETIlLBYtHw/9oADAMBAAIRAxEAPwDGWiFFpE2qyA1FbJGd1Hga9aHTX6rUW4rKSe4+o/A1fLLthmNHbYZaAAA3xzqRlcqixR3VTLwr4VVmFF989LKdzyT2H9nik23enUZISuWC+vkg/p05QrLjNMBtENCUfHbtojb1Sk3JdjluWo22mPE3nVNae4JA2w2njOdsnVfboDUWG2JDivDCkoCnDkqUogD/AGSeNef5bO3TK0pdVCjrHIB2kcT23p9ZZPDWsosmEhCdCogGfQmSfx2qHzLMiuslC4aFJ+O3SZcXTmOoKXD7o6+QP261G5QW5MNwMOK8MqUgqbOClSTg/wCwRxqQ3DUpFt3Y3bl1ttqYl7wqmhPaFA+zieM52yNbEZ26eWQ0qVDWOSBvA5jtvX29yeGuoResJKFaBQA09xBH4rOVZpM2lSCzLaKfhWNjroa0XedsMyWHWH2gQQfbjUEr9MepNRciug4B9J+Rr0DFZVF8j/KgHirwqrDqD7B6mVbHkHsf6PNPvTWG1Tqb591yEl945SiT3J7kfCV8An43/GqlTL3o9v1GHBuVlNP8xBMkqSlSwhRVhLe2+cA7/J0mW8l0vQAxAfMdp1KWyHyUpCiAT2EEe5/jVorFjUe8LbfiTorRlIYV5aTjC2lAZG/xn20Nzt1bB8fFg9KiZIIkcD6edW2RfMY4oYUUhEQDMKnUnXv5ACvr9JtCgOWbPrEVnsRPqLqkZ5DaThIP43/nTf8AUHVk2tYUWY00FynKpFTGQVBKVOJcCwFH2HpOkr6H6/GkWxU7VdcT5yBKLyEk7qbVtkfgg/zqm/VFApS+iVYnVNJKoPZIiKGMpfCsI55GTuPjURzDqfz7i35ICxA8tI+0UQN0RaBKTxQj6fKqm6bCkzHWgiU3VJSZKQoKSlxThWQk+49Q0nfVlQoDdnU+syme9ECpNKXjktqOFAfnb+NUj6XoFKR0So86mpIVO75EtRxlT5Vhew4GRsPjUy+uCvxo9s0y1WnEmZOlB5aAd0tp2yfyT/zWbw6mM+2tiQCsz6az9prC6JtClR4pNm3nRbmq0um24pEgMwhJD62VYKgfUjt2PBGpb1HifcaV5s+T80yCtTcX1eGn3C1ZO/8AjWhaRYtGtC2mYcGK2JK2EiTJxlbqiMnf4z7ailWajsGbEVT6ke0qQ4XioN+GkqwRgAHAA3OedXMDdWxfPwgPSkiCYk8E+9LX/jHscE3CuoLBkfugbEQBpI8/9GiNp3CiL5BqPT/MB3t7Vl72yB+kA777ZI4OjNydaXqHAqtBRSXG6y2Vxg/3ANgcBwDnON8amFgVXxaV5AqfW4gkIaQohKjjbuCdyM/O2rDatBtW5JyKlWaZDnVFj+k6pBUG1dv6SRnCjjGedd8pa2Vs8XLtoqSNdO86c7cGuLtxkMo0n9J7ccxtGo23FQqw7urNmXPGuGiSfDlMq9QO6XEnlKh7g6vXWjr/AEHqH0UdoTUaRT606+0Xo6k9yFJSckpUPbIHOvHX60bBidPXqrFgw6VVmVIEUR8I8YkgFJSOdsnP+NZo1exlxa5xAvUIKVJMa8xr6EUHvLd2xcLCyDWmOjHX+g9POijNCcjSKhWmn3SzHSO1CUqOQVKPtknjUEvy7qzedzybhrcnxJTyvSBsltI4SkewGgOtMdAbRsGX09ZqsqDDqtWeUsShIwvwSCcJCTxtg51sncWuDQb1SCpSjGnE6+gFazt3b5wMIIFCrb60PV2DSaAukuOVlwojF/uBbI4LhHOcb40G6iyWluOqlTakpAWr+gtgNpb53z27j/fvpqumhWfbVQ+40+htsSZSvLhSHShLQWCCoeydttRu9qg3Cpr0KNIfUHllAbcV6kJGxSoA4PHI1DxNtZvvh6zbKEng9+eTAHFM1Ku7BhTd0oK0+g441k6UmUWoOU2al9BJQfS4n+5PuNVS0a28Kl5+IlDzbjaWAjIAUknJaA4SPk87fOo7rt06oSILmWlZQT6kH9KtMb2yTcpI5otjsiGPluz07iODt9O4/wCN7pdjW5Xam3V6pKnmOSSYK5PiIH4c57f+6YLw6YWZUqA+mi0/7dUW2yphbbilBagNkqBJ2PzqQwb3YmUxFNdV5HKkhSgMpCQcn/zGmGn1ypMELp9THk/SAsqKR+pSjjBwBvjGONEH7DJhwLDyk9J0GsR5xofeTTU2eJcb6bZAcBAlQICuoj+J1AHsKfbQ6X2ZTaAwmtU77jUnGwp9bjikhCiN0pAI2HzpZqtp2db9b+4QanPDCjkQWHvRscHucH7ASAeSNA51eedaacemy3mWVocdTJdC+5eFBeMkjt3GM/Glir3NTY0t52n+IrvcUsNA5b9QwQfnfPxrpaY/IKdUtx5R6txx6a7ewqfcNWLTSUltKYjUnXmTGk7bHuOKea5dyRTZjdWa8FTLikNtelSCj9qQRzj8ai1ZnrqM1b6gEp4QgDASNcqtTlVJ7xJCyQNkpzsBrpaT4/Gt2YJA1NRczn3b5pFqk/LRtMSfWO3Ff//Z" alt="Rising Phoenix Games logo">
+            <div class="title-block">
+              <h1 class="game-title">Hangman</h1>
+              <p class="game-subtitle">Read the clue, reveal the word, and outrun the gallows</p>
+            </div>
+          </div>
+          <a href="index.html" class="rpg-back header-spacer" aria-hidden="true">Hub</a>
+        </div>
+      </div>
+    </header>
+
+    <main class="main-wrap">
+      <section class="panel board-panel" aria-labelledby="gameplay-heading">
+        <div class="panel-header">
+          <div class="panel-label" id="gameplay-heading">Puzzle Board</div>
+          <div class="status-bar" id="status-bar">Choose a category and begin the next guessing ritual.</div>
+        </div>
+
+        <div class="board-area">
+          <div class="top-actions">
+            <div class="metric">
+              <div class="metric-label">Category</div>
+              <div class="metric-value" id="metric-category">Mixed</div>
+              <div class="metric-sub">Current pool</div>
+            </div>
+            <div class="metric">
+              <div class="metric-label">Wrong Guesses</div>
+              <div class="metric-value"><span id="wrong-count">0</span> / <span id="max-wrong">6</span></div>
+              <div class="metric-sub">Before defeat</div>
+            </div>
+            <div class="metric">
+              <div class="metric-label">Wins</div>
+              <div class="metric-value" id="win-count">0</div>
+              <div class="metric-sub">This session</div>
+            </div>
+            <div class="metric">
+              <div class="metric-label">Streak</div>
+              <div class="metric-value" id="streak-count">0</div>
+              <div class="metric-sub">Consecutive wins</div>
+            </div>
+          </div>
+
+          <div class="hangman-frame" id="hangman-frame">
+            <div class="scene-grid">
+              <div class="canvas-wrap">
+                <div class="canvas-label">The Gallows</div>
+                <canvas id="gallows-canvas" width="320" height="320" aria-label="Hangman gallows drawing"></canvas>
+              </div>
+
+              <div class="word-wrap">
+                <div class="category-badge" id="category-badge">Mixed</div>
+                <div class="clue-block">
+                  <div class="clue-label">Clue</div>
+                  <div class="clue-text" id="clue-text">A fresh challenge awaits.</div>
+                </div>
+                <div class="word-display" id="word-display" aria-live="polite"></div>
+                <div class="progress-note" id="progress-note">Press a letter key or tap the on-screen keyboard.</div>
+              </div>
+            </div>
+
+            <div class="message-banner" id="message-banner" aria-hidden="true">
+              <div class="message-title" id="message-title">Victory</div>
+              <div class="message-subtitle" id="message-subtitle">The word yields to you.</div>
+            </div>
+          </div>
+
+          <div class="misses-row">
+            <div class="misses-label">Missed Letters</div>
+            <div class="misses-list" id="misses-list">—</div>
+          </div>
+
+          <div class="keyboard-wrap" id="keyboard" aria-label="Letter keyboard"></div>
+
+          <div class="controls-row">
+            <button class="rpg-btn" id="new-game-btn" type="button">New Word</button>
+            <button class="rpg-btn" id="hint-btn" type="button">Reveal a Letter</button>
+            <button class="rpg-btn" id="reset-score-btn" type="button">Reset Score</button>
+          </div>
+        </div>
+      </section>
+
+      <aside class="panel side-panel" aria-labelledby="guide-heading">
+        <div class="panel-header">
+          <div class="panel-label" id="guide-heading">Game Guide</div>
+          <div class="status-bar">A classic word duel with a Rising Phoenix finish.</div>
+        </div>
+
+        <div class="side-body">
+          <div class="info-card">
+            <div class="info-title">Category Pool</div>
+            <select class="category-select" id="category-select" aria-label="Select puzzle category"></select>
+          </div>
+
+          <div class="info-card">
+            <div class="info-title">How It Works</div>
+            <div class="info-copy">
+              Guess one letter at a time. Every incorrect guess adds another line to the hanging figure. Complete the full word before the sixth error and you win. Use <strong>Reveal a Letter</strong> sparingly—the hint exposes a hidden character but counts as a wrong step.
+            </div>
+          </div>
+
+          <div class="info-card">
+            <div class="info-title">Keyboard Legend</div>
+            <ul class="legend-list">
+              <li class="legend-item"><span class="legend-swatch swatch-hit"></span> A green key marks a correct letter.</li>
+              <li class="legend-item"><span class="legend-swatch swatch-miss"></span> A crimson key marks a failed guess.</li>
+              <li class="legend-item"><span class="legend-swatch swatch-warn"></span> Gold accents indicate live puzzle state and active category.</li>
+            </ul>
+          </div>
+
+          <div class="info-card">
+            <div class="info-title">Victory Condition</div>
+            <div class="info-copy">
+              Win by revealing every letter in the phrase. A confetti burst will crown the board, and a themed victory proclamation will swell across the puzzle before fading away.
+            </div>
+          </div>
+
+          <div class="info-card">
+            <div class="info-title">Word Pools</div>
+            <div class="info-copy">
+              The game includes <strong>mixed</strong>, <strong>fantasy</strong>, <strong>science</strong>, <strong>art</strong>, and <strong>myth</strong> word sets, each paired with a clue to keep guessing grounded rather than arbitrary.
+            </div>
+          </div>
+        </div>
+      </aside>
+    </main>
+
+    <footer class="rpg-footer">Rising Phoenix Games · Pure HTML, CSS, and JavaScript</footer>
+  </div>
+
+  <script>
+    const WORD_BANK = {
+      mixed: [
+        { answer: 'glassblower', clue: 'An artisan who shapes molten silica with breath and heat.' },
+        { answer: 'constellation', clue: 'A recognized pattern of stars in the night sky.' },
+        { answer: 'storyteller', clue: 'Someone who weaves narrative for an audience.' },
+        { answer: 'labyrinth', clue: 'A winding maze with a single intricate path.' },
+        { answer: 'board game', clue: 'A tabletop pastime played on a physical surface.' },
+        { answer: 'moonlight', clue: 'Natural illumination cast by Earth’s satellite.' },
+        { answer: 'alchemy', clue: 'A historical blend of proto-chemistry, symbolism, and transformation.' },
+        { answer: 'aurora', clue: 'A luminous sky display caused by charged particles.' },
+        { answer: 'campfire', clue: 'A contained blaze often surrounded by stories and song.' },
+        { answer: 'hourglass', clue: 'A timekeeping object that measures passing moments with sand.' }
+      ],
+      fantasy: [
+        { answer: 'dragon hoard', clue: 'A mountain of treasure fiercely guarded by scales and fire.' },
+        { answer: 'spellbook', clue: 'A wizard’s written archive of arcane formulae.' },
+        { answer: 'dungeon master', clue: 'The referee and world-builder behind a tabletop adventure.' },
+        { answer: 'rune circle', clue: 'A magical diagram inscribed with symbolic power.' },
+        { answer: 'phoenix', clue: 'A mythic bird reborn from flame and ash.' },
+        { answer: 'enchanted forest', clue: 'A woodland where magic saturates every path.' },
+        { answer: 'goblin king', clue: 'A ruler of cunning, chaos, and subterranean mischief.' },
+        { answer: 'crystal orb', clue: 'A polished sphere often used for visions or divination.' },
+        { answer: 'mystic portal', clue: 'A threshold that links distant realms.' },
+        { answer: 'shadow realm', clue: 'A plane of darkness and uncertain shapes.' }
+      ],
+      science: [
+        { answer: 'event horizon', clue: 'The boundary beyond which a black hole does not let light escape.' },
+        { answer: 'quantum', clue: 'A term used for the discrete behavior of matter and energy at tiny scales.' },
+        { answer: 'telescope', clue: 'An instrument designed to gather and magnify distant light.' },
+        { answer: 'nebula', clue: 'An interstellar cloud of dust and gas.' },
+        { answer: 'gravity well', clue: 'A conceptual dip in spacetime around a massive object.' },
+        { answer: 'photosphere', clue: 'The visible surface layer of the Sun.' },
+        { answer: 'molecule', clue: 'A stable group of bonded atoms.' },
+        { answer: 'supernova', clue: 'A stellar explosion of extraordinary brightness.' },
+        { answer: 'eclipse', clue: 'An alignment event where one celestial body obscures another.' },
+        { answer: 'spectrum', clue: 'The spread of light or other radiation by wavelength.' }
+      ],
+      art: [
+        { answer: 'lampworking', clue: 'Glass technique using a torch to melt and sculpt rods.' },
+        { answer: 'paperweight', clue: 'A small weighted object that often becomes a miniature artwork.' },
+        { answer: 'muralist', clue: 'An artist who paints directly onto walls or ceilings.' },
+        { answer: 'kiln shelf', clue: 'A heat-resistant surface used inside a firing chamber.' },
+        { answer: 'stained glass', clue: 'Colored glass joined into decorative panels.' },
+        { answer: 'gallery wall', clue: 'The place where curated works are displayed for viewers.' },
+        { answer: 'dichroic', clue: 'Glass coating known for shifting reflected color.' },
+        { answer: 'sketchbook', clue: 'A portable volume of studies, drafts, and visual ideas.' },
+        { answer: 'patina', clue: 'A surface change or finish acquired with age or treatment.' },
+        { answer: 'glass cane', clue: 'A rod with internal patterning used in decorative glasswork.' }
+      ],
+      myth: [
+        { answer: 'minotaur', clue: 'A creature of maze legend with a bull’s head.' },
+        { answer: 'thunder god', clue: 'A divine figure associated with storm and sky.' },
+        { answer: 'underworld', clue: 'The mythic domain of the dead beneath the living world.' },
+        { answer: 'oracle', clue: 'A voice or person who delivers prophetic insight.' },
+        { answer: 'sun chariot', clue: 'A mythic vehicle said to carry daylight across the heavens.' },
+        { answer: 'hydra', clue: 'A serpent beast infamous for replacing severed heads.' },
+        { answer: 'wyrm', clue: 'An older term for a dragonlike monster.' },
+        { answer: 'golden fleece', clue: 'A legendary prize pursued by Jason and the Argonauts.' },
+        { answer: 'trickster', clue: 'An archetype who bends order through wit and mischief.' },
+        { answer: 'valhalla', clue: 'A hall of the heroic dead in Norse tradition.' }
+      ]
+    };
+
+    const CATEGORY_LABELS = {
+      mixed: 'Mixed',
+      fantasy: 'Fantasy',
+      science: 'Science',
+      art: 'Art',
+      myth: 'Myth'
+    };
+
+    const VICTORY_MESSAGES = [
+      'The Phoenix Rises Victorious',
+      'The Word Bows Before You',
+      'Cipher Broken, Glory Claimed',
+      'Ashes to Answers',
+      'A Brilliant Guessing Triumph'
+    ];
+
+    const LOSS_MESSAGES = [
+      'The Gallows Claim This Round',
+      'The Secret Escapes the Cipher',
+      'Defeat Falls Before a New Attempt'
+    ];
+
+    const MAX_WRONG = 6;
+    const KEY_ROWS = ['QWERTYUIOP', 'ASDFGHJKL', 'ZXCVBNM'];
+
+    const statusBar = document.getElementById('status-bar');
+    const metricCategory = document.getElementById('metric-category');
+    const wrongCountEl = document.getElementById('wrong-count');
+    const maxWrongEl = document.getElementById('max-wrong');
+    const winCountEl = document.getElementById('win-count');
+    const streakCountEl = document.getElementById('streak-count');
+    const categoryBadge = document.getElementById('category-badge');
+    const clueText = document.getElementById('clue-text');
+    const wordDisplay = document.getElementById('word-display');
+    const progressNote = document.getElementById('progress-note');
+    const missesList = document.getElementById('misses-list');
+    const keyboard = document.getElementById('keyboard');
+    const categorySelect = document.getElementById('category-select');
+    const newGameBtn = document.getElementById('new-game-btn');
+    const hintBtn = document.getElementById('hint-btn');
+    const resetScoreBtn = document.getElementById('reset-score-btn');
+    const gallowsCanvas = document.getElementById('gallows-canvas');
+    const hangmanFrame = document.getElementById('hangman-frame');
+    const messageBanner = document.getElementById('message-banner');
+    const messageTitle = document.getElementById('message-title');
+    const messageSubtitle = document.getElementById('message-subtitle');
+    const confettiCanvas = document.getElementById('confetti-canvas');
+
+    maxWrongEl.textContent = String(MAX_WRONG);
+
+    const state = {
+      category: 'mixed',
+      puzzle: null,
+      guessed: new Set(),
+      misses: [],
+      wins: 0,
+      streak: 0,
+      over: false,
+      won: false,
+      seen: new Map()
+    };
+
+    function buildCategoryMenu() {
+      const entries = Object.keys(WORD_BANK);
+      categorySelect.innerHTML = entries.map(key => `<option value="${key}">${CATEGORY_LABELS[key]}</option>`).join('');
+      categorySelect.value = state.category;
+    }
+
+    function buildKeyboard() {
+      keyboard.innerHTML = '';
+      KEY_ROWS.forEach(rowLetters => {
+        const row = document.createElement('div');
+        row.className = 'keyboard-row';
+        [...rowLetters].forEach(letter => {
+          const btn = document.createElement('button');
+          btn.type = 'button';
+          btn.className = 'key-btn';
+          btn.textContent = letter;
+          btn.dataset.letter = letter;
+          btn.setAttribute('aria-label', `Guess ${letter}`);
+          btn.addEventListener('click', () => guessLetter(letter));
+          row.appendChild(btn);
+        });
+        keyboard.appendChild(row);
+      });
+    }
+
+    function normalizeAnswer(answer) {
+      return answer.toUpperCase();
+    }
+
+    function getPool(category) {
+      return WORD_BANK[category] || WORD_BANK.mixed;
+    }
+
+    function pickPuzzle(category) {
+      const pool = getPool(category);
+      const used = state.seen.get(category) || new Set();
+      if (used.size >= pool.length) used.clear();
+      const remaining = pool.filter(entry => !used.has(entry.answer));
+      const choice = remaining[Math.floor(Math.random() * remaining.length)];
+      used.add(choice.answer);
+      state.seen.set(category, used);
+      return choice;
+    }
+
+    function startNewGame() {
+      state.puzzle = pickPuzzle(state.category);
+      state.guessed = new Set();
+      state.misses = [];
+      state.over = false;
+      state.won = false;
+
+      clueText.textContent = state.puzzle.clue;
+      metricCategory.textContent = CATEGORY_LABELS[state.category];
+      categoryBadge.textContent = CATEGORY_LABELS[state.category];
+      wrongCountEl.textContent = '0';
+      missesList.textContent = '—';
+      statusBar.textContent = 'The puzzle is set. Name the letters before the figure is complete.';
+      progressNote.textContent = 'Press a letter key or tap the on-screen keyboard.';
+      hintBtn.disabled = false;
+
+      renderWord();
+      updateKeyboard();
+      drawGallows();
+      hideMessage();
+    }
+
+    function renderWord() {
+      const answer = normalizeAnswer(state.puzzle.answer);
+      wordDisplay.innerHTML = '';
+
+      [...answer].forEach(char => {
+        let node;
+        if (/[A-Z]/.test(char)) {
+          node = document.createElement('div');
+          const revealed = state.guessed.has(char) || state.over;
+          node.className = `letter-slot${revealed ? ' revealed' : ''}`;
+          const span = document.createElement('span');
+          span.className = 'letter-char';
+          span.textContent = revealed ? char : '';
+          node.appendChild(span);
+        } else if (char === ' ') {
+          node = document.createElement('div');
+          node.className = 'space-slot';
+        } else {
+          node = document.createElement('div');
+          node.className = 'divider-slot';
+          node.textContent = char;
+        }
+        wordDisplay.appendChild(node);
+      });
+    }
+
+    function updateKeyboard() {
+      document.querySelectorAll('.key-btn').forEach(btn => {
+        const letter = btn.dataset.letter;
+        btn.disabled = state.guessed.has(letter) || state.misses.includes(letter) || state.over;
+        btn.classList.remove('hit', 'miss');
+        if (state.guessed.has(letter)) btn.classList.add('hit');
+        if (state.misses.includes(letter)) btn.classList.add('miss');
+      });
+    }
+
+    function answerLetters() {
+      return [...new Set([...normalizeAnswer(state.puzzle.answer)].filter(ch => /[A-Z]/.test(ch)))];
+    }
+
+    function guessLetter(letter) {
+      if (state.over) return;
+      const upper = letter.toUpperCase();
+      if (state.guessed.has(upper) || state.misses.includes(upper)) return;
+
+      const answer = normalizeAnswer(state.puzzle.answer);
+      if (answer.includes(upper)) {
+        state.guessed.add(upper);
+        statusBar.textContent = `${upper} is in the word.`;
+      } else {
+        state.misses.push(upper);
+        wrongCountEl.textContent = String(state.misses.length);
+        missesList.textContent = state.misses.join(' · ');
+        statusBar.textContent = `${upper} is absent. The gallows advance.`;
+      }
+
+      renderWord();
+      updateKeyboard();
+      drawGallows();
+      checkGameState();
+    }
+
+    function revealHint() {
+      if (state.over) return;
+      const hiddenLetters = answerLetters().filter(letter => !state.guessed.has(letter));
+      if (!hiddenLetters.length) return;
+      const reveal = hiddenLetters[Math.floor(Math.random() * hiddenLetters.length)];
+      state.guessed.add(reveal);
+      if (state.misses.length < MAX_WRONG) {
+        state.misses.push('★');
+        wrongCountEl.textContent = String(state.misses.length);
+        missesList.textContent = state.misses.join(' · ');
+      }
+      statusBar.textContent = `A hint reveals ${reveal}. The price is one step closer to defeat.`;
+      renderWord();
+      updateKeyboard();
+      drawGallows();
+      checkGameState();
+    }
+
+    function checkGameState() {
+      const solved = answerLetters().every(letter => state.guessed.has(letter));
+      const failed = state.misses.length >= MAX_WRONG;
+
+      if (solved) {
+        state.over = true;
+        state.won = true;
+        state.wins += 1;
+        state.streak += 1;
+        winCountEl.textContent = String(state.wins);
+        streakCountEl.textContent = String(state.streak);
+        statusBar.textContent = 'All letters revealed. Victory is yours.';
+        progressNote.textContent = 'The phrase stands complete.';
+        hintBtn.disabled = true;
+        renderWord();
+        updateKeyboard();
+        launchVictory();
+        return;
+      }
+
+      if (failed) {
+        state.over = true;
+        state.won = false;
+        state.streak = 0;
+        streakCountEl.textContent = '0';
+        statusBar.textContent = `Defeat. The answer was “${normalizeAnswer(state.puzzle.answer)}.”`;
+        progressNote.textContent = 'Begin another word and try again.';
+        hintBtn.disabled = true;
+        renderWord();
+        updateKeyboard();
+        showMessage(false, randomFrom(LOSS_MESSAGES), `The answer was ${normalizeAnswer(state.puzzle.answer)}.`);
+      }
+    }
+
+    function randomFrom(items) {
+      return items[Math.floor(Math.random() * items.length)];
+    }
+
+    function showMessage(isWin, title, subtitle) {
+      messageBanner.classList.remove('show', 'lose');
+      void messageBanner.offsetWidth;
+      messageTitle.textContent = title;
+      messageSubtitle.textContent = subtitle;
+      if (!isWin) messageBanner.classList.add('lose');
+      messageBanner.classList.add('show');
+      window.clearTimeout(showMessage._timer);
+      showMessage._timer = window.setTimeout(() => {
+        messageBanner.classList.remove('show');
+        if (!isWin) messageBanner.classList.remove('lose');
+      }, 1750);
+    }
+
+    function hideMessage() {
+      messageBanner.classList.remove('show', 'lose');
+      window.clearTimeout(showMessage._timer);
+    }
+
+    function launchVictory() {
+      const title = randomFrom(VICTORY_MESSAGES);
+      const subtitle = `You deciphered ${normalizeAnswer(state.puzzle.answer)}.`;
+      showMessage(true, title, subtitle);
+      burstConfetti();
+    }
+
+    function resetScore() {
+      state.wins = 0;
+      state.streak = 0;
+      winCountEl.textContent = '0';
+      streakCountEl.textContent = '0';
+      statusBar.textContent = 'Session score reset. The next puzzle begins with a clean ledger.';
+    }
+
+    function changeCategory(value) {
+      state.category = value;
+      metricCategory.textContent = CATEGORY_LABELS[value];
+      categoryBadge.textContent = CATEGORY_LABELS[value];
+      startNewGame();
+    }
+
+    function drawGallows() {
+      const ctx = gallowsCanvas.getContext('2d');
+      const width = gallowsCanvas.width;
+      const height = gallowsCanvas.height;
+      ctx.clearRect(0, 0, width, height);
+
+      const gold = '#c8952a';
+      const pale = 'rgba(240,208,128,0.92)';
+      const shadow = 'rgba(0,0,0,0.35)';
+      const stage = Math.min(state.misses.length, MAX_WRONG);
+
+      // ambient glow
+      const bg = ctx.createRadialGradient(width * 0.5, height * 0.22, 8, width * 0.5, height * 0.45, width * 0.58);
+      bg.addColorStop(0, 'rgba(240,208,128,0.10)');
+      bg.addColorStop(1, 'rgba(0,0,0,0)');
+      ctx.fillStyle = bg;
+      ctx.fillRect(0, 0, width, height);
+
+      ctx.lineCap = 'round';
+      ctx.lineJoin = 'round';
+      ctx.shadowColor = shadow;
+      ctx.shadowBlur = 8;
+      ctx.strokeStyle = gold;
+      ctx.lineWidth = 8;
+
+      // base & stand always visible
+      ctx.beginPath();
+      ctx.moveTo(42, 286);
+      ctx.lineTo(278, 286);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(84, 286);
+      ctx.lineTo(84, 42);
+      ctx.lineTo(208, 42);
+      ctx.lineTo(208, 68);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(84, 92);
+      ctx.lineTo(126, 42);
+      ctx.stroke();
+
+      ctx.shadowBlur = 0;
+      ctx.strokeStyle = pale;
+      ctx.lineWidth = 4;
+      ctx.beginPath();
+      ctx.moveTo(84, 286);
+      ctx.lineTo(84, 42);
+      ctx.lineTo(208, 42);
+      ctx.stroke();
+
+      ctx.strokeStyle = '#f0d080';
+      ctx.fillStyle = '#f0d080';
+      ctx.lineWidth = 4;
+
+      if (stage >= 1) {
+        ctx.beginPath();
+        ctx.arc(208, 96, 28, 0, Math.PI * 2);
+        ctx.stroke();
+      }
+      if (stage >= 2) {
+        ctx.beginPath();
+        ctx.moveTo(208, 124);
+        ctx.lineTo(208, 192);
+        ctx.stroke();
+      }
+      if (stage >= 3) {
+        ctx.beginPath();
+        ctx.moveTo(208, 144);
+        ctx.lineTo(172, 170);
+        ctx.stroke();
+      }
+      if (stage >= 4) {
+        ctx.beginPath();
+        ctx.moveTo(208, 144);
+        ctx.lineTo(244, 170);
+        ctx.stroke();
+      }
+      if (stage >= 5) {
+        ctx.beginPath();
+        ctx.moveTo(208, 192);
+        ctx.lineTo(178, 238);
+        ctx.stroke();
+      }
+      if (stage >= 6) {
+        ctx.beginPath();
+        ctx.moveTo(208, 192);
+        ctx.lineTo(238, 238);
+        ctx.stroke();
+      }
+
+      // rope highlight
+      ctx.strokeStyle = 'rgba(240,208,128,0.85)';
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      ctx.moveTo(208, 42);
+      ctx.lineTo(208, 68);
+      ctx.stroke();
+    }
+
+    function resizeConfettiCanvas() {
+      const dpr = Math.max(1, window.devicePixelRatio || 1);
+      confettiCanvas.width = Math.floor(window.innerWidth * dpr);
+      confettiCanvas.height = Math.floor(window.innerHeight * dpr);
+      confettiCanvas.style.width = `${window.innerWidth}px`;
+      confettiCanvas.style.height = `${window.innerHeight}px`;
+      const ctx = confettiCanvas.getContext('2d');
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    }
+
+    function burstConfetti() {
+      resizeConfettiCanvas();
+      const ctx = confettiCanvas.getContext('2d');
+      const width = window.innerWidth;
+      const height = window.innerHeight;
+      const palette = ['#f0d080', '#c8952a', '#c04040', '#7aaa5a', '#8ed7ff', '#f8e898'];
+      const bursts = 11;
+      const particles = [];
+
+      for (let i = 0; i < bursts; i += 1) {
+        const originX = (i + 0.5) / bursts * width;
+        const originY = height * (0.16 + Math.random() * 0.18);
+        const count = 22 + Math.floor(Math.random() * 14);
+        for (let j = 0; j < count; j += 1) {
+          const angle = Math.random() * Math.PI * 2;
+          const speed = 2 + Math.random() * 5.2;
+          particles.push({
+            x: originX,
+            y: originY,
+            vx: Math.cos(angle) * speed,
+            vy: Math.sin(angle) * speed - (2 + Math.random() * 3),
+            size: 4 + Math.random() * 5,
+            rotation: Math.random() * Math.PI,
+            rotationSpeed: (Math.random() - 0.5) * 0.32,
+            color: palette[(Math.random() * palette.length) | 0],
+            alpha: 0.95,
+            gravity: 0.08 + Math.random() * 0.08,
+            drag: 0.992,
+            wobble: Math.random() * Math.PI * 2
+          });
+        }
+      }
+
+      let frame = 0;
+      cancelAnimationFrame(burstConfetti._raf);
+
+      function animate() {
+        frame += 1;
+        ctx.clearRect(0, 0, width, height);
+
+        particles.forEach(p => {
+          p.vx *= p.drag;
+          p.vy = p.vy * p.drag + p.gravity;
+          p.x += p.vx + Math.cos(p.wobble + frame * 0.05) * 0.35;
+          p.y += p.vy;
+          p.rotation += p.rotationSpeed;
+          p.alpha *= 0.988;
+
+          ctx.save();
+          ctx.translate(p.x, p.y);
+          ctx.rotate(p.rotation);
+          ctx.globalAlpha = Math.max(0, p.alpha);
+          ctx.fillStyle = p.color;
+          ctx.fillRect(-p.size / 2, -p.size / 2, p.size, p.size * 0.6);
+          ctx.restore();
+        });
+
+        const alive = particles.some(p => p.alpha > 0.05 && p.y < height + 30);
+        if (alive && frame < 180) {
+          burstConfetti._raf = requestAnimationFrame(animate);
+        } else {
+          ctx.clearRect(0, 0, width, height);
+        }
+      }
+
+      animate();
+    }
+
+    document.addEventListener('keydown', event => {
+      if (event.repeat || event.altKey || event.ctrlKey || event.metaKey) return;
+      if (event.key === 'Enter' && state.over) {
+        startNewGame();
+        return;
+      }
+      if (event.key === 'Backspace') {
+        event.preventDefault();
+        revealHint();
+        return;
+      }
+      const key = event.key.toUpperCase();
+      if (/^[A-Z]$/.test(key)) {
+        guessLetter(key);
+      }
+    });
+
+    categorySelect.addEventListener('change', e => changeCategory(e.target.value));
+    newGameBtn.addEventListener('click', startNewGame);
+    hintBtn.addEventListener('click', revealHint);
+    resetScoreBtn.addEventListener('click', resetScore);
+    window.addEventListener('resize', resizeConfettiCanvas);
+
+    buildCategoryMenu();
+    buildKeyboard();
+    resizeConfettiCanvas();
+    startNewGame();
+  </script>
+</body>
+</html>
