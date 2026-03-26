@@ -1,0 +1,1259 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>Yahtzee · Rising Phoenix Games</title>
+  <link rel="stylesheet" href="shared.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700&family=Cinzel:wght@400;600;700;900&family=IM+Fell+English:ital@0;1&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; }
+    html, body { margin: 0; min-height: 100%; }
+
+    :root {
+      --die-size: min(17vw, 112px);
+      --message-width: 88%;
+      --parchment: rgba(255, 240, 210, 0.035);
+      --panel-shadow: inset 0 0 30px rgba(0,0,0,0.35), 0 10px 34px rgba(0,0,0,0.45);
+    }
+
+    body {
+      font-family: var(--font-body);
+      color: var(--text);
+      background:
+        radial-gradient(ellipse 90% 55% at 15% 8%, rgba(90,48,12,0.55) 0%, transparent 58%),
+        radial-gradient(ellipse 70% 65% at 85% 90%, rgba(50,25,6,0.60) 0%, transparent 55%),
+        radial-gradient(ellipse 60% 40% at 50% 50%, rgba(30,18,5,0.40) 0%, transparent 70%),
+        linear-gradient(160deg, #1c1106 0%, #0f0c07 45%, #13100a 100%);
+      background-attachment: fixed;
+    }
+
+    #app {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      isolation: isolate;
+    }
+
+    .site-header {
+      padding: 0;
+      background: linear-gradient(180deg, #1e1508 0%, #120e06 100%);
+      border-bottom: 2px solid var(--gold);
+      box-shadow: 0 4px 24px rgba(0,0,0,0.7), 0 1px 0 rgba(200,149,42,0.15) inset;
+      position: relative;
+      overflow: hidden;
+      flex-shrink: 0;
+    }
+    .site-header::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: repeating-linear-gradient(
+        90deg,
+        transparent 0px,
+        transparent 48px,
+        rgba(200,149,42,0.04) 48px,
+        rgba(200,149,42,0.04) 49px
+      );
+      pointer-events: none;
+    }
+    .header-inner { position: relative; padding: 14px 20px 12px; }
+    .header-row { display: flex; align-items: center; margin-bottom: 6px; }
+
+    .rpg-back {
+      display: inline-block;
+      font-family: var(--font-ui);
+      font-size: 0.78rem;
+      letter-spacing: 0.08em;
+      color: var(--gold);
+      text-decoration: none;
+      padding: 0.55rem 1.1rem 0.55rem 2rem;
+      border: 1px solid rgba(200,149,42,0.25);
+      border-radius: 3px;
+      background: linear-gradient(180deg, #2a2010 0%, #1a1508 100%);
+      position: relative;
+      transition: border-color 0.2s, box-shadow 0.2s, color 0.2s;
+      margin: 0;
+      flex: 0 0 auto;
+      z-index: 2;
+    }
+    .rpg-back::before { content: '\2190'; position: absolute; left: 0.7rem; }
+    .rpg-back:hover {
+      border-color: var(--gold-light);
+      box-shadow: 0 0 18px 2px var(--gold-glow);
+      color: var(--gold-light);
+    }
+
+    .header-center {
+      flex: 1 1 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.85rem;
+      min-width: 0;
+    }
+    .header-spacer { visibility: hidden; pointer-events: none; }
+    .phoenix-mark {
+      width: 52px;
+      height: 52px;
+      object-fit: contain;
+      flex-shrink: 0;
+      filter: drop-shadow(0 0 10px rgba(200,149,42,0.5));
+    }
+    .title-block {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      min-width: 0;
+    }
+    .game-title {
+      margin: 0;
+      font-family: var(--font-display);
+      font-size: clamp(1.05rem, 3.8vw, 2rem);
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      line-height: 1.1;
+      background: linear-gradient(135deg, var(--gold-light) 0%, var(--gold) 40%, #a07020 80%, var(--gold-light) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .game-subtitle {
+      margin: 0.2rem 0 0;
+      font-style: italic;
+      color: #c8a878;
+      font-size: 0.82rem;
+      letter-spacing: 0.05em;
+    }
+
+    .main-wrap {
+      width: 100%;
+      max-width: 1280px;
+      margin: 0 auto;
+      padding: 22px 16px 32px;
+      display: grid;
+      grid-template-columns: minmax(340px, 1.15fr) minmax(300px, 0.85fr);
+      gap: 20px;
+      flex: 1;
+    }
+
+    .panel {
+      background: linear-gradient(160deg, var(--surface) 0%, var(--bg-warm) 100%);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      box-shadow: var(--panel-shadow);
+      overflow: hidden;
+      position: relative;
+    }
+    .panel-header {
+      padding: 14px 16px 10px;
+      border-bottom: 1px solid rgba(200,149,42,0.14);
+      background: linear-gradient(180deg, rgba(255,255,255,0.03) 0%, rgba(255,255,255,0) 100%);
+    }
+    .panel-label {
+      font-family: var(--font-ui);
+      font-size: 0.7rem;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: var(--gold);
+      margin: 0 0 0.25rem;
+    }
+    .status-bar {
+      margin: 0;
+      min-height: 2.4rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      padding: 8px 16px 8px 28px;
+      background: rgba(0,0,0,0.32);
+      border: 1px solid rgba(200,149,42,0.18);
+      border-radius: 8px;
+      font-family: var(--font-ui);
+      font-size: 0.8rem;
+      letter-spacing: 0.08em;
+      color: var(--gold-light);
+      position: relative;
+      text-align: center;
+    }
+    .status-bar::before {
+      content: '⚜';
+      position: absolute;
+      left: 10px;
+      font-size: 10px;
+      color: var(--gold);
+      opacity: 0.7;
+    }
+
+    .board-panel { display: flex; flex-direction: column; min-height: 860px; }
+    .board-area {
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+      flex: 1;
+      position: relative;
+    }
+
+    .metrics {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 10px;
+    }
+    .metric {
+      padding: 10px 12px;
+      border-radius: 12px;
+      background: linear-gradient(180deg, rgba(255,255,255,0.04) 0%, rgba(0,0,0,0.16) 100%);
+      border: 1px solid rgba(200,149,42,0.18);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.03);
+      text-align: center;
+      min-height: 72px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      gap: 5px;
+    }
+    .metric-label {
+      font-family: var(--font-ui);
+      font-size: 0.62rem;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: var(--gold);
+    }
+    .metric-value {
+      font-family: var(--font-display);
+      color: var(--gold-light);
+      font-size: clamp(1rem, 2.5vw, 1.42rem);
+      line-height: 1;
+    }
+    .metric-sub {
+      color: var(--text-muted);
+      font-size: 0.8rem;
+      font-style: italic;
+      line-height: 1.1;
+    }
+
+    .table-frame {
+      position: relative;
+      border-radius: 18px;
+      padding: 18px;
+      background:
+        radial-gradient(circle at 50% 45%, rgba(70,40,10,0.28) 0%, rgba(20,12,4,0.96) 70%),
+        linear-gradient(160deg, #201407 0%, #100b04 100%);
+      border: 1px solid rgba(200,149,42,0.28);
+      box-shadow:
+        inset 0 1px 0 rgba(255,255,255,0.04),
+        inset 0 0 38px rgba(0,0,0,0.35),
+        0 0 0 1px rgba(0,0,0,0.35),
+        0 18px 42px rgba(0,0,0,0.45),
+        0 0 30px rgba(200,149,42,0.14);
+      overflow: hidden;
+    }
+    .table-frame::before,
+    .table-frame::after {
+      content: '◆';
+      position: absolute;
+      color: rgba(200,149,42,0.45);
+      font-size: 10px;
+      line-height: 1;
+    }
+    .table-frame::before { top: 6px; left: 8px; }
+    .table-frame::after { bottom: 6px; right: 8px; }
+
+    .dice-row {
+      display: grid;
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .die {
+      position: relative;
+      aspect-ratio: 1 / 1;
+      min-width: 0;
+      border-radius: 18px;
+      border: 1px solid rgba(200,149,42,0.28);
+      background:
+        radial-gradient(circle at 30% 24%, rgba(255,255,255,0.14) 0%, rgba(255,255,255,0.04) 30%, transparent 32%),
+        linear-gradient(180deg, rgba(255,255,255,0.07) 0%, rgba(0,0,0,0.14) 100%),
+        #f4e4bf;
+      box-shadow:
+        inset 0 2px 10px rgba(255,255,255,0.18),
+        inset 0 -12px 16px rgba(80,45,10,0.20),
+        0 8px 18px rgba(0,0,0,0.28);
+      cursor: pointer;
+      transition: transform 0.15s ease, box-shadow 0.18s ease, border-color 0.18s ease;
+      user-select: none;
+      -webkit-user-select: none;
+      display: grid;
+      place-items: center;
+      overflow: hidden;
+    }
+    .die:hover {
+      transform: translateY(-2px);
+      border-color: rgba(240,208,128,0.65);
+      box-shadow:
+        inset 0 2px 10px rgba(255,255,255,0.18),
+        inset 0 -12px 16px rgba(80,45,10,0.20),
+        0 0 18px rgba(200,149,42,0.18),
+        0 10px 20px rgba(0,0,0,0.34);
+    }
+    .die.held {
+      border-color: rgba(126, 188, 96, 0.75);
+      box-shadow:
+        inset 0 2px 10px rgba(255,255,255,0.18),
+        inset 0 -12px 16px rgba(40,70,20,0.18),
+        0 0 0 1px rgba(126,188,96,0.28),
+        0 0 22px rgba(74,122,58,0.28),
+        0 10px 20px rgba(0,0,0,0.34);
+    }
+    .die.held::after {
+      content: 'Held';
+      position: absolute;
+      top: 7px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-family: var(--font-ui);
+      font-size: 0.54rem;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: #e8f6da;
+      background: rgba(48,76,35,0.82);
+      border: 1px solid rgba(126,188,96,0.35);
+      border-radius: 999px;
+      padding: 4px 8px;
+      z-index: 2;
+    }
+    .die.locked { cursor: default; }
+    .die.locked:hover { transform: none; }
+    .die.rolling { animation: dieRoll 0.56s ease; }
+    @keyframes dieRoll {
+      0% { transform: rotate(0deg) scale(1); }
+      20% { transform: rotate(-10deg) scale(0.96); }
+      50% { transform: rotate(12deg) scale(1.04); }
+      80% { transform: rotate(-6deg) scale(0.98); }
+      100% { transform: rotate(0deg) scale(1); }
+    }
+
+    .pips {
+      width: 78%;
+      height: 78%;
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      grid-template-rows: repeat(3, 1fr);
+      place-items: center;
+      position: relative;
+      z-index: 1;
+    }
+    .pip {
+      width: clamp(10px, 18%, 16px);
+      height: clamp(10px, 18%, 16px);
+      border-radius: 50%;
+      background: radial-gradient(circle at 35% 35%, #4d2b09 0%, #271404 65%, #140901 100%);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.12), 0 1px 2px rgba(0,0,0,0.28);
+      opacity: 0;
+      transform: scale(0.7);
+    }
+    .pip.on { opacity: 1; transform: scale(1); }
+
+    .die-value {
+      position: absolute;
+      bottom: 7px;
+      right: 10px;
+      font-family: var(--font-ui);
+      font-size: 0.68rem;
+      letter-spacing: 0.12em;
+      color: rgba(56, 30, 8, 0.65);
+      z-index: 1;
+    }
+
+    .actions {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+    .rpg-btn {
+      font-family: var(--font-ui);
+      font-size: 0.78rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: #f0d080;
+      background: linear-gradient(180deg,rgba(40,28,8,0.9) 0%,rgba(20,14,4,0.95) 100%);
+      border: 1px solid rgba(200,149,42,0.45);
+      padding: 10px 18px;
+      border-radius: 999px;
+      cursor: pointer;
+      transition: all 0.2s;
+      box-shadow: 0 1px 0 rgba(200,149,42,0.15), inset 0 1px 0 rgba(200,149,42,0.1);
+    }
+    .rpg-btn:hover:not(:disabled) {
+      border-color: rgba(200,149,42,0.75);
+      box-shadow: 0 0 18px 2px rgba(200,149,42,0.25),0 0 48px 8px rgba(180,120,20,0.15),inset 0 1px 0 rgba(200,149,42,0.2);
+      color: #f8e898;
+      transform: translateY(-1px);
+    }
+    .rpg-btn:disabled {
+      opacity: 0.38;
+      cursor: not-allowed;
+      filter: grayscale(0.2);
+    }
+    .rpg-btn-sage {
+      border-color: rgba(74,122,58,0.58);
+      color: #cde8b6;
+      background: linear-gradient(180deg, rgba(48, 76, 35, 0.96), rgba(25, 41, 18, 0.98));
+    }
+    .rpg-btn-crimson {
+      border-color: rgba(139,26,26,0.58);
+      color: #ffd7cf;
+      background: linear-gradient(180deg, rgba(110, 28, 20, 0.96), rgba(60, 14, 10, 0.98));
+    }
+
+    .turn-help {
+      padding: 14px 16px;
+      border-radius: 14px;
+      border: 1px solid rgba(200,149,42,0.18);
+      background: rgba(0,0,0,0.22);
+      color: #d7c59a;
+      line-height: 1.45;
+      font-size: 1rem;
+    }
+    .turn-help strong {
+      font-family: var(--font-ui);
+      color: var(--gold-light);
+      letter-spacing: 0.05em;
+      font-size: 0.84rem;
+      text-transform: uppercase;
+    }
+
+    .side-panel { display: flex; flex-direction: column; min-height: 860px; }
+    .side-body {
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      flex: 1;
+      overflow: auto;
+    }
+    .list-card {
+      border-radius: 14px;
+      border: 1px solid rgba(200,149,42,0.16);
+      background: linear-gradient(180deg, rgba(255,255,255,0.03) 0%, rgba(0,0,0,0.16) 100%);
+      padding: 14px;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.02);
+    }
+    .list-title {
+      margin: 0 0 10px;
+      font-family: var(--font-ui);
+      font-size: 0.7rem;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--gold);
+    }
+
+    .score-grid {
+      display: grid;
+      gap: 8px;
+    }
+    .score-row {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 78px 78px;
+      gap: 8px;
+      align-items: center;
+      padding: 9px 10px;
+      border-radius: 12px;
+      border: 1px solid rgba(200,149,42,0.12);
+      background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(0,0,0,0.12));
+      transition: border-color 0.18s ease, box-shadow 0.18s ease, transform 0.15s ease;
+    }
+    .score-row.selectable {
+      cursor: pointer;
+      border-color: rgba(200,149,42,0.28);
+    }
+    .score-row.selectable:hover {
+      border-color: rgba(240,208,128,0.66);
+      box-shadow: 0 0 18px rgba(200,149,42,0.16);
+      transform: translateY(-1px);
+    }
+    .score-row.filled {
+      border-color: rgba(74,122,58,0.30);
+      background: linear-gradient(180deg, rgba(48,76,35,0.20), rgba(0,0,0,0.14));
+    }
+    .score-row.forced {
+      border-color: rgba(139,26,26,0.32);
+      box-shadow: 0 0 0 1px rgba(139,26,26,0.14);
+    }
+    .row-name {
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+    .row-name strong {
+      font-size: 1.02rem;
+      font-weight: 400;
+      color: #ecdcb7;
+    }
+    .row-name span {
+      color: var(--text-muted);
+      font-size: 0.82rem;
+      line-height: 1.2;
+    }
+    .row-preview,
+    .row-score {
+      min-height: 40px;
+      border-radius: 10px;
+      display: grid;
+      place-items: center;
+      font-family: var(--font-ui);
+      letter-spacing: 0.08em;
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      border: 1px solid rgba(200,149,42,0.15);
+      background: rgba(0,0,0,0.24);
+    }
+    .row-preview { color: #d3c39c; }
+    .row-preview.good { color: var(--gold-light); }
+    .row-score { color: #f0d080; }
+    .row-score.empty { color: rgba(240,208,128,0.28); }
+
+    .summary-grid {
+      display: grid;
+      gap: 8px;
+    }
+    .summary-row {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 10px 12px;
+      border-radius: 12px;
+      background: linear-gradient(180deg, rgba(255,255,255,0.025), rgba(0,0,0,0.16));
+      border: 1px solid rgba(200,149,42,0.14);
+      color: #dfcfaa;
+      font-size: 0.98rem;
+    }
+    .summary-row strong {
+      font-family: var(--font-ui);
+      font-size: 0.82rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--gold);
+      font-weight: 600;
+    }
+    .summary-row.total {
+      border-color: rgba(240,208,128,0.42);
+      box-shadow: 0 0 18px rgba(200,149,42,0.10);
+    }
+    .summary-row.total strong,
+    .summary-row.total span { color: var(--gold-light); }
+
+    .hint-copy {
+      color: #cfbf99;
+      font-size: 0.95rem;
+      line-height: 1.48;
+    }
+    .hint-copy p { margin: 0 0 10px; }
+    .hint-copy p:last-child { margin-bottom: 0; }
+    .joker-note {
+      color: #f1d38f;
+      border-left: 3px solid rgba(200,149,42,0.58);
+      padding-left: 10px;
+      font-size: 0.92rem;
+    }
+
+    .victory-message {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      transform: translate(-50%, -50%) scale(0.18);
+      width: min(var(--message-width), 660px);
+      padding: 20px 24px;
+      border-radius: 20px;
+      border: 1px solid rgba(240,208,128,0.72);
+      background:
+        radial-gradient(circle at 50% 30%, rgba(255,220,140,0.18), rgba(0,0,0,0) 58%),
+        linear-gradient(180deg, rgba(40,28,8,0.96), rgba(16,11,4,0.98));
+      box-shadow: 0 0 42px rgba(200,149,42,0.28), inset 0 0 30px rgba(255,255,255,0.03);
+      text-align: center;
+      pointer-events: none;
+      opacity: 0;
+      z-index: 30;
+    }
+    .victory-message.show { animation: victoryGrow 1.75s ease forwards; }
+    .victory-title {
+      margin: 0;
+      font-family: var(--font-display);
+      font-size: clamp(1.2rem, 4vw, 2.2rem);
+      line-height: 1.1;
+      background: linear-gradient(135deg, #fff2be 0%, #f0d080 40%, #c8952a 80%, #fff2be 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .victory-sub {
+      margin: 8px 0 0;
+      color: #e5d3ab;
+      font-size: 1rem;
+      font-style: italic;
+    }
+    @keyframes victoryGrow {
+      0% { opacity: 0; transform: translate(-50%, -50%) scale(0.18); }
+      12% { opacity: 1; }
+      43% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+      76% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+      100% { opacity: 0; transform: translate(-50%, -50%) scale(1); }
+    }
+
+    .confetti-layer {
+      position: absolute;
+      inset: 0;
+      overflow: hidden;
+      pointer-events: none;
+      z-index: 24;
+    }
+    .confetti {
+      position: absolute;
+      width: 10px;
+      height: 16px;
+      border-radius: 2px;
+      opacity: 0;
+      transform: translate3d(0,0,0) rotate(0deg);
+      animation: confettiFall 1.35s ease-out forwards;
+      box-shadow: 0 0 10px rgba(255,255,255,0.08);
+    }
+    @keyframes confettiFall {
+      0% { opacity: 0; transform: translate3d(var(--x-start), var(--y-start), 0) rotate(0deg) scale(0.8); }
+      10% { opacity: 1; }
+      100% { opacity: 0; transform: translate3d(var(--x-end), var(--y-end), 0) rotate(var(--spin)) scale(1); }
+    }
+
+    .rpg-footer {
+      margin-top: auto;
+      padding: 12px 18px 18px;
+      text-align: center;
+      font-size: 0.82rem;
+      color: rgba(200,170,100,0.55);
+      font-style: italic;
+    }
+
+    @media (max-width: 1024px) {
+      .main-wrap { grid-template-columns: 1fr; }
+      .board-panel, .side-panel { min-height: auto; }
+      .side-body { overflow: visible; }
+    }
+    @media (max-width: 720px) {
+      .metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .dice-row { gap: 8px; }
+      .score-row { grid-template-columns: minmax(0, 1fr) 68px 68px; }
+      .row-name strong { font-size: 0.95rem; }
+    }
+    @media (max-width: 520px) {
+      .header-inner { padding-inline: 14px; }
+      .header-center { gap: 0.6rem; }
+      .phoenix-mark { width: 42px; height: 42px; }
+      .board-area, .side-body { padding: 14px; }
+      .table-frame { padding: 12px; }
+      .dice-row { gap: 6px; }
+      .score-row { gap: 6px; padding: 8px; }
+      .score-row { grid-template-columns: minmax(0, 1fr) 60px 60px; }
+      .row-preview, .row-score { min-height: 36px; font-size: 0.72rem; }
+      .actions { justify-content: stretch; }
+      .actions .rpg-btn { flex: 1 1 calc(50% - 10px); }
+    }
+  </style>
+</head>
+<body>
+  <div id="app">
+    <header class="site-header">
+      <div class="header-inner">
+        <div class="header-row">
+          <a href="index.html" class="rpg-back">Hub</a>
+          <div class="header-center">
+            <img class="phoenix-mark" src="RPG Favicon no background copy.png" alt="Rising Phoenix logo">
+            <div class="title-block">
+              <h1 class="game-title">Yahtzee</h1>
+              <p class="game-subtitle">Roll the bones, hold your fortune, and carve your final tally</p>
+            </div>
+          </div>
+          <a href="index.html" class="rpg-back header-spacer" aria-hidden="true">Hub</a>
+        </div>
+      </div>
+    </header>
+
+    <main class="main-wrap">
+      <section class="panel board-panel">
+        <div class="panel-header">
+          <div class="panel-label">Dice Table</div>
+          <div class="status-bar" id="statusBar">Roll to begin your turn.</div>
+        </div>
+        <div class="board-area">
+          <div class="metrics">
+            <div class="metric">
+              <div class="metric-label">Total</div>
+              <div class="metric-value" id="grandTotalMetric">0</div>
+              <div class="metric-sub">grand score</div>
+            </div>
+            <div class="metric">
+              <div class="metric-label">Rolls Left</div>
+              <div class="metric-value" id="rollsLeftMetric">3</div>
+              <div class="metric-sub">this turn</div>
+            </div>
+            <div class="metric">
+              <div class="metric-label">Upper Bonus</div>
+              <div class="metric-value" id="upperBonusMetric">0</div>
+              <div class="metric-sub">needs 63</div>
+            </div>
+            <div class="metric">
+              <div class="metric-label">Best</div>
+              <div class="metric-value" id="bestScoreMetric">0</div>
+              <div class="metric-sub">stored locally</div>
+            </div>
+          </div>
+
+          <div class="table-frame">
+            <div class="confetti-layer" id="confettiLayer"></div>
+            <div class="victory-message" id="victoryMessage">
+              <h2 class="victory-title">The Dice Have Spoken</h2>
+              <p class="victory-sub" id="victorySub">A legendary tally crowns the table.</p>
+            </div>
+            <div class="dice-row" id="diceRow"></div>
+          </div>
+
+          <div class="actions">
+            <button class="rpg-btn rpg-btn-sage" id="rollBtn">Roll Dice</button>
+            <button class="rpg-btn" id="releaseBtn">Release Holds</button>
+            <button class="rpg-btn rpg-btn-crimson" id="newGameBtn">New Game</button>
+          </div>
+
+          <div class="turn-help" id="turnHelp">
+            <strong>How to play:</strong>
+            Roll up to three times. Tap dice to hold them between rolls, then claim one open category on the scorecard.
+          </div>
+        </div>
+      </section>
+
+      <aside class="panel side-panel">
+        <div class="panel-header">
+          <div class="panel-label">Scorecard</div>
+          <div class="status-bar" id="sideStatus">Choose an open line after rolling.</div>
+        </div>
+        <div class="side-body">
+          <section class="list-card">
+            <h3 class="list-title">Upper Section</h3>
+            <div class="score-grid" id="upperScoreGrid"></div>
+          </section>
+
+          <section class="list-card">
+            <h3 class="list-title">Lower Section</h3>
+            <div class="score-grid" id="lowerScoreGrid"></div>
+          </section>
+
+          <section class="list-card">
+            <h3 class="list-title">Totals</h3>
+            <div class="summary-grid" id="summaryGrid"></div>
+          </section>
+
+          <section class="list-card">
+            <h3 class="list-title">Rules Notes</h3>
+            <div class="hint-copy">
+              <p>Classic categories are implemented, including the upper-section bonus, large and small straights, full house, and Yahtzee.</p>
+              <p class="joker-note">Extra Yahtzees award a <strong>+100</strong> bonus when your Yahtzee box already shows 50. Joker handling is also supported: if the matching upper box is open, it must be used; otherwise lower boxes become available with their fixed joker values.</p>
+              <p>Once all thirteen scoring categories are filled, the game ends, confetti bursts across the board, and your final total is preserved as a local best score if it exceeds your previous record.</p>
+            </div>
+          </section>
+        </div>
+      </aside>
+    </main>
+
+    <footer class="rpg-footer">
+      © <span id="year"></span> Rising Phoenix Games · Crafted in the Rising Phoenix style
+    </footer>
+  </div>
+
+  <script>
+    const CATEGORIES = [
+      { key: 'ones', label: 'Ones', desc: 'Sum of all 1s.', section: 'upper', face: 1 },
+      { key: 'twos', label: 'Twos', desc: 'Sum of all 2s.', section: 'upper', face: 2 },
+      { key: 'threes', label: 'Threes', desc: 'Sum of all 3s.', section: 'upper', face: 3 },
+      { key: 'fours', label: 'Fours', desc: 'Sum of all 4s.', section: 'upper', face: 4 },
+      { key: 'fives', label: 'Fives', desc: 'Sum of all 5s.', section: 'upper', face: 5 },
+      { key: 'sixes', label: 'Sixes', desc: 'Sum of all 6s.', section: 'upper', face: 6 },
+      { key: 'threeKind', label: '3 of a Kind', desc: 'Three matching dice. Score total of all dice.', section: 'lower' },
+      { key: 'fourKind', label: '4 of a Kind', desc: 'Four matching dice. Score total of all dice.', section: 'lower' },
+      { key: 'fullHouse', label: 'Full House', desc: 'Three of one value and two of another. Score 25.', section: 'lower' },
+      { key: 'smallStraight', label: 'Small Straight', desc: 'Four in sequence. Score 30.', section: 'lower' },
+      { key: 'largeStraight', label: 'Large Straight', desc: 'Five in sequence. Score 40.', section: 'lower' },
+      { key: 'yahtzee', label: 'Yahtzee', desc: 'Five matching dice. Score 50.', section: 'lower' },
+      { key: 'chance', label: 'Chance', desc: 'Any dice. Score total of all dice.', section: 'lower' }
+    ];
+
+    const UPPER_KEYS = CATEGORIES.filter(c => c.section === 'upper').map(c => c.key);
+    const LOWER_KEYS = CATEGORIES.filter(c => c.section === 'lower').map(c => c.key);
+    const UPPER_BY_FACE = { 1: 'ones', 2: 'twos', 3: 'threes', 4: 'fours', 5: 'fives', 6: 'sixes' };
+    const PIP_MAP = {
+      1: [4],
+      2: [0, 8],
+      3: [0, 4, 8],
+      4: [0, 2, 6, 8],
+      5: [0, 2, 4, 6, 8],
+      6: [0, 2, 3, 5, 6, 8]
+    };
+    const CONFETTI_COLORS = ['#f0d080', '#c8952a', '#c04040', '#7aaa5a', '#8ed7ff', '#d7d1bb'];
+
+    const state = {
+      dice: [1, 1, 1, 1, 1],
+      held: [false, false, false, false, false],
+      rollsLeft: 3,
+      hasRolledThisTurn: false,
+      scores: Object.fromEntries(CATEGORIES.map(c => [c.key, null])),
+      yahtzeeBonus: 0,
+      bestScore: Number(localStorage.getItem('rpg_yahtzee_best') || 0)
+    };
+
+    const els = {
+      diceRow: document.getElementById('diceRow'),
+      rollBtn: document.getElementById('rollBtn'),
+      releaseBtn: document.getElementById('releaseBtn'),
+      newGameBtn: document.getElementById('newGameBtn'),
+      statusBar: document.getElementById('statusBar'),
+      sideStatus: document.getElementById('sideStatus'),
+      turnHelp: document.getElementById('turnHelp'),
+      upperScoreGrid: document.getElementById('upperScoreGrid'),
+      lowerScoreGrid: document.getElementById('lowerScoreGrid'),
+      summaryGrid: document.getElementById('summaryGrid'),
+      grandTotalMetric: document.getElementById('grandTotalMetric'),
+      rollsLeftMetric: document.getElementById('rollsLeftMetric'),
+      upperBonusMetric: document.getElementById('upperBonusMetric'),
+      bestScoreMetric: document.getElementById('bestScoreMetric'),
+      confettiLayer: document.getElementById('confettiLayer'),
+      victoryMessage: document.getElementById('victoryMessage'),
+      victorySub: document.getElementById('victorySub')
+    };
+
+    function randomDie() {
+      return Math.floor(Math.random() * 6) + 1;
+    }
+
+    function countsOf(dice) {
+      const counts = [0, 0, 0, 0, 0, 0, 0];
+      for (const die of dice) counts[die] += 1;
+      return counts;
+    }
+
+    function sumDice(dice) {
+      return dice.reduce((sum, die) => sum + die, 0);
+    }
+
+    function isYahtzee(dice) {
+      return new Set(dice).size === 1;
+    }
+
+    function hasNOfKind(dice, n) {
+      const counts = countsOf(dice);
+      return counts.some((count, face) => face > 0 && count >= n);
+    }
+
+    function isFullHouse(dice) {
+      const tally = countsOf(dice).slice(1).filter(Boolean).sort((a, b) => a - b);
+      return tally.length === 2 && tally[0] === 2 && tally[1] === 3;
+    }
+
+    function hasStraight(dice, length) {
+      const uniq = [...new Set(dice)].sort((a, b) => a - b);
+      let run = 1;
+      let best = 1;
+      for (let i = 1; i < uniq.length; i += 1) {
+        if (uniq[i] === uniq[i - 1] + 1) {
+          run += 1;
+          best = Math.max(best, run);
+        } else {
+          run = 1;
+        }
+      }
+      return best >= length;
+    }
+
+    function upperSubtotal(scores) {
+      return UPPER_KEYS.reduce((sum, key) => sum + (scores[key] ?? 0), 0);
+    }
+
+    function upperBonus(scores) {
+      return upperSubtotal(scores) >= 63 ? 35 : 0;
+    }
+
+    function lowerSubtotal(scores, yahtzeeBonus) {
+      return LOWER_KEYS.reduce((sum, key) => sum + (scores[key] ?? 0), 0) + yahtzeeBonus;
+    }
+
+    function grandTotal(scores, yahtzeeBonus) {
+      return upperSubtotal(scores) + upperBonus(scores) + lowerSubtotal(scores, yahtzeeBonus);
+    }
+
+    function firstFace(dice) {
+      return dice[0];
+    }
+
+    function matchingUpperKeyForDice(dice) {
+      return UPPER_BY_FACE[firstFace(dice)];
+    }
+
+    function isExtraYahtzeeJokerActive() {
+      return isYahtzee(state.dice) && state.scores.yahtzee === 50;
+    }
+
+    function allFilled(keys) {
+      return keys.every(key => state.scores[key] !== null);
+    }
+
+    function forcedJokerCategoryKey() {
+      if (!isExtraYahtzeeJokerActive()) return null;
+      const requiredUpper = matchingUpperKeyForDice(state.dice);
+      if (state.scores[requiredUpper] === null) return requiredUpper;
+      const hasAnyLowerOpen = LOWER_KEYS.filter(key => key !== 'yahtzee').some(key => state.scores[key] === null);
+      if (hasAnyLowerOpen) return 'lower-choice';
+      return 'any-open';
+    }
+
+    function isCategorySelectable(category) {
+      if (!state.hasRolledThisTurn) return false;
+      if (state.scores[category.key] !== null) return false;
+
+      const forced = forcedJokerCategoryKey();
+      if (!forced) return true;
+      if (forced === 'lower-choice') return category.section === 'lower' && category.key !== 'yahtzee';
+      if (forced === 'any-open') return true;
+      return category.key === forced;
+    }
+
+    function previewScoreForCategory(category) {
+      const dice = state.dice;
+      const total = sumDice(dice);
+      const jokerActive = isExtraYahtzeeJokerActive();
+      const forced = forcedJokerCategoryKey();
+      const categorySelectable = isCategorySelectable(category);
+      if (state.scores[category.key] !== null) return state.scores[category.key];
+      if (!state.hasRolledThisTurn) return '—';
+      if (jokerActive && !categorySelectable) return '—';
+
+      switch (category.key) {
+        case 'ones': return countsOf(dice)[1] * 1;
+        case 'twos': return countsOf(dice)[2] * 2;
+        case 'threes': return countsOf(dice)[3] * 3;
+        case 'fours': return countsOf(dice)[4] * 4;
+        case 'fives': return countsOf(dice)[5] * 5;
+        case 'sixes': return countsOf(dice)[6] * 6;
+        case 'threeKind': return hasNOfKind(dice, 3) || jokerActive ? total : 0;
+        case 'fourKind': return hasNOfKind(dice, 4) || jokerActive ? total : 0;
+        case 'fullHouse': return jokerActive ? 25 : (isFullHouse(dice) ? 25 : 0);
+        case 'smallStraight': return jokerActive ? 30 : (hasStraight(dice, 4) ? 30 : 0);
+        case 'largeStraight': return jokerActive ? 40 : (hasStraight(dice, 5) ? 40 : 0);
+        case 'yahtzee': return isYahtzee(dice) ? 50 : 0;
+        case 'chance': return total;
+        default: return 0;
+      }
+    }
+
+    function scoreCategory(categoryKey) {
+      const category = CATEGORIES.find(c => c.key === categoryKey);
+      if (!category || !isCategorySelectable(category)) return;
+
+      const awarded = Number(previewScoreForCategory(category));
+      if (Number.isNaN(awarded)) return;
+
+      const extraYahtzeeBonus = isExtraYahtzeeJokerActive() ? 100 : 0;
+      state.scores[categoryKey] = awarded;
+      if (extraYahtzeeBonus && categoryKey !== 'yahtzee') state.yahtzeeBonus += extraYahtzeeBonus;
+
+      const scoreText = awarded === 0 ? 'You sacrifice that line for zero.' : `You claim ${category.label} for ${awarded}.`;
+      const bonusText = extraYahtzeeBonus ? ' Extra Yahtzee bonus: +100.' : '';
+      state.hasRolledThisTurn = false;
+      state.rollsLeft = 3;
+      state.held = [false, false, false, false, false];
+      els.statusBar.textContent = scoreText + bonusText;
+      els.sideStatus.textContent = scoreText + bonusText;
+
+      if (CATEGORIES.every(c => state.scores[c.key] !== null)) {
+        finishGame();
+      } else {
+        const remaining = CATEGORIES.filter(c => state.scores[c.key] === null).length;
+        els.turnHelp.innerHTML = `<strong>Turn resolved:</strong> ${scoreText}${bonusText} ${remaining} scoring line${remaining === 1 ? '' : 's'} remain.`;
+      }
+
+      persistBestIfNeeded();
+      render();
+    }
+
+    function rollDice() {
+      if (state.rollsLeft <= 0) return;
+      if (CATEGORIES.every(c => state.scores[c.key] !== null)) return;
+
+      const diceEls = els.diceRow.querySelectorAll('.die');
+      state.dice = state.dice.map((value, index) => {
+        if (state.held[index]) return value;
+        if (diceEls[index]) {
+          diceEls[index].classList.remove('rolling');
+          void diceEls[index].offsetWidth;
+          diceEls[index].classList.add('rolling');
+          setTimeout(() => diceEls[index]?.classList.remove('rolling'), 560);
+        }
+        return randomDie();
+      });
+      state.rollsLeft -= 1;
+      state.hasRolledThisTurn = true;
+
+      const forced = forcedJokerCategoryKey();
+      if (forced && forced !== 'lower-choice' && forced !== 'any-open') {
+        const forcedLabel = CATEGORIES.find(c => c.key === forced)?.label || 'matching upper box';
+        els.sideStatus.textContent = `Joker rule active. The ${forcedLabel} line must be used.`;
+      } else if (forced === 'lower-choice') {
+        els.sideStatus.textContent = 'Joker rule active. Any open lower-section line may be claimed.';
+      } else if (forced === 'any-open') {
+        els.sideStatus.textContent = 'Joker rule active. Any open line may be claimed.';
+      } else {
+        els.sideStatus.textContent = 'Hold dice or choose an open scoring line.';
+      }
+
+      if (state.rollsLeft === 0) {
+        els.statusBar.textContent = 'Final roll spent. You must now score an open category.';
+      } else {
+        els.statusBar.textContent = `Roll complete. ${state.rollsLeft} roll${state.rollsLeft === 1 ? '' : 's'} remaining this turn.`;
+      }
+
+      els.turnHelp.innerHTML = `<strong>Turn guidance:</strong> Tap any die to hold or release it. Then roll again or claim a score before the turn ends.`;
+      render();
+    }
+
+    function toggleHold(index) {
+      if (!state.hasRolledThisTurn || state.rollsLeft === 3) return;
+      if (state.rollsLeft <= 0) return;
+      state.held[index] = !state.held[index];
+      els.statusBar.textContent = state.held[index]
+        ? `Die ${index + 1} held for the next roll.`
+        : `Die ${index + 1} released back to the cup.`;
+      renderDice();
+      renderControls();
+    }
+
+    function releaseHolds() {
+      state.held = [false, false, false, false, false];
+      els.statusBar.textContent = 'All held dice released.';
+      render();
+    }
+
+    function newGame() {
+      state.dice = [1, 1, 1, 1, 1];
+      state.held = [false, false, false, false, false];
+      state.rollsLeft = 3;
+      state.hasRolledThisTurn = false;
+      state.scores = Object.fromEntries(CATEGORIES.map(c => [c.key, null]));
+      state.yahtzeeBonus = 0;
+      clearCelebration();
+      els.statusBar.textContent = 'Fresh table. Roll to begin your new game.';
+      els.sideStatus.textContent = 'Choose an open line after rolling.';
+      els.turnHelp.innerHTML = '<strong>How to play:</strong> Roll up to three times. Tap dice to hold them between rolls, then claim one open category on the scorecard.';
+      render();
+    }
+
+    function renderDice() {
+      els.diceRow.innerHTML = '';
+      state.dice.forEach((value, index) => {
+        const die = document.createElement('button');
+        die.type = 'button';
+        die.className = `die${state.held[index] ? ' held' : ''}${!state.hasRolledThisTurn || state.rollsLeft <= 0 ? ' locked' : ''}`;
+        die.setAttribute('aria-label', `Die ${index + 1}: ${value}${state.held[index] ? ', held' : ''}`);
+        die.addEventListener('click', () => toggleHold(index));
+
+        const pips = document.createElement('div');
+        pips.className = 'pips';
+        for (let cell = 0; cell < 9; cell += 1) {
+          const pip = document.createElement('span');
+          pip.className = 'pip' + (PIP_MAP[value].includes(cell) ? ' on' : '');
+          pips.appendChild(pip);
+        }
+
+        const label = document.createElement('span');
+        label.className = 'die-value';
+        label.textContent = value;
+
+        die.appendChild(pips);
+        die.appendChild(label);
+        els.diceRow.appendChild(die);
+      });
+    }
+
+    function renderScoreGrid(target, categories) {
+      target.innerHTML = '';
+      const forced = forcedJokerCategoryKey();
+
+      categories.forEach(category => {
+        const row = document.createElement('button');
+        row.type = 'button';
+        row.className = 'score-row';
+        row.disabled = !isCategorySelectable(category);
+        if (state.scores[category.key] !== null) row.classList.add('filled');
+        if (isCategorySelectable(category)) row.classList.add('selectable');
+        if (forced && state.hasRolledThisTurn) {
+          if ((forced === category.key) || (forced === 'lower-choice' && category.section === 'lower' && category.key !== 'yahtzee') || forced === 'any-open') {
+            row.classList.add('forced');
+          }
+        }
+        row.addEventListener('click', () => scoreCategory(category.key));
+
+        const name = document.createElement('div');
+        name.className = 'row-name';
+        name.innerHTML = `<strong>${category.label}</strong><span>${category.desc}</span>`;
+
+        const preview = document.createElement('div');
+        preview.className = 'row-preview';
+        const previewValue = previewScoreForCategory(category);
+        preview.textContent = previewValue;
+        if (state.hasRolledThisTurn && state.scores[category.key] === null && previewValue !== '—' && Number(previewValue) > 0) {
+          preview.classList.add('good');
+        }
+
+        const score = document.createElement('div');
+        score.className = 'row-score' + (state.scores[category.key] === null ? ' empty' : '');
+        score.textContent = state.scores[category.key] ?? 'Open';
+
+        row.appendChild(name);
+        row.appendChild(preview);
+        row.appendChild(score);
+        target.appendChild(row);
+      });
+    }
+
+    function renderSummary() {
+      const upper = upperSubtotal(state.scores);
+      const bonus = upperBonus(state.scores);
+      const lower = lowerSubtotal(state.scores, state.yahtzeeBonus);
+      const total = grandTotal(state.scores, state.yahtzeeBonus);
+      const remainingToBonus = Math.max(0, 63 - upper);
+      const rows = [
+        ['Upper subtotal', upper],
+        ['Upper bonus', bonus],
+        ['Needed for bonus', remainingToBonus],
+        ['Yahtzee bonus', state.yahtzeeBonus],
+        ['Lower subtotal', lower],
+        ['Grand total', total, true]
+      ];
+      els.summaryGrid.innerHTML = '';
+      rows.forEach(([label, value, totalRow]) => {
+        const row = document.createElement('div');
+        row.className = 'summary-row' + (totalRow ? ' total' : '');
+        row.innerHTML = `<strong>${label}</strong><span>${value}</span>`;
+        els.summaryGrid.appendChild(row);
+      });
+    }
+
+    function renderMetrics() {
+      els.grandTotalMetric.textContent = grandTotal(state.scores, state.yahtzeeBonus);
+      els.rollsLeftMetric.textContent = state.rollsLeft;
+      els.upperBonusMetric.textContent = upperBonus(state.scores);
+      els.bestScoreMetric.textContent = state.bestScore;
+    }
+
+    function renderControls() {
+      const gameOver = CATEGORIES.every(c => state.scores[c.key] !== null);
+      els.rollBtn.disabled = gameOver || state.rollsLeft <= 0;
+      els.releaseBtn.disabled = !state.held.some(Boolean);
+      els.rollBtn.textContent = state.rollsLeft > 0 ? `Roll Dice (${state.rollsLeft})` : 'Score the Turn';
+    }
+
+    function finishGame() {
+      const total = grandTotal(state.scores, state.yahtzeeBonus);
+      persistBestIfNeeded();
+      els.statusBar.textContent = `Game complete. Final total: ${total}.`;
+      els.sideStatus.textContent = `Scorecard complete. Final total: ${total}.`;
+      els.turnHelp.innerHTML = `<strong>Final tally:</strong> ${total} points across the full scorecard. Begin a new game whenever you wish.`;
+      els.victorySub.textContent = total >= 300
+        ? `A mythic ${total}-point victory blazes across the table.`
+        : total >= 200
+          ? `A formidable ${total}-point victory is yours.`
+          : `The tally stands at ${total} points.`;
+      triggerCelebration();
+    }
+
+    function persistBestIfNeeded() {
+      const total = grandTotal(state.scores, state.yahtzeeBonus);
+      if (total > state.bestScore) {
+        state.bestScore = total;
+        localStorage.setItem('rpg_yahtzee_best', String(total));
+      }
+    }
+
+    function triggerCelebration() {
+      clearCelebration();
+      els.victoryMessage.classList.remove('show');
+      void els.victoryMessage.offsetWidth;
+      els.victoryMessage.classList.add('show');
+
+      const rect = els.confettiLayer.getBoundingClientRect();
+      const bursts = [0.12, 0.28, 0.44, 0.58, 0.72, 0.86];
+      bursts.forEach((origin, burstIndex) => {
+        for (let i = 0; i < 20; i += 1) {
+          const piece = document.createElement('span');
+          piece.className = 'confetti';
+          const x = rect.width * origin;
+          const y = rect.height * (0.14 + Math.random() * 0.18);
+          const dx = (Math.random() - 0.5) * 180;
+          const dy = 180 + Math.random() * 220;
+          piece.style.background = CONFETTI_COLORS[(i + burstIndex) % CONFETTI_COLORS.length];
+          piece.style.setProperty('--x-start', `${x}px`);
+          piece.style.setProperty('--y-start', `${y}px`);
+          piece.style.setProperty('--x-end', `${x + dx}px`);
+          piece.style.setProperty('--y-end', `${y + dy}px`);
+          piece.style.setProperty('--spin', `${(Math.random() - 0.5) * 960}deg`);
+          piece.style.width = `${6 + Math.random() * 8}px`;
+          piece.style.height = `${10 + Math.random() * 10}px`;
+          piece.style.animationDelay = `${burstIndex * 0.05 + Math.random() * 0.08}s`;
+          els.confettiLayer.appendChild(piece);
+        }
+      });
+
+      setTimeout(() => {
+        clearCelebration();
+      }, 2200);
+    }
+
+    function clearCelebration() {
+      els.confettiLayer.innerHTML = '';
+      els.victoryMessage.classList.remove('show');
+    }
+
+    function render() {
+      renderDice();
+      renderScoreGrid(els.upperScoreGrid, CATEGORIES.filter(c => c.section === 'upper'));
+      renderScoreGrid(els.lowerScoreGrid, CATEGORIES.filter(c => c.section === 'lower'));
+      renderSummary();
+      renderMetrics();
+      renderControls();
+    }
+
+    els.rollBtn.addEventListener('click', rollDice);
+    els.releaseBtn.addEventListener('click', releaseHolds);
+    els.newGameBtn.addEventListener('click', newGame);
+
+    document.addEventListener('keydown', (event) => {
+      const key = event.key.toLowerCase();
+      if (key === ' ' || key === 'enter') {
+        if (document.activeElement === document.body || document.activeElement === els.rollBtn) {
+          event.preventDefault();
+          if (!els.rollBtn.disabled) rollDice();
+        }
+      }
+      if (/^[1-5]$/.test(key)) {
+        const idx = Number(key) - 1;
+        if (idx >= 0 && idx < 5) toggleHold(idx);
+      }
+      if (key === 'r') releaseHolds();
+      if (key === 'n') newGame();
+    });
+
+    document.getElementById('year').textContent = new Date().getFullYear();
+    render();
+  </script>
+</body>
+</html>
