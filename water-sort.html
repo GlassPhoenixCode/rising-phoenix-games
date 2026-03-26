@@ -1,0 +1,1238 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>Water Sort · Rising Phoenix Games</title>
+  <link rel="stylesheet" href="shared.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700&family=Cinzel:wght@400;600;700;900&family=IM+Fell+English:ital@0;1&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; }
+    html, body { margin: 0; min-height: 100%; }
+
+    :root {
+      --tube-width: 84px;
+      --tube-height: 250px;
+      --tube-gap: 16px;
+      --ball-size: 44px;
+      --message-width: 88%;
+    }
+
+    body {
+      font-family: var(--font-body);
+      color: var(--text);
+      background:
+        radial-gradient(ellipse 90% 55% at 15% 8%, rgba(90,48,12,0.55) 0%, transparent 58%),
+        radial-gradient(ellipse 70% 65% at 85% 90%, rgba(50,25,6,0.60) 0%, transparent 55%),
+        radial-gradient(ellipse 60% 40% at 50% 50%, rgba(30,18,5,0.40) 0%, transparent 70%),
+        linear-gradient(160deg, #1c1106 0%, #0f0c07 45%, #13100a 100%);
+      background-attachment: fixed;
+    }
+
+    #app {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      isolation: isolate;
+    }
+
+    .site-header {
+      padding: 0;
+      background: linear-gradient(180deg, #1e1508 0%, #120e06 100%);
+      border-bottom: 2px solid var(--gold);
+      box-shadow: 0 4px 24px rgba(0,0,0,0.7), 0 1px 0 rgba(200,149,42,0.15) inset;
+      position: relative;
+      overflow: hidden;
+      flex-shrink: 0;
+    }
+    .site-header::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: repeating-linear-gradient(
+        90deg,
+        transparent 0px,
+        transparent 48px,
+        rgba(200,149,42,0.04) 48px,
+        rgba(200,149,42,0.04) 49px
+      );
+      pointer-events: none;
+    }
+    .header-inner { position: relative; padding: 14px 20px 12px; }
+    .header-row { display: flex; align-items: center; margin-bottom: 6px; }
+
+    .rpg-back {
+      display: inline-block;
+      font-family: var(--font-ui);
+      font-size: 0.78rem;
+      letter-spacing: 0.08em;
+      color: var(--gold);
+      text-decoration: none;
+      padding: 0.55rem 1.1rem 0.55rem 2rem;
+      border: 1px solid rgba(200,149,42,0.25);
+      border-radius: 3px;
+      background: linear-gradient(180deg, #2a2010 0%, #1a1508 100%);
+      position: relative;
+      transition: border-color 0.2s, box-shadow 0.2s, color 0.2s;
+      margin: 0;
+      flex: 0 0 auto;
+      z-index: 2;
+    }
+    .rpg-back::before { content: '\2190'; position: absolute; left: 0.7rem; }
+    .rpg-back:hover {
+      border-color: var(--gold-light);
+      box-shadow: 0 0 18px 2px var(--gold-glow);
+      color: var(--gold-light);
+    }
+
+    .header-center {
+      flex: 1 1 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.85rem;
+      min-width: 0;
+    }
+    .header-spacer { visibility: hidden; pointer-events: none; }
+    .phoenix-mark {
+      width: 52px;
+      height: 52px;
+      object-fit: contain;
+      flex-shrink: 0;
+      filter: drop-shadow(0 0 10px rgba(200,149,42,0.5));
+    }
+    .title-block {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      min-width: 0;
+    }
+    .game-title {
+      margin: 0;
+      font-family: var(--font-display);
+      font-size: clamp(1.05rem, 3.8vw, 2rem);
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      line-height: 1.1;
+      background: linear-gradient(135deg, var(--gold-light) 0%, var(--gold) 40%, #a07020 80%, var(--gold-light) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .game-subtitle {
+      margin: 0.2rem 0 0;
+      font-style: italic;
+      color: #c8a878;
+      font-size: 0.82rem;
+      letter-spacing: 0.05em;
+    }
+
+    .main-wrap {
+      width: 100%;
+      max-width: 1240px;
+      margin: 0 auto;
+      padding: 22px 16px 34px;
+      display: grid;
+      grid-template-columns: minmax(340px, 1.2fr) minmax(280px, 0.8fr);
+      gap: 20px;
+      flex: 1;
+    }
+
+    .panel {
+      background: linear-gradient(160deg, var(--surface) 0%, var(--bg-warm) 100%);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      box-shadow: inset 0 0 30px rgba(0,0,0,0.35), 0 10px 34px rgba(0,0,0,0.45);
+      overflow: hidden;
+      position: relative;
+    }
+    .panel-header {
+      padding: 14px 16px 10px;
+      border-bottom: 1px solid rgba(200,149,42,0.14);
+      background: linear-gradient(180deg, rgba(255,255,255,0.03) 0%, rgba(255,255,255,0) 100%);
+    }
+    .panel-label {
+      font-family: var(--font-ui);
+      font-size: 0.7rem;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: var(--gold);
+      margin: 0 0 0.25rem;
+    }
+    .status-bar {
+      margin: 0;
+      min-height: 2.4rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      padding: 8px 16px 8px 28px;
+      background: rgba(0,0,0,0.32);
+      border: 1px solid rgba(200,149,42,0.18);
+      border-radius: 8px;
+      font-family: var(--font-ui);
+      font-size: 0.8rem;
+      letter-spacing: 0.08em;
+      color: var(--gold-light);
+      position: relative;
+      text-align: center;
+    }
+    .status-bar::before {
+      content: '⚜';
+      position: absolute;
+      left: 10px;
+      font-size: 10px;
+      color: var(--gold);
+      opacity: 0.7;
+    }
+
+    .board-panel {
+      display: flex;
+      flex-direction: column;
+      min-height: 780px;
+    }
+    .board-area {
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 18px;
+      flex: 1;
+      position: relative;
+    }
+
+    .top-actions {
+      width: min(100%, 840px);
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 10px;
+    }
+    .metric {
+      padding: 10px 12px;
+      border-radius: 12px;
+      background: linear-gradient(180deg, rgba(255,255,255,0.04) 0%, rgba(0,0,0,0.16) 100%);
+      border: 1px solid rgba(200,149,42,0.18);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.03);
+      text-align: center;
+      min-height: 68px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      gap: 5px;
+    }
+    .metric-label {
+      font-family: var(--font-ui);
+      font-size: 0.62rem;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: var(--gold);
+    }
+    .metric-value {
+      font-family: var(--font-display);
+      color: var(--gold-light);
+      font-size: clamp(1rem, 2.4vw, 1.35rem);
+      line-height: 1;
+    }
+    .metric-sub {
+      color: var(--text-muted);
+      font-size: 0.8rem;
+      font-style: italic;
+      line-height: 1.1;
+    }
+
+    .board-frame {
+      width: min(100%, 880px);
+      position: relative;
+      padding: 18px;
+      border-radius: 18px;
+      background:
+        radial-gradient(circle at 50% 45%, rgba(70,40,10,0.28) 0%, rgba(20,12,4,0.96) 70%),
+        linear-gradient(160deg, #201407 0%, #100b04 100%);
+      border: 1px solid rgba(200,149,42,0.28);
+      box-shadow:
+        inset 0 1px 0 rgba(255,255,255,0.04),
+        inset 0 0 38px rgba(0,0,0,0.35),
+        0 0 0 1px rgba(0,0,0,0.35),
+        0 18px 42px rgba(0,0,0,0.45),
+        0 0 30px rgba(200,149,42,0.14);
+    }
+    .board-frame::before,
+    .board-frame::after {
+      content: '◆';
+      position: absolute;
+      color: rgba(200,149,42,0.45);
+      font-size: 10px;
+      line-height: 1;
+    }
+    .board-frame::before { top: 6px; left: 8px; }
+    .board-frame::after { bottom: 6px; right: 8px; }
+
+    .tube-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(var(--tube-width), 1fr));
+      gap: var(--tube-gap);
+      align-items: end;
+      justify-items: center;
+      width: 100%;
+      min-height: 320px;
+    }
+
+    .tube {
+      width: var(--tube-width);
+      background: transparent;
+      border: 0;
+      padding: 0;
+      cursor: pointer;
+      position: relative;
+      transition: transform 0.18s ease, filter 0.18s ease;
+      color: inherit;
+    }
+    .tube:hover { transform: translateY(-3px); }
+    .tube:active { transform: translateY(-1px) scale(0.985); }
+    .tube.selected { transform: translateY(-10px); }
+    .tube.valid .tube-body {
+      box-shadow: 0 0 0 2px rgba(122,170,90,0.4), 0 0 22px rgba(122,170,90,0.24), inset 0 0 16px rgba(255,255,255,0.06);
+      border-color: rgba(130, 200, 110, 0.72);
+    }
+    .tube.selected .tube-body {
+      box-shadow: 0 0 0 2px rgba(120,180,255,0.42), 0 0 28px rgba(120,180,255,0.25), inset 0 0 16px rgba(255,255,255,0.06);
+      border-color: rgba(145, 205, 255, 0.82);
+    }
+    .tube.complete .tube-body {
+      border-color: rgba(240,208,128,0.7);
+      box-shadow: 0 0 20px rgba(200,149,42,0.22), inset 0 0 16px rgba(255,255,255,0.06);
+    }
+    .tube.disabled { cursor: default; }
+
+    .tube-body {
+      position: relative;
+      width: var(--tube-width);
+      height: var(--tube-height);
+      border-radius: 0 0 24px 24px;
+      border: 3px solid rgba(225, 240, 255, 0.30);
+      border-top: 0;
+      background:
+        linear-gradient(180deg, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0.02) 22%, rgba(0,0,0,0.08) 100%),
+        linear-gradient(180deg, rgba(38, 58, 74, 0.22), rgba(14, 18, 24, 0.18));
+      overflow: hidden;
+      box-shadow:
+        inset 8px 0 14px rgba(255,255,255,0.04),
+        inset -8px 0 14px rgba(0,0,0,0.14),
+        inset 0 -12px 22px rgba(0,0,0,0.25),
+        0 16px 24px rgba(0,0,0,0.35);
+    }
+    .tube-body::before,
+    .tube-body::after {
+      content: '';
+      position: absolute;
+      top: 14px;
+      bottom: 18px;
+      width: 7px;
+      border-radius: 999px;
+      pointer-events: none;
+      z-index: 2;
+    }
+    .tube-body::before {
+      left: 7px;
+      background: linear-gradient(180deg, rgba(255,255,255,0.32), rgba(255,255,255,0.04));
+      opacity: 0.7;
+    }
+    .tube-body::after {
+      right: 6px;
+      background: linear-gradient(180deg, rgba(255,255,255,0.12), rgba(255,255,255,0.02));
+      opacity: 0.45;
+    }
+    .tube-rim {
+      width: calc(var(--tube-width) + 10px);
+      height: 18px;
+      margin: 0 auto -5px;
+      border-radius: 999px;
+      border: 3px solid rgba(225, 240, 255, 0.32);
+      background: linear-gradient(180deg, rgba(255,255,255,0.15), rgba(0,0,0,0.08));
+      box-shadow: inset 0 2px 6px rgba(255,255,255,0.05), 0 6px 14px rgba(0,0,0,0.22);
+      position: relative;
+      z-index: 3;
+    }
+    .tube-rim::after {
+      content: '';
+      position: absolute;
+      inset: 3px;
+      border-radius: inherit;
+      background: linear-gradient(180deg, rgba(255,255,255,0.06), rgba(255,255,255,0.01));
+    }
+
+    .slots {
+      position: absolute;
+      inset: 14px 6px 10px;
+      display: flex;
+      flex-direction: column-reverse;
+      align-items: center;
+      justify-content: flex-start;
+      gap: 5px;
+      z-index: 1;
+    }
+    .slot {
+      width: 100%;
+      height: calc((var(--tube-height) - 44px) / 4);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      padding-inline: 4px;
+    }
+    .slot.empty::before {
+      content: '';
+      width: 82%;
+      height: 78%;
+      border-radius: 12px;
+      border: 1px dashed rgba(240,208,128,0.08);
+      background: linear-gradient(180deg, rgba(255,255,255,0.015), rgba(255,255,255,0));
+      opacity: 0.45;
+    }
+
+    .liquid {
+      width: 100%;
+      height: 100%;
+      border-radius: 12px;
+      position: relative;
+      border: 1px solid rgba(255,255,255,0.24);
+      box-shadow:
+        inset 0 -10px 12px rgba(0,0,0,0.2),
+        inset 0 8px 10px rgba(255,255,255,0.08),
+        0 4px 10px rgba(0,0,0,0.18);
+      overflow: hidden;
+    }
+    .liquid::before {
+      content: '';
+      position: absolute;
+      left: 8%;
+      top: 10%;
+      width: 55%;
+      height: 22%;
+      border-radius: 999px;
+      background: linear-gradient(180deg, rgba(255,255,255,0.5), rgba(255,255,255,0.08));
+      opacity: 0.55;
+    }
+    .liquid::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background:
+        linear-gradient(180deg, rgba(255,255,255,0.14), transparent 40%),
+        radial-gradient(circle at 82% 75%, rgba(0,0,0,0.16), transparent 30%);
+      mix-blend-mode: screen;
+      pointer-events: none;
+    }
+
+    .tube-index {
+      margin-top: 8px;
+      text-align: center;
+      font-family: var(--font-ui);
+      font-size: 0.66rem;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: rgba(240,208,128,0.6);
+    }
+
+    .control-row {
+      width: min(100%, 840px);
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 10px;
+    }
+    .rpg-btn,
+    .difficulty-btn {
+      font-family: var(--font-ui);
+      font-size: 0.78rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: #f0d080;
+      background: linear-gradient(180deg,rgba(40,28,8,0.9) 0%,rgba(20,14,4,0.95) 100%);
+      border: 1px solid rgba(200,149,42,0.45);
+      padding: 10px 18px;
+      border-radius: 999px;
+      cursor: pointer;
+      transition: all 0.2s;
+      box-shadow: 0 1px 0 rgba(200,149,42,0.15), inset 0 1px 0 rgba(200,149,42,0.1);
+    }
+    .rpg-btn:hover,
+    .difficulty-btn:hover {
+      border-color: rgba(200,149,42,0.75);
+      box-shadow: 0 0 18px 2px rgba(200,149,42,0.25),0 0 48px 8px rgba(180,120,20,0.15),inset 0 1px 0 rgba(200,149,42,0.2);
+      color: #f8e898;
+      transform: translateY(-1px);
+    }
+    .rpg-btn:active,
+    .difficulty-btn:active { transform: translateY(0); }
+    .rpg-btn-sage {
+      border-color: rgba(74,122,58,0.58);
+      color: #cde8b6;
+      background: linear-gradient(180deg, rgba(48, 76, 35, 0.96), rgba(25, 41, 18, 0.98));
+    }
+    .rpg-btn-crimson {
+      border-color: rgba(139,26,26,0.6);
+      color: #f3c7c7;
+      background: linear-gradient(180deg, rgba(96,25,25,0.96), rgba(48,10,10,0.98));
+    }
+    .difficulty-row {
+      width: min(100%, 840px);
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      justify-content: center;
+      align-items: center;
+    }
+    .difficulty-label {
+      font-family: var(--font-ui);
+      font-size: 0.7rem;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: var(--gold);
+      margin-right: 2px;
+    }
+    .difficulty-btn.active {
+      color: #1b1205;
+      background: linear-gradient(180deg, #f5dfa1 0%, #c8952a 100%);
+      border-color: #f0d080;
+      box-shadow: 0 0 18px rgba(200,149,42,0.26), inset 0 1px 0 rgba(255,255,255,0.28);
+    }
+
+    .legend {
+      width: min(100%, 840px);
+      padding: 12px 14px;
+      border-radius: 14px;
+      background: rgba(0,0,0,0.26);
+      border: 1px solid rgba(200,149,42,0.16);
+      color: #d8c39c;
+      text-align: center;
+      line-height: 1.5;
+      font-size: 0.96rem;
+      font-style: italic;
+    }
+    .legend strong {
+      font-family: var(--font-ui);
+      font-style: normal;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      font-size: 0.68rem;
+      color: var(--gold-light);
+      margin-right: 0.25rem;
+    }
+
+    .side-panel {
+      display: flex;
+      flex-direction: column;
+    }
+    .side-body {
+      padding: 18px 18px 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+    }
+    .rule-card {
+      padding: 14px 14px 16px;
+      border-radius: 14px;
+      background: rgba(0,0,0,0.24);
+      border: 1px solid rgba(200,149,42,0.14);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.02);
+    }
+    .rule-title {
+      margin: 0 0 0.65rem;
+      font-family: var(--font-ui);
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      font-size: 0.72rem;
+      color: var(--gold-light);
+    }
+    .rule-card p,
+    .rule-card li {
+      margin: 0;
+      color: #dcc7a0;
+      line-height: 1.55;
+      font-size: 0.98rem;
+    }
+    .rule-card ul {
+      margin: 0;
+      padding-left: 1.15rem;
+      display: grid;
+      gap: 0.55rem;
+    }
+
+    .palette-preview {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 10px;
+      margin-top: 0.85rem;
+    }
+    .swatch {
+      height: 28px;
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,0.18);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.12), 0 4px 10px rgba(0,0,0,0.22);
+    }
+
+    .overlay-message {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      transform: translate(-50%, -50%) scale(0.2);
+      width: var(--message-width);
+      max-width: 640px;
+      padding: 20px 18px;
+      border-radius: 18px;
+      border: 1px solid rgba(240,208,128,0.65);
+      background: linear-gradient(180deg, rgba(35,22,9,0.96), rgba(16,10,4,0.96));
+      box-shadow: 0 20px 60px rgba(0,0,0,0.58), 0 0 36px rgba(200,149,42,0.26), inset 0 1px 0 rgba(255,255,255,0.07);
+      z-index: 30;
+      text-align: center;
+      pointer-events: none;
+      opacity: 0;
+    }
+    .overlay-message.show {
+      animation: victoryMessage 1.75s ease forwards;
+    }
+    @keyframes victoryMessage {
+      0% { opacity: 0; transform: translate(-50%, -50%) scale(0.2); }
+      12% { opacity: 1; }
+      43% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+      86% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+      100% { opacity: 0; transform: translate(-50%, -50%) scale(1); }
+    }
+    .overlay-kicker {
+      font-family: var(--font-ui);
+      font-size: 0.72rem;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      color: #c8a878;
+      margin-bottom: 0.45rem;
+    }
+    .overlay-title {
+      font-family: var(--font-display);
+      font-size: clamp(1.35rem, 5vw, 2.6rem);
+      line-height: 1.06;
+      letter-spacing: 0.04em;
+      background: linear-gradient(135deg, #fff3b0 0%, #f0d080 35%, #c8952a 75%, #fff3b0 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin: 0;
+    }
+    .overlay-subtitle {
+      margin-top: 0.55rem;
+      color: #e1cfad;
+      font-size: clamp(0.92rem, 2vw, 1.05rem);
+      font-style: italic;
+    }
+
+    .footer {
+      margin-top: auto;
+      padding: 14px 18px 18px;
+      text-align: center;
+      color: rgba(200,170,100,0.5);
+      font-style: italic;
+      font-size: 0.8rem;
+      letter-spacing: 0.02em;
+    }
+
+    canvas#confetti {
+      position: fixed;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 999;
+    }
+
+    @media (max-width: 980px) {
+      .main-wrap { grid-template-columns: 1fr; }
+      .side-panel { order: 2; }
+      .board-panel { min-height: auto; }
+    }
+
+    @media (max-width: 760px) {
+      :root {
+        --tube-width: 74px;
+        --tube-height: 224px;
+        --ball-size: 38px;
+        --tube-gap: 12px;
+        --message-width: 92%;
+      }
+      .header-inner { padding-inline: 14px; }
+      .top-actions { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    }
+
+    @media (max-width: 480px) {
+      :root {
+        --tube-width: 66px;
+        --tube-height: 208px;
+        --ball-size: 34px;
+        --tube-gap: 10px;
+      }
+      .board-area { padding: 14px; }
+      .board-frame { padding: 14px; }
+      .difficulty-row { gap: 8px; }
+      .difficulty-btn, .rpg-btn { padding: 10px 14px; font-size: 0.7rem; }
+      .tube-index { font-size: 0.58rem; }
+      .palette-preview { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    }
+  </style>
+</head>
+<body>
+  <canvas id="confetti"></canvas>
+  <div id="app">
+    <header class="site-header">
+      <div class="header-inner">
+        <div class="header-row">
+          <a class="rpg-back" href="index.html">Hub</a>
+          <div class="header-center">
+            <img class="phoenix-mark" src="RPG Favicon no background.png" alt="Rising Phoenix Games logo">
+            <div class="title-block">
+              <h1 class="game-title">Water Sort</h1>
+              <p class="game-subtitle">Sort the colored waters until every glass holds only one hue</p>
+            </div>
+          </div>
+          <a class="rpg-back header-spacer" href="index.html" tabindex="-1" aria-hidden="true">Hub</a>
+        </div>
+      </div>
+    </header>
+
+    <main class="main-wrap">
+      <section class="panel board-panel">
+        <div class="panel-header">
+          <div class="panel-label">Puzzle Status</div>
+          <p class="status-bar" id="status-bar">Select a glass, then choose a valid destination.</p>
+        </div>
+
+        <div class="board-area">
+          <div class="top-actions">
+            <div class="metric">
+              <div class="metric-label">Difficulty</div>
+              <div class="metric-value" id="difficulty-readout">Medium</div>
+              <div class="metric-sub">Two empty reserve glasses</div>
+            </div>
+            <div class="metric">
+              <div class="metric-label">Moves</div>
+              <div class="metric-value" id="move-count">0</div>
+              <div class="metric-sub">Every pour matters</div>
+            </div>
+            <div class="metric">
+              <div class="metric-label">Completed</div>
+              <div class="metric-value" id="complete-count">0</div>
+              <div class="metric-sub">Sorted glasses</div>
+            </div>
+            <div class="metric">
+              <div class="metric-label">Goal</div>
+              <div class="metric-value" id="goal-count">7</div>
+              <div class="metric-sub">Filled monochrome glasses</div>
+            </div>
+          </div>
+
+          <div class="difficulty-row" role="group" aria-label="Difficulty">
+            <span class="difficulty-label">Difficulty</span>
+            <button class="difficulty-btn" data-difficulty="easy">Easy</button>
+            <button class="difficulty-btn active" data-difficulty="medium">Medium</button>
+            <button class="difficulty-btn" data-difficulty="hard">Hard</button>
+          </div>
+
+          <div class="control-row">
+            <button class="rpg-btn rpg-btn-sage" id="new-puzzle-btn">New Puzzle</button>
+            <button class="rpg-btn" id="restart-btn">Restart</button>
+            <button class="rpg-btn" id="undo-btn">Undo</button>
+            <button class="rpg-btn rpg-btn-crimson" id="clear-selection-btn">Clear Selection</button>
+          </div>
+
+          <div class="legend"><strong>Pouring Rules</strong>You may pour into any glass that still has room. Sort each glass until it holds only one color to win.</div>
+
+          <div class="board-frame">
+            <div class="tube-grid" id="tube-grid"></div>
+            <div class="overlay-message" id="victory-message" aria-hidden="true">
+              <div class="overlay-kicker">Victory Attained</div>
+              <h2 class="overlay-title">The Prism Stands Ordered</h2>
+              <div class="overlay-subtitle">Every vessel now holds a single radiant color of water.</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="footer">Rising Phoenix Games · Crafted in pure HTML, CSS, and JavaScript</div>
+      </section>
+
+      <aside class="panel side-panel">
+        <div class="panel-header">
+          <div class="panel-label">Game Notes</div>
+          <p class="status-bar">Build clear buffer spaces before you commit to long transfer chains.</p>
+        </div>
+        <div class="side-body">
+          <div class="rule-card">
+            <h2 class="rule-title">How to Play</h2>
+            <ul>
+              <li>Choose a source glass. Its top color becomes the active water layer.</li>
+              <li>Choose a destination glass. A valid pour moves the top layer into any glass that has room.</li>
+              <li>Any glass accepts any color, as long as it isn't full.</li>
+              <li>You win when every non-empty glass is full and contains only one color.</li>
+            </ul>
+          </div>
+
+          <div class="rule-card">
+            <h2 class="rule-title">Difficulty Structure</h2>
+            <p>Easy uses 5 colors, medium uses 7, and hard uses 9. Every puzzle keeps two empty reserve glasses, so the tactical burden comes from sequence planning rather than brute scarcity.</p>
+          </div>
+
+          <div class="rule-card">
+            <h2 class="rule-title">Palette</h2>
+            <p>The current puzzle draws from the house jewel palette below.</p>
+            <div class="palette-preview" id="palette-preview"></div>
+          </div>
+
+          <div class="rule-card">
+            <h2 class="rule-title">Strategic Advice</h2>
+            <p>Do not chase the first visible partial match. The stronger line is usually to free a buried color, consolidate reserve space, and only then lock a full monochrome glass.</p>
+          </div>
+        </div>
+      </aside>
+    </main>
+  </div>
+
+  <script>
+    const CAPACITY = 4;
+    const COLOR_POOL = [
+      { key: 'ember',   fill: 'radial-gradient(circle at 30% 28%, #ffd8a8 0%, #ffaf5d 28%, #d9691f 68%, #7b2d08 100%)' },
+      { key: 'ruby',    fill: 'radial-gradient(circle at 30% 28%, #ffc4c4 0%, #ef6d6d 30%, #ae2323 68%, #5a0a0a 100%)' },
+      { key: 'amber',   fill: 'radial-gradient(circle at 30% 28%, #fff0bc 0%, #f1c75b 28%, #bc7f1c 68%, #60400a 100%)' },
+      { key: 'moss',    fill: 'radial-gradient(circle at 30% 28%, #d7f1bf 0%, #8fc96b 30%, #4f8430 68%, #1f4312 100%)' },
+      { key: 'jade',    fill: 'radial-gradient(circle at 30% 28%, #bff4dc 0%, #53c59f 30%, #168064 68%, #08382d 100%)' },
+      { key: 'teal',    fill: 'radial-gradient(circle at 30% 28%, #c7f3fb 0%, #65cde2 28%, #1b7fa8 68%, #0b3551 100%)' },
+      { key: 'sapphire',fill: 'radial-gradient(circle at 30% 28%, #c7d8ff 0%, #6f92f2 30%, #2a4faa 68%, #111f57 100%)' },
+      { key: 'violet',  fill: 'radial-gradient(circle at 30% 28%, #e2ccff 0%, #a67cea 30%, #6640a7 68%, #2d184f 100%)' },
+      { key: 'rose',    fill: 'radial-gradient(circle at 30% 28%, #ffd4ec 0%, #ee8bc9 30%, #b53e88 68%, #56173f 100%)' },
+      { key: 'ivory',   fill: 'radial-gradient(circle at 30% 28%, #fffefa 0%, #f2e7c8 32%, #c6b48a 70%, #655640 100%)' }
+    ];
+
+    const DIFFICULTIES = {
+      easy:   { label: 'Easy', colors: 5, scrambleMoves: 120 },
+      medium: { label: 'Medium', colors: 7, scrambleMoves: 180 },
+      hard:   { label: 'Hard', colors: 9, scrambleMoves: 260 }
+    };
+
+    const tubeGrid = document.getElementById('tube-grid');
+    const statusBar = document.getElementById('status-bar');
+    const moveCountEl = document.getElementById('move-count');
+    const completeCountEl = document.getElementById('complete-count');
+    const goalCountEl = document.getElementById('goal-count');
+    const difficultyReadout = document.getElementById('difficulty-readout');
+    const palettePreview = document.getElementById('palette-preview');
+    const victoryMessage = document.getElementById('victory-message');
+
+    const confettiCanvas = document.getElementById('confetti');
+    const confettiCtx = confettiCanvas.getContext('2d');
+
+    const newPuzzleBtn = document.getElementById('new-puzzle-btn');
+    const restartBtn = document.getElementById('restart-btn');
+    const undoBtn = document.getElementById('undo-btn');
+    const clearSelectionBtn = document.getElementById('clear-selection-btn');
+
+    let difficulty = 'medium';
+    let palette = COLOR_POOL.slice(0, DIFFICULTIES[difficulty].colors);
+    let tubes = [];
+    let initialTubes = [];
+    let selectedTube = null;
+    let moveCount = 0;
+    let history = [];
+    let victoryShown = false;
+    let victoryTimeout = null;
+    let confettiParticles = [];
+    let confettiRaf = null;
+
+    function cloneState(state) {
+      return state.map(tube => tube.slice());
+    }
+
+    function setStatus(text) {
+      statusBar.textContent = text;
+    }
+
+    function updatePalettePreview() {
+      palettePreview.innerHTML = '';
+      palette.forEach(color => {
+        const swatch = document.createElement('div');
+        swatch.className = 'swatch';
+        swatch.style.background = color.fill;
+        swatch.title = color.key;
+        palettePreview.appendChild(swatch);
+      });
+    }
+
+    function buildSolvedState(colorCount) {
+      const solved = [];
+      for (let i = 0; i < colorCount; i++) {
+        solved.push(Array(CAPACITY).fill(i));
+      }
+      solved.push([]);
+      solved.push([]);
+      return solved;
+    }
+
+    function getTopColor(tube) {
+      return tube.length ? tube[tube.length - 1] : null;
+    }
+
+    function getTopRunLength(tube) {
+      if (!tube.length) return 0;
+      const color = getTopColor(tube);
+      let count = 0;
+      for (let i = tube.length - 1; i >= 0; i--) {
+        if (tube[i] !== color) break;
+        count++;
+      }
+      return count;
+    }
+
+    function canPour(sourceIndex, destIndex, state = tubes) {
+      if (sourceIndex === destIndex) return false;
+      const source = state[sourceIndex];
+      const dest = state[destIndex];
+      if (!source || !dest || !source.length) return false;
+      if (dest.length >= CAPACITY) return false;
+      const free = CAPACITY - dest.length;
+      return free > 0;
+    }
+
+    function getPourAmount(sourceIndex, destIndex, state = tubes) {
+      if (!canPour(sourceIndex, destIndex, state)) return 0;
+      return 1;
+    }
+
+    function pour(sourceIndex, destIndex, state = tubes) {
+      const amount = getPourAmount(sourceIndex, destIndex, state);
+      if (!amount) return false;
+      const source = state[sourceIndex];
+      const dest = state[destIndex];
+      const moved = source.splice(source.length - amount, amount);
+      dest.push(...moved);
+      return true;
+    }
+
+    function isUniformFull(tube) {
+      return tube.length === CAPACITY && tube.every(color => color === tube[0]);
+    }
+
+    function isSolved(state = tubes) {
+      return state.every(tube => tube.length === 0 || isUniformFull(tube));
+    }
+
+    function countCompleted(state = tubes) {
+      return state.filter(isUniformFull).length;
+    }
+
+    function countMixedTubes(state) {
+      return state.filter(tube => {
+        if (!tube.length || isUniformFull(tube)) return false;
+        return true;
+      }).length;
+    }
+
+    function generatePuzzle() {
+      const { colors } = DIFFICULTIES[difficulty];
+      palette = COLOR_POOL.slice(0, colors);
+
+      // Build a flat pool of all liquid layers: each color appears CAPACITY times
+      const pool = [];
+      for (let c = 0; c < colors; c++) {
+        for (let k = 0; k < CAPACITY; k++) {
+          pool.push(c);
+        }
+      }
+
+      // Fisher-Yates shuffle
+      for (let i = pool.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [pool[i], pool[j]] = [pool[j], pool[i]];
+      }
+
+      // Distribute into tubes (colors tubes of CAPACITY each, plus 2 empty)
+      const state = [];
+      for (let t = 0; t < colors; t++) {
+        state.push(pool.slice(t * CAPACITY, (t + 1) * CAPACITY));
+      }
+      state.push([]); // empty tube 1
+      state.push([]); // empty tube 2
+
+      // Reject if accidentally solved (extremely unlikely but guard anyway)
+      if (isSolved(state)) {
+        return generatePuzzle();
+      }
+
+      return state;
+    }
+
+    function renderBoard() {
+      tubeGrid.innerHTML = '';
+      const validTargets = selectedTube == null ? [] : tubes.map((_, index) => canPour(selectedTube, index));
+
+      tubes.forEach((tube, index) => {
+        const button = document.createElement('button');
+        button.className = 'tube';
+        if (selectedTube === index) button.classList.add('selected');
+        if (selectedTube != null && validTargets[index]) button.classList.add('valid');
+        if (isUniformFull(tube)) button.classList.add('complete');
+        if (!tube.length) button.classList.add('empty-tube');
+        button.setAttribute('aria-label', `Glass ${index + 1}, ${tube.length} filled layers`);
+        button.addEventListener('click', () => handleTubeClick(index));
+
+        const rim = document.createElement('div');
+        rim.className = 'tube-rim';
+
+        const body = document.createElement('div');
+        body.className = 'tube-body';
+
+        const slots = document.createElement('div');
+        slots.className = 'slots';
+
+        for (let slot = 0; slot < CAPACITY; slot++) {
+          const slotEl = document.createElement('div');
+          slotEl.className = 'slot';
+          const colorIndex = tube[slot];
+          if (colorIndex == null) {
+            slotEl.classList.add('empty');
+          } else {
+            const liquid = document.createElement('div');
+            liquid.className = 'liquid';
+            liquid.style.background = palette[colorIndex].fill;
+            slotEl.appendChild(liquid);
+          }
+          slots.appendChild(slotEl);
+        }
+
+        const label = document.createElement('div');
+        label.className = 'tube-index';
+        label.textContent = `Glass ${index + 1}`;
+
+        body.appendChild(slots);
+        button.appendChild(rim);
+        button.appendChild(body);
+        button.appendChild(label);
+        tubeGrid.appendChild(button);
+      });
+
+      updateReadouts();
+    }
+
+    function updateReadouts() {
+      moveCountEl.textContent = String(moveCount);
+      const complete = countCompleted();
+      completeCountEl.textContent = String(complete);
+      goalCountEl.textContent = String(DIFFICULTIES[difficulty].colors);
+      difficultyReadout.textContent = DIFFICULTIES[difficulty].label;
+      undoBtn.disabled = history.length === 0;
+      undoBtn.style.opacity = history.length === 0 ? '0.55' : '1';
+    }
+
+    function clearSelection(silent = false) {
+      selectedTube = null;
+      renderBoard();
+      if (!silent) setStatus('Selection cleared. Choose another source glass.');
+    }
+
+    function handleTubeClick(index) {
+      if (victoryShown) return;
+      const tube = tubes[index];
+
+      if (selectedTube == null) {
+        if (!tube.length) {
+          setStatus('An empty glass cannot be the source. Choose a glass with colored water.');
+          return;
+        }
+        selectedTube = index;
+        renderBoard();
+        const matchingTargets = tubes.reduce((count, _, i) => count + (canPour(index, i) ? 1 : 0), 0);
+        setStatus(matchingTargets ? `Glass ${index + 1} selected. Choose a highlighted destination.` : `Glass ${index + 1} has no valid destination. Choose a different source.`);
+        return;
+      }
+
+      if (selectedTube === index) {
+        clearSelection();
+        return;
+      }
+
+      if (!canPour(selectedTube, index)) {
+        if (tube.length && getTopColor(tubes[selectedTube]) !== getTopColor(tube)) {
+          setStatus('Invalid destination. That glass is already full.');
+        } else if (tube.length >= CAPACITY) {
+          setStatus('Invalid destination. That glass is already full.');
+        } else {
+          setStatus('Invalid move. Choose a highlighted destination glass.');
+        }
+        return;
+      }
+
+      history.push(cloneState(tubes));
+      const sourceForStatus = selectedTube;
+      const amount = getPourAmount(selectedTube, index);
+      pour(selectedTube, index, tubes);
+      moveCount++;
+      selectedTube = null;
+      renderBoard();
+      setStatus(`Poured ${amount} layer${amount === 1 ? '' : 's'} from Glass ${sourceForStatus + 1} to Glass ${index + 1}.`);
+
+      if (isSolved() && !victoryShown) {
+        triggerVictory();
+      }
+    }
+
+    function startNewPuzzle() {
+      clearVictoryMessage();
+      selectedTube = null;
+      moveCount = 0;
+      history = [];
+      tubes = generatePuzzle();
+      initialTubes = cloneState(tubes);
+      updatePalettePreview();
+      renderBoard();
+      setStatus('A new arrangement is ready. Build reserve space, then consolidate colors.');
+    }
+
+    function restartPuzzle() {
+      clearVictoryMessage();
+      selectedTube = null;
+      moveCount = 0;
+      history = [];
+      tubes = cloneState(initialTubes);
+      renderBoard();
+      setStatus('Puzzle reset to its initial arrangement.');
+    }
+
+    function undoMove() {
+      if (!history.length || victoryShown) return;
+      clearVictoryMessage();
+      selectedTube = null;
+      tubes = history.pop();
+      moveCount = Math.max(0, moveCount - 1);
+      renderBoard();
+      setStatus('Previous pour undone.');
+    }
+
+    document.querySelectorAll('.difficulty-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const newDifficulty = btn.dataset.difficulty;
+        if (!DIFFICULTIES[newDifficulty] || newDifficulty === difficulty) return;
+        difficulty = newDifficulty;
+        document.querySelectorAll('.difficulty-btn').forEach(b => b.classList.toggle('active', b === btn));
+        startNewPuzzle();
+      });
+    });
+
+    newPuzzleBtn.addEventListener('click', startNewPuzzle);
+    restartBtn.addEventListener('click', restartPuzzle);
+    undoBtn.addEventListener('click', undoMove);
+    clearSelectionBtn.addEventListener('click', () => clearSelection());
+
+    function clearVictoryMessage() {
+      clearTimeout(victoryTimeout);
+      victoryShown = false;
+      victoryMessage.classList.remove('show');
+      victoryMessage.setAttribute('aria-hidden', 'true');
+    }
+
+    function triggerVictory() {
+      victoryShown = true;
+      victoryMessage.classList.remove('show');
+      void victoryMessage.offsetWidth;
+      victoryMessage.classList.add('show');
+      victoryMessage.setAttribute('aria-hidden', 'false');
+      launchConfettiBursts();
+      setStatus(`Victory. The entire collection is sorted in ${moveCount} moves.`);
+      victoryTimeout = setTimeout(() => {
+        clearVictoryMessage();
+      }, 1750);
+    }
+
+    function resizeConfettiCanvas() {
+      const dpr = window.devicePixelRatio || 1;
+      confettiCanvas.width = Math.floor(window.innerWidth * dpr);
+      confettiCanvas.height = Math.floor(window.innerHeight * dpr);
+      confettiCanvas.style.width = window.innerWidth + 'px';
+      confettiCanvas.style.height = window.innerHeight + 'px';
+      confettiCtx.setTransform(1, 0, 0, 1, 0, 0);
+      confettiCtx.scale(dpr, dpr);
+    }
+
+    function spawnConfettiBurst(x, y, count) {
+      const colors = ['#f0d080', '#c8952a', '#d4553f', '#7aaa5a', '#8ed7ff', '#fff4bf', '#b56cff', '#ef8bc9'];
+      for (let i = 0; i < count; i++) {
+        const angle = (Math.PI * 2 * i / count) + (Math.random() * 0.5 - 0.25);
+        const speed = 2.4 + Math.random() * 5.8;
+        const life = 42 + Math.random() * 34;
+        confettiParticles.push({
+          x,
+          y,
+          vx: Math.cos(angle) * speed,
+          vy: Math.sin(angle) * speed - (1.8 + Math.random() * 2.8),
+          size: 4 + Math.random() * 8,
+          width: 4 + Math.random() * 8,
+          height: 6 + Math.random() * 10,
+          color: colors[Math.floor(Math.random() * colors.length)],
+          life,
+          maxLife: life,
+          rotation: Math.random() * Math.PI * 2,
+          spin: (Math.random() - 0.5) * 0.35,
+          shape: Math.random() < 0.5 ? 'rect' : 'circle'
+        });
+      }
+    }
+
+    function launchConfettiBursts() {
+      resizeConfettiCanvas();
+      const bursts = 20;
+      for (let i = 0; i < bursts; i++) {
+        const x = (i + 0.5) / bursts * window.innerWidth + (Math.random() - 0.5) * (window.innerWidth * 0.05);
+        const y = window.innerHeight * (0.18 + Math.random() * 0.42);
+        spawnConfettiBurst(x, y, 22 + Math.floor(Math.random() * 18));
+      }
+      if (!confettiRaf) animateConfetti();
+    }
+
+    function animateConfetti() {
+      confettiRaf = requestAnimationFrame(animateConfetti);
+      confettiCtx.clearRect(0, 0, window.innerWidth, window.innerHeight);
+      confettiParticles = confettiParticles.filter(p => p.life > 0);
+
+      for (const p of confettiParticles) {
+        p.life -= 1;
+        p.vy += 0.12;
+        p.x += p.vx;
+        p.y += p.vy;
+        p.rotation += p.spin;
+        const alpha = Math.max(0, p.life / p.maxLife);
+
+        confettiCtx.save();
+        confettiCtx.globalAlpha = alpha;
+        confettiCtx.translate(p.x, p.y);
+        confettiCtx.rotate(p.rotation);
+        confettiCtx.fillStyle = p.color;
+        if (p.shape === 'rect') {
+          confettiCtx.fillRect(-p.width / 2, -p.height / 2, p.width, p.height);
+        } else {
+          confettiCtx.beginPath();
+          confettiCtx.arc(0, 0, p.size / 2, 0, Math.PI * 2);
+          confettiCtx.fill();
+        }
+        confettiCtx.restore();
+      }
+
+      if (!confettiParticles.length) {
+        cancelAnimationFrame(confettiRaf);
+        confettiRaf = null;
+        confettiCtx.clearRect(0, 0, window.innerWidth, window.innerHeight);
+      }
+    }
+
+    window.addEventListener('resize', resizeConfettiCanvas);
+    resizeConfettiCanvas();
+    startNewPuzzle();
+  </script>
+</body>
+</html>
