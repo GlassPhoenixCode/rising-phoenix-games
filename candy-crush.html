@@ -1,0 +1,1738 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>Candy Crush · Rising Phoenix Games</title>
+  <link rel="stylesheet" href="shared.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700&family=Cinzel:wght@400;600;700;900&family=IM+Fell+English:ital@0;1&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; }
+    html, body { margin: 0; min-height: 100%; }
+
+    :root {
+      --cols: 8;
+      --rows: 8;
+      --cell-size: min(10.2vw, 74px);
+      --gap: clamp(4px, 0.75vw, 8px);
+      --board-pad: clamp(8px, 1.5vw, 14px);
+      --message-width: 88%;
+      --panel-shadow: inset 0 0 30px rgba(0,0,0,0.35), 0 10px 34px rgba(0,0,0,0.45);
+    }
+
+    body {
+      font-family: var(--font-body);
+      color: var(--text);
+      background:
+        radial-gradient(ellipse 90% 55% at 15% 8%, rgba(90,48,12,0.55) 0%, transparent 58%),
+        radial-gradient(ellipse 70% 65% at 85% 90%, rgba(50,25,6,0.60) 0%, transparent 55%),
+        radial-gradient(ellipse 60% 40% at 50% 50%, rgba(30,18,5,0.40) 0%, transparent 70%),
+        linear-gradient(160deg, #1c1106 0%, #0f0c07 45%, #13100a 100%);
+      background-attachment: fixed;
+    }
+
+    #app {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      isolation: isolate;
+    }
+
+    .site-header {
+      padding: 0;
+      background: linear-gradient(180deg, #1e1508 0%, #120e06 100%);
+      border-bottom: 2px solid var(--gold);
+      box-shadow: 0 4px 24px rgba(0,0,0,0.7), 0 1px 0 rgba(200,149,42,0.15) inset;
+      position: relative;
+      overflow: hidden;
+      flex-shrink: 0;
+    }
+    .site-header::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: repeating-linear-gradient(
+        90deg,
+        transparent 0px,
+        transparent 48px,
+        rgba(200,149,42,0.04) 48px,
+        rgba(200,149,42,0.04) 49px
+      );
+      pointer-events: none;
+    }
+    .header-inner { position: relative; padding: 14px 20px 12px; }
+    .header-row { display: flex; align-items: center; margin-bottom: 6px; }
+
+    .rpg-back {
+      display: inline-block;
+      font-family: var(--font-ui);
+      font-size: 0.78rem;
+      letter-spacing: 0.08em;
+      color: var(--gold);
+      text-decoration: none;
+      padding: 0.55rem 1.1rem 0.55rem 2rem;
+      border: 1px solid rgba(200,149,42,0.25);
+      border-radius: 3px;
+      background: linear-gradient(180deg, #2a2010 0%, #1a1508 100%);
+      position: relative;
+      transition: border-color 0.2s, box-shadow 0.2s, color 0.2s;
+      margin: 0;
+      flex: 0 0 auto;
+      z-index: 2;
+    }
+    .rpg-back::before { content: '\2190'; position: absolute; left: 0.7rem; }
+    .rpg-back:hover {
+      border-color: var(--gold-light);
+      box-shadow: 0 0 18px 2px var(--gold-glow);
+      color: var(--gold-light);
+    }
+
+    .header-center {
+      flex: 1 1 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.85rem;
+      min-width: 0;
+    }
+    .header-spacer { visibility: hidden; pointer-events: none; }
+    .phoenix-mark {
+      width: 52px;
+      height: 52px;
+      object-fit: contain;
+      flex-shrink: 0;
+      filter: drop-shadow(0 0 10px rgba(200,149,42,0.5));
+    }
+    .title-block {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      min-width: 0;
+    }
+    .game-title {
+      margin: 0;
+      font-family: var(--font-display);
+      font-size: clamp(1.0rem, 3.8vw, 2rem);
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      line-height: 1.1;
+      background: linear-gradient(135deg, var(--gold-light) 0%, var(--gold) 40%, #a07020 80%, var(--gold-light) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .game-subtitle {
+      margin: 0.2rem 0 0;
+      font-style: italic;
+      color: #c8a878;
+      font-size: 0.82rem;
+      letter-spacing: 0.05em;
+    }
+
+    .main-wrap {
+      width: 100%;
+      max-width: 1220px;
+      margin: 0 auto;
+      padding: 22px 16px 36px;
+      display: grid;
+      grid-template-columns: minmax(320px, 1.18fr) minmax(280px, 0.82fr);
+      gap: 20px;
+      flex: 1;
+      align-items: start;
+    }
+
+    .panel {
+      background: linear-gradient(160deg, var(--surface) 0%, var(--bg-warm) 100%);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      box-shadow: var(--panel-shadow);
+      overflow: hidden;
+      position: relative;
+    }
+    .panel-header {
+      padding: 14px 16px 10px;
+      border-bottom: 1px solid rgba(200,149,42,0.14);
+      background: linear-gradient(180deg, rgba(255,255,255,0.03) 0%, rgba(255,255,255,0) 100%);
+    }
+    .panel-label {
+      font-family: var(--font-ui);
+      font-size: 0.7rem;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: var(--gold);
+      margin: 0 0 0.25rem;
+    }
+    .status-bar {
+      margin: 0;
+      min-height: 2.4rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      padding: 8px 16px 8px 28px;
+      background: rgba(0,0,0,0.32);
+      border: 1px solid rgba(200,149,42,0.18);
+      border-radius: 8px;
+      font-family: var(--font-ui);
+      font-size: 0.8rem;
+      letter-spacing: 0.08em;
+      color: var(--gold-light);
+      position: relative;
+      text-align: center;
+    }
+    .status-bar::before {
+      content: '⚜';
+      position: absolute;
+      left: 10px;
+      font-size: 10px;
+      color: var(--gold);
+      opacity: 0.7;
+    }
+
+    .board-panel {
+      display: flex;
+      flex-direction: column;
+      min-height: 800px;
+    }
+    .board-area {
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 18px;
+      flex: 1;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .metrics {
+      width: min(100%, 760px);
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 10px;
+    }
+    .metric {
+      padding: 10px 12px;
+      border-radius: 12px;
+      background: linear-gradient(180deg, rgba(255,255,255,0.04) 0%, rgba(0,0,0,0.16) 100%);
+      border: 1px solid rgba(200,149,42,0.18);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.03);
+      text-align: center;
+      min-height: 70px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      gap: 5px;
+    }
+    .metric-label {
+      font-family: var(--font-ui);
+      font-size: 0.62rem;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: var(--gold);
+    }
+    .metric-value {
+      font-family: var(--font-display);
+      color: var(--gold-light);
+      font-size: clamp(1rem, 2.4vw, 1.35rem);
+      line-height: 1;
+    }
+    .metric-sub {
+      color: var(--text-muted);
+      font-size: 0.78rem;
+      font-style: italic;
+      line-height: 1.1;
+    }
+
+    .board-frame {
+      width: min(100%, 760px);
+      position: relative;
+      padding: 18px;
+      border-radius: 18px;
+      background:
+        radial-gradient(circle at 50% 45%, rgba(70,40,10,0.28) 0%, rgba(20,12,4,0.96) 70%),
+        linear-gradient(160deg, #201407 0%, #100b04 100%);
+      border: 1px solid rgba(200,149,42,0.28);
+      box-shadow:
+        inset 0 1px 0 rgba(255,255,255,0.04),
+        inset 0 0 38px rgba(0,0,0,0.35),
+        0 0 0 1px rgba(0,0,0,0.35),
+        0 18px 42px rgba(0,0,0,0.45),
+        0 0 30px rgba(200,149,42,0.14);
+    }
+    .board-frame::before,
+    .board-frame::after {
+      content: '◆';
+      position: absolute;
+      color: rgba(200,149,42,0.45);
+      font-size: 10px;
+      line-height: 1;
+    }
+    .board-frame::before { top: 6px; left: 8px; }
+    .board-frame::after { bottom: 6px; right: 8px; }
+
+    .board {
+      display: grid;
+      grid-template-columns: repeat(var(--cols), var(--cell-size));
+      grid-template-rows: repeat(var(--rows), var(--cell-size));
+      gap: var(--gap);
+      padding: var(--board-pad);
+      justify-content: center;
+      border-radius: 16px;
+      background:
+        linear-gradient(180deg, rgba(255,255,255,0.03), rgba(0,0,0,0.10)),
+        rgba(28, 18, 7, 0.95);
+      border: 1px solid rgba(200,149,42,0.2);
+      position: relative;
+      z-index: 1;
+      touch-action: none;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+
+    .tile {
+      position: relative;
+      width: var(--cell-size);
+      height: var(--cell-size);
+      border-radius: 20px;
+      border: 1px solid rgba(240,208,128,0.12);
+      background: linear-gradient(180deg, rgba(255,255,255,0.03), rgba(0,0,0,0.14));
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.07), 0 7px 10px rgba(0,0,0,0.24);
+      transition: transform 0.18s ease, opacity 0.18s ease, filter 0.18s ease, box-shadow 0.2s ease;
+      cursor: grab;
+      overflow: hidden;
+    }
+    .tile::before {
+      content: '';
+      position: absolute;
+      inset: 8% 10% auto 10%;
+      height: 34%;
+      border-radius: 999px;
+      background: linear-gradient(180deg, rgba(255,255,255,0.42), rgba(255,255,255,0));
+      pointer-events: none;
+      opacity: 0.9;
+    }
+    .tile::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(135deg, rgba(255,255,255,0.05) 0%, transparent 45%, rgba(200,149,42,0.04) 100%);
+      pointer-events: none;
+    }
+    .tile:hover {
+      transform: translateY(-1px) scale(1.02);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.08), 0 0 16px rgba(200,149,42,0.14), 0 8px 12px rgba(0,0,0,0.28);
+    }
+    .tile.selected {
+      outline: 2px solid rgba(255,230,150,0.9);
+      outline-offset: 2px;
+      transform: scale(1.05);
+      filter: brightness(1.08);
+    }
+    .tile.hint {
+      animation: hintPulse 0.95s ease-in-out infinite;
+    }
+    @keyframes hintPulse {
+      0%, 100% { box-shadow: 0 0 0 rgba(255,220,120,0.0), 0 8px 12px rgba(0,0,0,0.28); }
+      50% { box-shadow: 0 0 18px rgba(255,220,120,0.55), 0 8px 12px rgba(0,0,0,0.28); }
+    }
+
+    .tile.empty {
+      opacity: 0;
+      pointer-events: none;
+      transform: scale(0.5);
+    }
+    .tile.clearing {
+      animation: popOut 0.28s ease forwards;
+      z-index: 3;
+    }
+    @keyframes popOut {
+      0% { transform: scale(1); opacity: 1; }
+      55% { transform: scale(1.18); opacity: 1; }
+      100% { transform: scale(0.28); opacity: 0; }
+    }
+    .tile.falling {
+      transition: transform 0.26s ease, opacity 0.2s ease;
+    }
+    .tile.spawn {
+      animation: spawnIn 0.24s ease;
+    }
+    @keyframes spawnIn {
+      from { transform: scale(0.3); opacity: 0; }
+      to { transform: scale(1); opacity: 1; }
+    }
+
+    .candy-red { background: radial-gradient(circle at 35% 28%, #ffb5b0 0%, #d74d48 45%, #7d1518 100%); }
+    .candy-blue { background: radial-gradient(circle at 35% 28%, #b8dfff 0%, #458ce2 45%, #173b7f 100%); }
+    .candy-green { background: radial-gradient(circle at 35% 28%, #cbf4b0 0%, #58a847 45%, #1d5f1e 100%); }
+    .candy-gold { background: radial-gradient(circle at 35% 28%, #fff1b8 0%, #dfa638 45%, #7d4f0f 100%); }
+    .candy-purple { background: radial-gradient(circle at 35% 28%, #e5c8ff 0%, #8c59cf 45%, #402067 100%); }
+    .candy-orange { background: radial-gradient(circle at 35% 28%, #ffd1a2 0%, #e88434 45%, #8b3d0f 100%); }
+
+    .stripe-h,
+    .stripe-v {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      opacity: 0.92;
+      mix-blend-mode: screen;
+    }
+    .stripe-h {
+      background: repeating-linear-gradient(
+        180deg,
+        rgba(255,255,255,0.82) 0px,
+        rgba(255,255,255,0.82) 7px,
+        rgba(255,255,255,0.08) 7px,
+        rgba(255,255,255,0.08) 14px
+      );
+    }
+    .stripe-v {
+      background: repeating-linear-gradient(
+        90deg,
+        rgba(255,255,255,0.82) 0px,
+        rgba(255,255,255,0.82) 7px,
+        rgba(255,255,255,0.08) 7px,
+        rgba(255,255,255,0.08) 14px
+      );
+    }
+    .bomb-core {
+      position: absolute;
+      inset: 16%;
+      border-radius: 50%;
+      background: radial-gradient(circle at 35% 32%, #fff6cf 0%, #3b2310 32%, #0d0705 66%, #000 100%);
+      box-shadow: 0 0 16px rgba(255,220,120,0.35), inset 0 0 12px rgba(255,255,255,0.1);
+      overflow: hidden;
+    }
+    .bomb-core::before {
+      content: '';
+      position: absolute;
+      inset: 14%;
+      border-radius: 50%;
+      background:
+        radial-gradient(circle at 20% 20%, #ff4a4a 0 12%, transparent 13%),
+        radial-gradient(circle at 78% 26%, #4ad0ff 0 11%, transparent 12%),
+        radial-gradient(circle at 36% 72%, #62df5d 0 12%, transparent 13%),
+        radial-gradient(circle at 74% 74%, #f0ca54 0 11%, transparent 12%),
+        radial-gradient(circle at 52% 49%, #cb79ff 0 12%, transparent 13%);
+      opacity: 0.95;
+    }
+
+    .controls-row {
+      width: min(100%, 760px);
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      justify-content: center;
+    }
+    .rpg-btn {
+      font-family: var(--font-ui);
+      font-size: 0.78rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: #f0d080;
+      background: linear-gradient(180deg,rgba(40,28,8,0.9) 0%,rgba(20,14,4,0.95) 100%);
+      border: 1px solid rgba(200,149,42,0.45);
+      padding: 10px 18px;
+      border-radius: 999px;
+      cursor: pointer;
+      transition: all 0.2s;
+      box-shadow: 0 1px 0 rgba(200,149,42,0.15), inset 0 1px 0 rgba(200,149,42,0.1);
+    }
+    .rpg-btn:hover {
+      border-color: rgba(200,149,42,0.75);
+      box-shadow: 0 0 18px 2px rgba(200,149,42,0.25),0 0 48px 8px rgba(180,120,20,0.15),inset 0 1px 0 rgba(200,149,42,0.2);
+      color: #f8e898;
+      transform: translateY(-1px);
+    }
+    .rpg-btn:active { transform: translateY(0); }
+
+    .side-panel {
+      display: flex;
+      flex-direction: column;
+      min-height: 800px;
+    }
+    .side-body {
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      flex: 1;
+    }
+    .list-card {
+      border-radius: 14px;
+      border: 1px solid rgba(200,149,42,0.16);
+      background: linear-gradient(180deg, rgba(255,255,255,0.03) 0%, rgba(0,0,0,0.12) 100%);
+      padding: 14px;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.03);
+    }
+    .card-title {
+      margin: 0 0 0.55rem;
+      font-family: var(--font-ui);
+      font-size: 0.72rem;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: var(--gold-light);
+    }
+    .card-copy,
+    .card-list {
+      margin: 0;
+      color: #d7c299;
+      font-size: 0.98rem;
+      line-height: 1.5;
+    }
+    .card-list {
+      padding-left: 1.2rem;
+    }
+    .card-list li + li { margin-top: 0.35rem; }
+    .legend-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-top: 8px;
+    }
+    .legend-swatch {
+      width: 22px;
+      height: 22px;
+      border-radius: 8px;
+      border: 1px solid rgba(255,255,255,0.18);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.1);
+      flex: 0 0 auto;
+    }
+    .legend-text {
+      color: #d7c299;
+      font-size: 0.92rem;
+    }
+
+    .victory-banner,
+    .defeat-banner {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      transform: translate(-50%, -50%) scale(0.1);
+      width: var(--message-width);
+      max-width: 640px;
+      padding: 18px 18px;
+      text-align: center;
+      border-radius: 18px;
+      font-family: var(--font-display);
+      font-size: clamp(1rem, 4vw, 2.1rem);
+      line-height: 1.15;
+      letter-spacing: 0.05em;
+      pointer-events: none;
+      opacity: 0;
+      z-index: 30;
+      box-shadow: 0 0 24px rgba(0,0,0,0.42), inset 0 1px 0 rgba(255,255,255,0.08);
+    }
+    .victory-banner {
+      border: 1px solid rgba(240,208,128,0.62);
+      background: radial-gradient(circle at 50% 35%, rgba(120,80,16,0.95), rgba(30,16,6,0.97));
+      color: #f7e6a8;
+      text-shadow: 0 0 10px rgba(255, 216, 120, 0.3);
+    }
+    .defeat-banner {
+      border: 1px solid rgba(200,90,90,0.55);
+      background: radial-gradient(circle at 50% 35%, rgba(90,20,16,0.95), rgba(25,8,6,0.97));
+      color: #ffd0c8;
+      text-shadow: 0 0 10px rgba(255, 130, 120, 0.24);
+    }
+    .victory-banner.show,
+    .defeat-banner.show {
+      animation: bannerGrow 1.75s ease forwards;
+    }
+    @keyframes bannerGrow {
+      0% { transform: translate(-50%, -50%) scale(0.1); opacity: 0; }
+      12% { opacity: 1; }
+      43% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+      76% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+      100% { transform: translate(-50%, -50%) scale(1); opacity: 0; }
+    }
+
+    .confetti-layer {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      overflow: hidden;
+      z-index: 25;
+    }
+    .confetti {
+      position: absolute;
+      width: 12px;
+      height: 18px;
+      border-radius: 3px;
+      opacity: 0;
+      animation: confettiBurst 1500ms cubic-bezier(.14,.74,.29,1) forwards;
+      box-shadow: 0 0 10px rgba(255,255,255,0.12);
+    }
+    @keyframes confettiBurst {
+      0% {
+        transform: translate(var(--sx), var(--sy)) rotate(0deg) scale(0.6);
+        opacity: 0;
+      }
+      8% { opacity: 1; }
+      100% {
+        transform: translate(var(--tx), var(--ty)) rotate(var(--rot)) scale(1);
+        opacity: 0;
+      }
+    }
+
+
+    .progress-shell {
+      width: min(100%, 760px);
+      border-radius: 999px;
+      padding: 4px;
+      border: 1px solid rgba(200,149,42,0.24);
+      background: linear-gradient(180deg, rgba(255,255,255,0.03), rgba(0,0,0,0.2));
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.03);
+    }
+    .progress-track {
+      height: 18px;
+      border-radius: 999px;
+      background: rgba(0,0,0,0.34);
+      overflow: hidden;
+      position: relative;
+    }
+    .progress-fill {
+      position: absolute;
+      inset: 0 auto 0 0;
+      width: 0%;
+      border-radius: inherit;
+      background:
+        linear-gradient(90deg, #8b4e12 0%, #c07b19 22%, #f0d080 50%, #c07b19 78%, #8b4e12 100%);
+      box-shadow: 0 0 16px rgba(240,208,128,0.28);
+      transition: width 0.35s ease;
+    }
+    .progress-fill::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(120deg, transparent 20%, rgba(255,255,255,0.34) 50%, transparent 80%);
+      transform: translateX(-100%);
+      animation: progressSweep 2.2s linear infinite;
+    }
+    @keyframes progressSweep {
+      to { transform: translateX(220%); }
+    }
+    .progress-text {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: var(--font-ui);
+      font-size: 0.7rem;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: #f8e6ab;
+      text-shadow: 0 1px 2px rgba(0,0,0,0.65);
+      z-index: 1;
+    }
+
+    .board-frame.shake {
+      animation: boardShake 0.4s ease;
+    }
+    @keyframes boardShake {
+      0%,100% { transform: translateX(0); }
+      20% { transform: translateX(-5px); }
+      40% { transform: translateX(4px); }
+      60% { transform: translateX(-3px); }
+      80% { transform: translateX(2px); }
+    }
+
+    .tile.invalid {
+      animation: invalidWiggle 0.26s ease;
+    }
+    @keyframes invalidWiggle {
+      0%,100% { transform: translateX(0) scale(1); }
+      25% { transform: translateX(-7px) scale(1.02); }
+      50% { transform: translateX(6px) scale(1.02); }
+      75% { transform: translateX(-4px) scale(1.01); }
+    }
+
+    .tile.special {
+      box-shadow:
+        inset 0 1px 0 rgba(255,255,255,0.12),
+        0 0 16px rgba(255,224,132,0.18),
+        0 7px 10px rgba(0,0,0,0.24);
+    }
+    .tile.special::after {
+      animation: specialSweep 2.7s linear infinite;
+      background:
+        linear-gradient(135deg, rgba(255,255,255,0.08) 0%, transparent 40%, rgba(255,255,255,0.18) 52%, transparent 64%, rgba(200,149,42,0.05) 100%);
+      background-size: 200% 200%;
+    }
+    @keyframes specialSweep {
+      0% { background-position: 0% 0%; }
+      100% { background-position: 200% 200%; }
+    }
+
+    .wrapped-core {
+      position: absolute;
+      inset: 20%;
+      border-radius: 12px;
+      border: 2px solid rgba(255,240,220,0.72);
+      box-shadow: 0 0 14px rgba(255,227,168,0.28), inset 0 0 12px rgba(255,255,255,0.18);
+      transform: rotate(45deg);
+      background:
+        radial-gradient(circle at 30% 30%, rgba(255,255,255,0.42) 0%, rgba(255,255,255,0.12) 32%, rgba(255,255,255,0.02) 60%, transparent 62%),
+        linear-gradient(135deg, rgba(255,255,255,0.08), rgba(0,0,0,0.1));
+    }
+    .wrapped-core::before,
+    .wrapped-core::after {
+      content: '';
+      position: absolute;
+      background: rgba(255,245,220,0.78);
+      box-shadow: 0 0 8px rgba(255,240,220,0.22);
+    }
+    .wrapped-core::before {
+      left: 50%;
+      top: -14%;
+      width: 2px;
+      height: 128%;
+      transform: translateX(-50%);
+    }
+    .wrapped-core::after {
+      top: 50%;
+      left: -14%;
+      height: 2px;
+      width: 128%;
+      transform: translateY(-50%);
+    }
+
+    .effects-layer,
+    .score-layer {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      overflow: hidden;
+      z-index: 20;
+    }
+    .score-popup {
+      position: absolute;
+      transform: translate(-50%, -50%);
+      font-family: var(--font-display);
+      font-size: clamp(0.9rem, 2.3vw, 1.3rem);
+      letter-spacing: 0.04em;
+      color: #ffe9b5;
+      text-shadow: 0 0 10px rgba(255,214,120,0.2), 0 2px 8px rgba(0,0,0,0.75);
+      white-space: nowrap;
+      opacity: 0;
+      animation: scoreRise 950ms ease-out forwards;
+      z-index: 21;
+    }
+    @keyframes scoreRise {
+      0% { opacity: 0; transform: translate(-50%, -10%) scale(0.6); }
+      12% { opacity: 1; }
+      100% { opacity: 0; transform: translate(-50%, -150%) scale(1.08); }
+    }
+
+    .blast-line {
+      position: absolute;
+      background: linear-gradient(90deg, rgba(255,255,255,0), rgba(255,232,171,0.95), rgba(255,255,255,0));
+      opacity: 0;
+      filter: blur(1px);
+      animation: blastFlash 460ms ease-out forwards;
+      z-index: 19;
+    }
+    .blast-line.row {
+      height: 12px;
+      border-radius: 999px;
+      transform: translateY(-50%);
+    }
+    .blast-line.col {
+      width: 12px;
+      border-radius: 999px;
+      background: linear-gradient(180deg, rgba(255,255,255,0), rgba(255,232,171,0.95), rgba(255,255,255,0));
+      transform: translateX(-50%);
+    }
+    @keyframes blastFlash {
+      0% { opacity: 0; transform: scale(0.4); }
+      30% { opacity: 1; }
+      100% { opacity: 0; transform: scale(1.06); }
+    }
+
+    .rpg-footer {
+      margin-top: auto;
+      padding: 12px 18px 18px;
+      text-align: center;
+      color: var(--text-dim);
+      font-style: italic;
+      font-size: 0.82rem;
+      letter-spacing: 0.04em;
+      border-top: 1px solid rgba(200,149,42,0.12);
+    }
+
+    @media (max-width: 980px) {
+      .main-wrap { grid-template-columns: 1fr; }
+      .side-panel { min-height: 0; }
+      .board-panel { min-height: 0; }
+    }
+    @media (max-width: 720px) {
+      :root { --cell-size: min(10.35vw, 58px); }
+      .metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .board-area { padding: 16px 12px 18px; }
+      .panel-header { padding: 12px 12px 8px; }
+    }
+  </style>
+</head>
+<body>
+  <div id="app">
+    <header class="site-header">
+      <div class="header-inner">
+        <div class="header-row">
+          <a href="index.html" class="rpg-back">Hub</a>
+          <div class="header-center">
+            <img class="phoenix-mark" src="RPG Favicon no background copy.png" alt="Rising Phoenix Games logo">
+            <div class="title-block">
+              <h1 class="game-title">Candy Crush</h1>
+              <p class="game-subtitle">Match the sweets. Trigger cascades. Chase a sugarstorm victory.</p>
+            </div>
+          </div>
+          <div class="rpg-back header-spacer">Hub</div>
+        </div>
+      </div>
+    </header>
+
+    <main class="main-wrap">
+      <section class="panel board-panel">
+        <div class="panel-header">
+          <div class="panel-label">Puzzle Board</div>
+          <div class="status-bar" id="status-bar">Swap adjacent candies to form matches of three or more.</div>
+        </div>
+
+        <div class="board-area">
+          <div class="metrics">
+            <div class="metric">
+              <div class="metric-label">Score</div>
+              <div class="metric-value" id="score-value">0</div>
+              <div class="metric-sub">Current run</div>
+            </div>
+            <div class="metric">
+              <div class="metric-label">Target</div>
+              <div class="metric-value" id="target-value">3000</div>
+              <div class="metric-sub">Reach to win</div>
+            </div>
+            <div class="metric">
+              <div class="metric-label">Moves</div>
+              <div class="metric-value" id="moves-value">24</div>
+              <div class="metric-sub">Before the jar empties</div>
+            </div>
+            <div class="metric">
+              <div class="metric-label">Cascade</div>
+              <div class="metric-value" id="cascade-value">0×</div>
+              <div class="metric-sub">Chain multiplier</div>
+            </div>
+          </div>
+
+          <div class="progress-shell" aria-label="Target progress">
+            <div class="progress-track">
+              <div class="progress-fill" id="progress-fill"></div>
+              <div class="progress-text" id="progress-text">0% to target</div>
+            </div>
+          </div>
+
+          <div class="board-frame" id="board-frame">
+            <div id="board" class="board" aria-label="Candy Crush board"></div>
+            <div id="effects-layer" class="effects-layer"></div>
+            <div id="score-layer" class="score-layer"></div>
+            <div id="confetti-layer" class="confetti-layer"></div>
+            <div id="victory-banner" class="victory-banner">SWEET VICTORY!</div>
+            <div id="defeat-banner" class="defeat-banner">OUT OF MOVES</div>
+          </div>
+
+          <div class="controls-row">
+            <button class="rpg-btn" id="new-game-btn">New Game</button>
+            <button class="rpg-btn" id="shuffle-btn">Shuffle Board</button>
+            <button class="rpg-btn" id="hint-btn">Hint</button>
+          </div>
+        </div>
+      </section>
+
+      <aside class="panel side-panel">
+        <div class="panel-header">
+          <div class="panel-label">Game Guide</div>
+          <div class="status-bar" id="side-status">Mouse, touch, and drag swapping are enabled.</div>
+        </div>
+        <div class="side-body">
+          <div class="list-card">
+            <h2 class="card-title">Rules</h2>
+            <ul class="card-list">
+              <li>Swap one candy with an orthogonally adjacent candy.</li>
+              <li>Valid swaps must create a line of at least three matching candies.</li>
+              <li>Each valid swap consumes one move.</li>
+              <li>Reach the target score before moves run out to win.</li>
+              <li>L and T shapes create wrapped candies with explosive area clears.</li>
+            </ul>
+          </div>
+
+          <div class="list-card">
+            <h2 class="card-title">Special Candies</h2>
+            <div class="legend-row">
+              <div class="legend-swatch candy-red" style="position:relative; overflow:hidden;"><span class="stripe-h"></span></div>
+              <div class="legend-text">4 in a row creates a striped candy that clears a full row or column.</div>
+            </div>
+            <div class="legend-row">
+              <div class="legend-swatch" style="position:relative; overflow:hidden; background: radial-gradient(circle at 35% 28%, #fff6cf 0%, #3b2310 32%, #0d0705 66%, #000 100%);"><span class="bomb-core" style="inset:2px;"></span></div>
+              <div class="legend-text">5 in a row creates a color bomb that clears every candy of one color.</div>
+                        <div class="legend-row">
+              <div class="legend-swatch candy-purple" style="position:relative; overflow:hidden;"><span class="wrapped-core"></span></div>
+              <div class="legend-text">L and T matches create wrapped candies that detonate in a 3×3 burst.</div>
+            </div>
+          </div>
+
+          <div class="list-card">
+            <h2 class="card-title">How to Play</h2>
+            <p class="card-copy">Click then click an adjacent candy, or drag one candy onto another. On touch screens, tap one candy and then an adjacent candy. Cascades increase your score rapidly, so do not chase only the first obvious match.</p>
+          </div>
+
+          <div class="list-card">
+            <h2 class="card-title">Scoring</h2>
+            <ul class="card-list">
+              <li>Standard candy cleared: 60 points.</li>
+              <li>Striped candy activation: bonus 120 points per candy cleared in the blast.</li>
+              <li>Color bomb activation: bonus 180 points per candy cleared by the blast.</li>
+              <li>Wrapped candy detonation: bonus 140 points for each candy caught in the blast.</li>
+              <li>Cascades multiply match value by chain depth.</li>
+            </ul>
+          </div>
+        </div>
+      </aside>
+    </main>
+
+    <footer class="rpg-footer">© <span id="year"></span> Rising Phoenix Games · Crafted for The Rising Phoenix Gallery</footer>
+  </div>
+
+  <script>
+    const COLS = 8;
+    const ROWS = 8;
+    const BASE_TARGET = 7000;
+    const BASE_MOVES = 24;
+    const COLORS = ['red', 'blue', 'green', 'gold', 'purple', 'orange'];
+
+    const boardEl = document.getElementById('board');
+    const statusBarEl = document.getElementById('status-bar');
+    const sideStatusEl = document.getElementById('side-status');
+    const scoreValueEl = document.getElementById('score-value');
+    const targetValueEl = document.getElementById('target-value');
+    const movesValueEl = document.getElementById('moves-value');
+    const cascadeValueEl = document.getElementById('cascade-value');
+    const progressFillEl = document.getElementById('progress-fill');
+    const progressTextEl = document.getElementById('progress-text');
+    const boardFrameEl = document.getElementById('board-frame');
+    const effectsLayerEl = document.getElementById('effects-layer');
+    const scoreLayerEl = document.getElementById('score-layer');
+    const confettiLayerEl = document.getElementById('confetti-layer');
+    const victoryBannerEl = document.getElementById('victory-banner');
+    const defeatBannerEl = document.getElementById('defeat-banner');
+
+    let board = [];
+    let score = 0;
+    let targetScore = BASE_TARGET;
+    let movesLeft = BASE_MOVES;
+    let cascadeDepth = 0;
+    let selected = null;
+    let draggingFrom = null;
+    let locked = false;
+    let gameState = 'playing';
+    let hintPair = null;
+    let highestCascade = 0;
+
+    function randColor() {
+      return COLORS[Math.floor(Math.random() * COLORS.length)];
+    }
+
+    function createCandy(color = randColor(), special = null) {
+      return { color, special, key: Math.random().toString(36).slice(2) + Date.now().toString(36) };
+    }
+
+    function copyCandy(candy) {
+      if (!candy) return null;
+      return { color: candy.color, special: candy.special, key: candy.key || Math.random().toString(36).slice(2) };
+    }
+
+    function updateReadouts() {
+      scoreValueEl.textContent = score.toLocaleString();
+      targetValueEl.textContent = targetScore.toLocaleString();
+      movesValueEl.textContent = movesLeft;
+      cascadeValueEl.textContent = cascadeDepth > 0 ? `${cascadeDepth}\u00D7` : '0×';
+    }
+
+    function setStatus(main, side = main) {
+      statusBarEl.textContent = main;
+      sideStatusEl.textContent = side;
+    }
+
+    function toIndex(r, c) {
+      return r * COLS + c;
+    }
+
+    function inBounds(r, c) {
+      return r >= 0 && r < ROWS && c >= 0 && c < COLS;
+    }
+
+    function isAdjacent(a, b) {
+      return Math.abs(a.r - b.r) + Math.abs(a.c - b.c) === 1;
+    }
+
+    function swapCells(a, b) {
+      const tmp = board[a.r][a.c];
+      board[a.r][a.c] = board[b.r][b.c];
+      board[b.r][b.c] = tmp;
+    }
+
+    function buildInitialBoard() {
+      board = Array.from({ length: ROWS }, () => Array(COLS).fill(null));
+      for (let r = 0; r < ROWS; r++) {
+        for (let c = 0; c < COLS; c++) {
+          let candy;
+          do {
+            candy = createCandy();
+            board[r][c] = candy;
+          } while (createsInitialMatch(r, c));
+        }
+      }
+      while (!findPossibleMoves().length) shuffleBoard(false);
+    }
+
+    function createsInitialMatch(r, c) {
+      const candy = board[r][c];
+      if (!candy) return false;
+      if (c >= 2) {
+        const a = board[r][c - 1];
+        const b = board[r][c - 2];
+        if (a && b && a.color === candy.color && b.color === candy.color) return true;
+      }
+      if (r >= 2) {
+        const a = board[r - 1][c];
+        const b = board[r - 2][c];
+        if (a && b && a.color === candy.color && b.color === candy.color) return true;
+      }
+      return false;
+    }
+
+    function renderBoard() {
+      boardEl.innerHTML = '';
+      for (let r = 0; r < ROWS; r++) {
+        for (let c = 0; c < COLS; c++) {
+          const tile = document.createElement('button');
+          tile.type = 'button';
+          tile.className = 'tile';
+          tile.dataset.r = r;
+          tile.dataset.c = c;
+          const candy = board[r][c];
+
+          if (!candy) {
+            tile.classList.add('empty');
+          } else {
+            tile.classList.add(`candy-${candy.color}`);
+            if (selected && selected.r === r && selected.c === c) tile.classList.add('selected');
+            if (hintPair && hintPair.some(p => p.r === r && p.c === c)) tile.classList.add('hint');
+            if (candy.special) tile.classList.add('special');
+            if (candy.special === 'striped-h') {
+              const stripe = document.createElement('span');
+              stripe.className = 'stripe-h';
+              tile.appendChild(stripe);
+            } else if (candy.special === 'striped-v') {
+              const stripe = document.createElement('span');
+              stripe.className = 'stripe-v';
+              tile.appendChild(stripe);
+            } else if (candy.special === 'color-bomb') {
+              const bomb = document.createElement('span');
+              bomb.className = 'bomb-core';
+              tile.appendChild(bomb);
+            } else if (candy.special === 'wrapped') {
+              const wrap = document.createElement('span');
+              wrap.className = 'wrapped-core';
+              tile.appendChild(wrap);
+            }
+          }
+
+          tile.addEventListener('click', onTileClick);
+          tile.addEventListener('pointerdown', onPointerDown);
+          tile.addEventListener('pointerup', onPointerUp);
+          tile.addEventListener('pointerenter', onPointerEnter);
+          tile.addEventListener('dragstart', ev => ev.preventDefault());
+          boardEl.appendChild(tile);
+        }
+      }
+      updateReadouts();
+    }
+
+    function onTileClick(event) {
+      if (locked || gameState !== 'playing') return;
+      const r = Number(event.currentTarget.dataset.r);
+      const c = Number(event.currentTarget.dataset.c);
+      if (!board[r][c]) return;
+      hintPair = null;
+
+      if (!selected) {
+        selected = { r, c };
+        setStatus('Candy selected. Choose an adjacent candy to swap.', 'Tap or click an adjacent candy to confirm the swap.');
+        renderBoard();
+        return;
+      }
+
+      if (selected.r === r && selected.c === c) {
+        selected = null;
+        setStatus('Selection cleared.', 'Choose any candy to begin a new swap.');
+        renderBoard();
+        return;
+      }
+
+      if (!isAdjacent(selected, { r, c })) {
+        selected = { r, c };
+        setStatus('That was not adjacent. Selection moved to the new candy.', 'Only orthogonally adjacent candies can be swapped.');
+        renderBoard();
+        return;
+      }
+
+      const from = { ...selected };
+      selected = null;
+      attemptSwap(from, { r, c });
+    }
+
+    function onPointerDown(event) {
+      if (locked || gameState !== 'playing') return;
+      const tile = event.currentTarget;
+      draggingFrom = { r: Number(tile.dataset.r), c: Number(tile.dataset.c) };
+      tile.setPointerCapture?.(event.pointerId);
+    }
+
+    function onPointerEnter(event) {
+      if (!draggingFrom || locked || gameState !== 'playing') return;
+      const tile = event.currentTarget;
+      const target = { r: Number(tile.dataset.r), c: Number(tile.dataset.c) };
+      if (isAdjacent(draggingFrom, target)) {
+        const from = draggingFrom;
+        draggingFrom = null;
+        selected = null;
+        hintPair = null;
+        attemptSwap(from, target);
+      }
+    }
+
+    function onPointerUp() {
+      draggingFrom = null;
+    }
+
+    async function attemptSwap(a, b) {
+      if (locked || gameState !== 'playing') return;
+      locked = true;
+      hintPair = null;
+      swapCells(a, b);
+      renderBoard();
+      await wait(120);
+
+      const first = board[a.r][a.c];
+      const second = board[b.r][b.c];
+      const specialResult = triggerSpecialSwap(a, b, first, second);
+      const hasMatch = specialResult.activated || findMatches().groups.length > 0;
+
+      movesLeft = Math.max(0, movesLeft - 1);
+
+      if (!hasMatch) {
+        setStatus('Swap made. No burst triggered from that exchange.', 'Any orthogonally adjacent candies may be swapped, even without an immediate match.');
+        renderBoard();
+        updateReadouts();
+        checkEndState();
+        if (gameState !== 'playing') {
+          locked = false;
+          return;
+        }
+        locked = false;
+        if (!findPossibleMoves().length) {
+          setStatus('No legal match remains in this layout. The board has been reshuffled.', 'A fresh arrangement has been dealt.');
+          shuffleBoard(false);
+        }
+        return;
+      }
+
+      setStatus('Swap made. Resolving the sugarstorm...', 'Matches and special effects are being cleared.');
+      await resolveBoard(specialResult.toClear, specialResult.specialBonuses, [a, b]);
+      renderBoard();
+      checkEndState();
+      locked = false;
+    }
+
+    function triggerSpecialSwap(a, b, first, second) {
+      const result = { activated: false, toClear: new Set(), specialBonuses: 0 };
+      if (!first || !second) return result;
+
+      const cellA = `${a.r},${a.c}`;
+      const cellB = `${b.r},${b.c}`;
+
+      if (first.special === 'color-bomb' && second.special === 'color-bomb') {
+        result.activated = true;
+        for (let r = 0; r < ROWS; r++) {
+          for (let c = 0; c < COLS; c++) result.toClear.add(`${r},${c}`);
+        }
+        result.specialBonuses += 900;
+        triggerBoardShake();
+        return result;
+      }
+
+      if (first.special === 'color-bomb' || second.special === 'color-bomb') {
+        result.activated = true;
+        const bombCell = first.special === 'color-bomb' ? cellA : cellB;
+        const partner = first.special === 'color-bomb' ? second : first;
+        result.toClear.add(bombCell);
+
+        if (partner.special === 'striped-h' || partner.special === 'striped-v') {
+          for (let r = 0; r < ROWS; r++) {
+            for (let c = 0; c < COLS; c++) {
+              const candy = board[r][c];
+              if (candy && candy.color === partner.color) {
+                candy.special = Math.random() < 0.5 ? 'striped-h' : 'striped-v';
+                result.toClear.add(`${r},${c}`);
+              }
+            }
+          }
+          result.specialBonuses += 420;
+        } else if (partner.special === 'wrapped') {
+          for (let r = 0; r < ROWS; r++) {
+            for (let c = 0; c < COLS; c++) {
+              const candy = board[r][c];
+              if (candy && candy.color === partner.color) {
+                candy.special = 'wrapped';
+                result.toClear.add(`${r},${c}`);
+              }
+            }
+          }
+          result.specialBonuses += 480;
+        } else {
+          clearColor(partner.color, result.toClear);
+          result.specialBonuses += 180;
+        }
+        triggerBoardShake();
+        return result;
+      }
+
+      if (first.special && second.special) {
+        result.activated = true;
+        const specials = [first.special, second.special].sort().join('|');
+        if (specials.includes('wrapped') && specials.includes('striped')) {
+          addCrossArea(a.r, a.c, result.toClear, 1, 2);
+          addCrossArea(b.r, b.c, result.toClear, 2, 1);
+          result.specialBonuses += 520;
+        } else if (first.special === 'wrapped' && second.special === 'wrapped') {
+          addArea(a.r, a.c, result.toClear, 2);
+          addArea(b.r, b.c, result.toClear, 2);
+          result.specialBonuses += 640;
+        } else if (first.special.startsWith('striped') && second.special.startsWith('striped')) {
+          addWholeRow(a.r, result.toClear);
+          addWholeCol(a.c, result.toClear);
+          addWholeRow(b.r, result.toClear);
+          addWholeCol(b.c, result.toClear);
+          result.specialBonuses += 420;
+        } else {
+          result.activated = false;
+        }
+        if (result.activated) triggerBoardShake();
+        return result;
+      }
+
+      return result;
+    }
+
+    function clearColor(color, set) {
+      for (let r = 0; r < ROWS; r++) {
+        for (let c = 0; c < COLS; c++) {
+          if (board[r][c] && board[r][c].color === color) set.add(`${r},${c}`);
+        }
+      }
+    }
+
+    function addWholeRow(r, set) {
+      for (let c = 0; c < COLS; c++) set.add(`${r},${c}`);
+    }
+    function addWholeCol(c, set) {
+      for (let r = 0; r < ROWS; r++) set.add(`${r},${c}`);
+    }
+    function addArea(centerR, centerC, set, radius = 1) {
+      for (let r = centerR - radius; r <= centerR + radius; r++) {
+        for (let c = centerC - radius; c <= centerC + radius; c++) {
+          if (inBounds(r, c)) set.add(`${r},${c}`);
+        }
+      }
+    }
+    function addCrossArea(centerR, centerC, set, rowRadius = 1, colRadius = 1) {
+      for (let r = centerR - rowRadius; r <= centerR + rowRadius; r++) {
+        for (let c = 0; c < COLS; c++) if (inBounds(r, c)) set.add(`${r},${c}`);
+      }
+      for (let c = centerC - colRadius; c <= centerC + colRadius; c++) {
+        for (let r = 0; r < ROWS; r++) if (inBounds(r, c)) set.add(`${r},${c}`);
+      }
+    }
+
+    function findMatches() {
+      const groups = [];
+      const covered = new Set();
+
+      for (let r = 0; r < ROWS; r++) {
+        let c = 0;
+        while (c < COLS) {
+          const candy = board[r][c];
+          if (!candy) { c++; continue; }
+          let end = c + 1;
+          while (end < COLS && board[r][end] && board[r][end].color === candy.color) end++;
+          const len = end - c;
+          if (len >= 3) {
+            const cells = [];
+            for (let x = c; x < end; x++) {
+              cells.push({ r, c: x });
+              covered.add(`${r},${x}`);
+            }
+            groups.push({ type: 'row', cells, color: candy.color, length: len });
+          }
+          c = end;
+        }
+      }
+
+      for (let c = 0; c < COLS; c++) {
+        let r = 0;
+        while (r < ROWS) {
+          const candy = board[r][c];
+          if (!candy) { r++; continue; }
+          let end = r + 1;
+          while (end < ROWS && board[end][c] && board[end][c].color === candy.color) end++;
+          const len = end - r;
+          if (len >= 3) {
+            const cells = [];
+            for (let y = r; y < end; y++) cells.push({ r: y, c });
+            groups.push({ type: 'col', cells, color: candy.color, length: len });
+          }
+          r = end;
+        }
+      }
+
+      return { groups, covered };
+    }
+
+    function determineSpecials(groups, preferredCells = []) {
+      const specials = new Map();
+      const cellMap = new Map();
+
+      for (const group of groups) {
+        for (const cell of group.cells) {
+          const key = `${cell.r},${cell.c}`;
+          if (!cellMap.has(key)) cellMap.set(key, []);
+          cellMap.get(key).push(group);
+        }
+      }
+
+      const preferredKeys = new Set(preferredCells.map(cell => `${cell.r},${cell.c}`));
+
+      function choosePreferredCell(cells) {
+        const preferred = cells.find(cell => preferredKeys.has(`${cell.r},${cell.c}`));
+        return preferred || cells[Math.floor(cells.length / 2)];
+      }
+
+      for (const [key, overlapping] of cellMap.entries()) {
+        const hasRow = overlapping.some(g => g.type === 'row');
+        const hasCol = overlapping.some(g => g.type === 'col');
+        const maxLen = Math.max(...overlapping.map(g => g.length));
+        if (hasRow && hasCol) {
+          specials.set(key, maxLen >= 5 ? 'color-bomb' : 'wrapped');
+        }
+      }
+
+      for (const group of groups) {
+        if (group.length >= 5) {
+          const cell = choosePreferredCell(group.cells);
+          const key = `${cell.r},${cell.c}`;
+          if (!specials.has(key)) specials.set(key, 'color-bomb');
+        } else if (group.length === 4) {
+          const cell = choosePreferredCell(group.cells);
+          const key = `${cell.r},${cell.c}`;
+          if (!specials.has(key)) specials.set(key, group.type === 'row' ? 'striped-h' : 'striped-v');
+        }
+      }
+      return specials;
+    }
+
+    async function resolveBoard(initialClearSet = new Set(), initialSpecialBonuses = 0, preferredSpecialCells = []) {
+      cascadeDepth = 0;
+      let carrySet = new Set(initialClearSet || []);
+      let carryBonus = initialSpecialBonuses || 0;
+      let totalResolved = 0;
+
+      while (true) {
+        const { groups } = findMatches();
+        if (!groups.length && carrySet.size === 0) break;
+        cascadeDepth += 1;
+        highestCascade = Math.max(highestCascade, cascadeDepth);
+
+        const specialsToCreate = determineSpecials(groups, preferredSpecialCells);
+        const clearSet = new Set(carrySet);
+        let gained = carryBonus;
+
+        for (const group of groups) {
+          gained += group.cells.length * 60 * cascadeDepth;
+          for (const cell of group.cells) clearSet.add(`${cell.r},${cell.c}`);
+        }
+
+        for (const key of specialsToCreate.keys()) clearSet.delete(key);
+        gained += Math.max(0, clearSet.size - groups.reduce((a, g) => a + g.cells.length, 0)) * 120;
+
+        const expanded = expandTriggeredSpecials(clearSet);
+        if (clearSet.size >= 8 || cascadeDepth >= 2) triggerBoardShake();
+        for (const key of expanded.extraClears) clearSet.add(key);
+        gained += expanded.bonus * cascadeDepth;
+        totalResolved += clearSet.size;
+
+        markClearing(clearSet);
+        setStatus(`Cascade ${cascadeDepth}× resolving. ${clearSet.size} candies burst.`, 'Chain reactions multiply your score.');
+        updateReadouts();
+        spawnScorePopup(gained, clearSet);
+        await wait(280);
+
+        for (const key of clearSet) {
+          const [r, c] = key.split(',').map(Number);
+          board[r][c] = null;
+        }
+
+        for (const [key, special] of specialsToCreate.entries()) {
+          const [r, c] = key.split(',').map(Number);
+          const color = groups.find(g => g.cells.some(cell => cell.r === r && cell.c === c))?.color || board[r][c]?.color || randColor();
+          board[r][c] = createCandy(color, special);
+        }
+
+        score += gained;
+        carrySet = new Set();
+        carryBonus = 0;
+        preferredSpecialCells = [];
+        collapseBoard();
+        renderBoard();
+        await wait(220);
+      }
+
+      if (totalResolved > 0) {
+        const possible = findPossibleMoves();
+        if (!possible.length) {
+          setStatus('No legal matches remain. The board has been reshuffled.', 'A fresh arrangement has been dealt.');
+          shuffleBoard(false);
+        } else {
+          setStatus('Board stable. Seek the next high-value cascade.', 'Hint is available if the next move is not obvious.');
+        }
+      }
+
+      cascadeDepth = 0;
+      updateReadouts();
+    }
+
+    function expandTriggeredSpecials(initialSet) {
+      const queue = [...initialSet];
+      const seen = new Set(initialSet);
+      let bonus = 0;
+
+      while (queue.length) {
+        const key = queue.shift();
+        const [r, c] = key.split(',').map(Number);
+        const candy = board[r][c];
+        if (!candy || !candy.special) continue;
+
+        if (candy.special === 'striped-h') {
+          bonus += 120;
+          spawnBlastLine('row', r, c);
+          for (let x = 0; x < COLS; x++) {
+            const k = `${r},${x}`;
+            if (!seen.has(k)) { seen.add(k); queue.push(k); }
+          }
+        } else if (candy.special === 'striped-v') {
+          bonus += 120;
+          spawnBlastLine('col', r, c);
+          for (let y = 0; y < ROWS; y++) {
+            const k = `${y},${c}`;
+            if (!seen.has(k)) { seen.add(k); queue.push(k); }
+          }
+        } else if (candy.special === 'wrapped') {
+          bonus += 140;
+          addArea(r, c, seen, 1);
+          for (let y = r - 1; y <= r + 1; y++) {
+            for (let x = c - 1; x <= c + 1; x++) {
+              if (inBounds(y, x)) {
+                const k = `${y},${x}`;
+                if (!seen.has(k)) { seen.add(k); queue.push(k); }
+              }
+            }
+          }
+        } else if (candy.special === 'color-bomb') {
+          bonus += 180;
+          const targetColor = COLORS[Math.floor(Math.random() * COLORS.length)];
+          for (let y = 0; y < ROWS; y++) {
+            for (let x = 0; x < COLS; x++) {
+              if (board[y][x] && board[y][x].color === targetColor) {
+                const k = `${y},${x}`;
+                if (!seen.has(k)) { seen.add(k); queue.push(k); }
+              }
+            }
+          }
+        }
+      }
+
+      return { extraClears: seen, bonus };
+    }
+
+    function markClearing(clearSet) {
+      clearSet.forEach(key => {
+        const el = getTileElementByKey(key);
+        if (el) el.classList.add('clearing');
+      });
+    }
+
+    function getTileElementByKey(key) {
+      const [r, c] = key.split(',');
+      return boardEl.querySelector(`.tile[data-r="${r}"][data-c="${c}"]`);
+    }
+
+    function collapseBoard() {
+      for (let c = 0; c < COLS; c++) {
+        const survivors = [];
+        for (let r = ROWS - 1; r >= 0; r--) {
+          if (board[r][c]) survivors.push(board[r][c]);
+        }
+        let r = ROWS - 1;
+        for (const candy of survivors) board[r--][c] = candy;
+        while (r >= 0) board[r--][c] = createCandy();
+      }
+      // prevent accidental spontaneous starting matches from new fill loop only after cascades resolved naturally
+    }
+
+    function findPossibleMoves() {
+      const moves = [];
+      for (let r = 0; r < ROWS; r++) {
+        for (let c = 0; c < COLS; c++) {
+          const neighbors = [
+            { r, c: c + 1 },
+            { r: r + 1, c }
+          ];
+          for (const n of neighbors) {
+            if (!inBounds(n.r, n.c)) continue;
+            swapCells({ r, c }, n);
+            const a = board[r][c];
+            const b = board[n.r][n.c];
+            const valid = (a?.special === 'color-bomb' || b?.special === 'color-bomb') || findMatches().groups.length > 0;
+            swapCells({ r, c }, n);
+            if (valid) moves.push([{ r, c }, { r: n.r, c: n.c }]);
+          }
+        }
+      }
+      return moves;
+    }
+
+    function shuffleBoard(consumeMove = true) {
+      if (locked || gameState !== 'playing') return;
+      if (consumeMove && movesLeft <= 0) return;
+
+      const candies = [];
+      for (let r = 0; r < ROWS; r++) {
+        for (let c = 0; c < COLS; c++) candies.push(copyCandy(board[r][c]));
+      }
+      do {
+        for (let i = candies.length - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1));
+          [candies[i], candies[j]] = [candies[j], candies[i]];
+        }
+        let idx = 0;
+        for (let r = 0; r < ROWS; r++) {
+          for (let c = 0; c < COLS; c++) board[r][c] = copyCandy(candies[idx++]);
+        }
+      } while (findMatches().groups.length > 0 || !findPossibleMoves().length);
+
+      if (consumeMove) movesLeft = Math.max(0, movesLeft - 1);
+      selected = null;
+      hintPair = null;
+      renderBoard();
+      setStatus('The board has been reshuffled.', consumeMove ? 'One move was spent to refresh the layout.' : 'A fresh layout was generated to keep the game alive.');
+      checkEndState();
+    }
+
+    function showHint() {
+      if (locked || gameState !== 'playing') return;
+      const moves = findPossibleMoves();
+      if (!moves.length) {
+        setStatus('No move exists in this layout. The board will be shuffled.', 'An automatic reshuffle is needed.');
+        shuffleBoard(false);
+        return;
+      }
+      hintPair = moves[Math.floor(Math.random() * moves.length)];
+      renderBoard();
+      setStatus('Hint highlighted. Try swapping the glowing candies.', 'Hints do not consume moves.');
+      setTimeout(() => {
+        hintPair = null;
+        renderBoard();
+      }, 1800);
+    }
+
+    function checkEndState() {
+      updateReadouts();
+      if (score >= targetScore && gameState === 'playing') {
+        gameState = 'won';
+        triggerVictory();
+        return;
+      }
+      if (movesLeft <= 0 && gameState === 'playing') {
+        gameState = 'lost';
+        triggerDefeat();
+      }
+    }
+
+    function triggerVictory() {
+      setStatus('Sweet victory achieved.', 'You reached the target score and conquered the candy board.');
+      showBanner(victoryBannerEl, `SWEET VICTORY! • ${score.toLocaleString()} POINTS`);
+      burstConfetti();
+    }
+
+    function triggerDefeat() {
+      setStatus('No moves remain.', 'Start a fresh board and try to engineer larger cascades.');
+      showBanner(defeatBannerEl, `SUGAR STORM SPENT • ${score.toLocaleString()} / ${targetScore.toLocaleString()}`);
+    }
+
+    function showBanner(el, text) {
+      el.textContent = text;
+      el.classList.remove('show');
+      void el.offsetWidth;
+      el.classList.add('show');
+    }
+
+    function burstConfetti() {
+      effectsLayerEl.innerHTML = '';
+      scoreLayerEl.innerHTML = '';
+      confettiLayerEl.innerHTML = '';
+      const colors = ['#f05b54', '#4d8cff', '#63c850', '#f0c24c', '#b273ff', '#ff9b4f'];
+      const bursts = [
+        { x: 15, y: 18 }, { x: 32, y: 12 }, { x: 50, y: 16 }, { x: 68, y: 12 }, { x: 85, y: 18 },
+        { x: 22, y: 32 }, { x: 78, y: 32 }
+      ];
+
+      bursts.forEach((burst, burstIndex) => {
+        for (let i = 0; i < 18; i++) {
+          const piece = document.createElement('span');
+          piece.className = 'confetti';
+          const angle = (Math.PI * 2 * i) / 18 + Math.random() * 0.35;
+          const distance = 60 + Math.random() * 150;
+          const tx = Math.cos(angle) * distance;
+          const ty = Math.sin(angle) * distance + 90 + Math.random() * 90;
+          const rot = `${Math.floor(Math.random() * 720 - 360)}deg`;
+          piece.style.left = `${burst.x}%`;
+          piece.style.top = `${burst.y}%`;
+          piece.style.background = colors[(i + burstIndex) % colors.length];
+          piece.style.setProperty('--sx', '0px');
+          piece.style.setProperty('--sy', '0px');
+          piece.style.setProperty('--tx', `${tx}px`);
+          piece.style.setProperty('--ty', `${ty}px`);
+          piece.style.setProperty('--rot', rot);
+          piece.style.animationDelay = `${Math.random() * 140}ms`;
+          confettiLayerEl.appendChild(piece);
+        }
+      });
+
+      setTimeout(() => { confettiLayerEl.innerHTML = ''; }, 1900);
+    }
+
+    function flashInvalidSwap(a, b) {
+      [a, b].forEach(cell => {
+        const el = getTileElementByKey(`${cell.r},${cell.c}`);
+        if (!el) return;
+        el.classList.remove('invalid');
+        void el.offsetWidth;
+        el.classList.add('invalid');
+      });
+    }
+
+    function triggerBoardShake() {
+      boardFrameEl.classList.remove('shake');
+      void boardFrameEl.offsetWidth;
+      boardFrameEl.classList.add('shake');
+    }
+
+    function getBoardGeometry() {
+      const rect = boardEl.getBoundingClientRect();
+      const style = getComputedStyle(boardEl);
+      const gap = parseFloat(style.columnGap || style.gap || 0);
+      const cell = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--cell-size'));
+      return { rect, gap, cell };
+    }
+
+    function getCellCenter(r, c) {
+      const { rect, gap, cell } = getBoardGeometry();
+      return {
+        x: rect.left + c * (cell + gap) + cell / 2,
+        y: rect.top + r * (cell + gap) + cell / 2
+      };
+    }
+
+    function spawnScorePopup(amount, clearSet) {
+      if (!clearSet || !clearSet.size) return;
+      let sumR = 0, sumC = 0, count = 0;
+      for (const key of clearSet) {
+        const [r, c] = key.split(',').map(Number);
+        sumR += r; sumC += c; count++;
+      }
+      const center = getCellCenter(sumR / count, sumC / count);
+      const frameRect = boardFrameEl.getBoundingClientRect();
+      const popup = document.createElement('div');
+      popup.className = 'score-popup';
+      popup.textContent = `+${amount.toLocaleString()}`;
+      popup.style.left = `${center.x - frameRect.left}px`;
+      popup.style.top = `${center.y - frameRect.top}px`;
+      scoreLayerEl.appendChild(popup);
+      setTimeout(() => popup.remove(), 980);
+    }
+
+    function spawnBlastLine(type, r, c) {
+      const { rect, gap, cell } = getBoardGeometry();
+      const frameRect = boardFrameEl.getBoundingClientRect();
+      const line = document.createElement('div');
+      line.className = `blast-line ${type}`;
+      if (type === 'row') {
+        line.style.width = `${rect.width}px`;
+        line.style.left = `${rect.left - frameRect.left}px`;
+        line.style.top = `${(r * (cell + gap) + cell / 2) + (rect.top - frameRect.top)}px`;
+      } else {
+        line.style.height = `${rect.height}px`;
+        line.style.left = `${(c * (cell + gap) + cell / 2) + (rect.left - frameRect.left)}px`;
+        line.style.top = `${rect.top - frameRect.top}px`;
+      }
+      effectsLayerEl.appendChild(line);
+      setTimeout(() => line.remove(), 500);
+    }
+
+    function wait(ms) {
+      return new Promise(resolve => setTimeout(resolve, ms));
+    }
+
+    function newGame() {
+      score = 0;
+      targetScore = BASE_TARGET;
+      movesLeft = BASE_MOVES;
+      cascadeDepth = 0;
+      selected = null;
+      draggingFrom = null;
+      hintPair = null;
+      highestCascade = 0;
+      locked = false;
+      gameState = 'playing';
+      effectsLayerEl.innerHTML = '';
+      scoreLayerEl.innerHTML = '';
+      confettiLayerEl.innerHTML = '';
+      victoryBannerEl.classList.remove('show');
+      defeatBannerEl.classList.remove('show');
+      buildInitialBoard();
+      renderBoard();
+      setStatus('Fresh board dealt. Build cascades and hit the target score.', 'Striped, wrapped, and color bomb candies can generate much larger chain reactions.');
+    }
+
+    document.getElementById('new-game-btn').addEventListener('click', newGame);
+    document.getElementById('shuffle-btn').addEventListener('click', () => shuffleBoard(true));
+    document.getElementById('hint-btn').addEventListener('click', showHint);
+    document.getElementById('year').textContent = new Date().getFullYear();
+
+    newGame();
+  </script>
+</body>
+</html>

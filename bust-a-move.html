@@ -1,0 +1,1317 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>Bust-a-Move · Rising Phoenix Games</title>
+  <link rel="stylesheet" href="shared.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700&family=Cinzel:wght@400;600;700;900&family=IM+Fell+English:ital@0;1&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; }
+    html, body { margin: 0; min-height: 100%; }
+
+    :root {
+      --message-width: 88%;
+      --board-w: 560;
+      --board-h: 720;
+    }
+
+    body {
+      font-family: var(--font-body);
+      color: var(--text);
+      background:
+        radial-gradient(ellipse 90% 55% at 15% 8%, rgba(90,48,12,0.55) 0%, transparent 58%),
+        radial-gradient(ellipse 70% 65% at 85% 90%, rgba(50,25,6,0.60) 0%, transparent 55%),
+        radial-gradient(ellipse 60% 40% at 50% 50%, rgba(30,18,5,0.40) 0%, transparent 70%),
+        linear-gradient(160deg, #1c1106 0%, #0f0c07 45%, #13100a 100%);
+      background-attachment: fixed;
+    }
+
+    #app {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      isolation: isolate;
+    }
+
+    .site-header {
+      padding: 0;
+      background: linear-gradient(180deg, #1e1508 0%, #120e06 100%);
+      border-bottom: 2px solid var(--gold);
+      box-shadow: 0 4px 24px rgba(0,0,0,0.7), 0 1px 0 rgba(200,149,42,0.15) inset;
+      position: relative;
+      overflow: hidden;
+      flex-shrink: 0;
+    }
+    .site-header::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: repeating-linear-gradient(
+        90deg,
+        transparent 0px,
+        transparent 48px,
+        rgba(200,149,42,0.04) 48px,
+        rgba(200,149,42,0.04) 49px
+      );
+      pointer-events: none;
+    }
+    .header-inner { position: relative; padding: 14px 20px 12px; }
+    .header-row { display: flex; align-items: center; margin-bottom: 6px; }
+
+    .rpg-back {
+      display: inline-block;
+      font-family: var(--font-ui);
+      font-size: 0.78rem;
+      letter-spacing: 0.08em;
+      color: var(--gold);
+      text-decoration: none;
+      padding: 0.55rem 1.1rem 0.55rem 2rem;
+      border: 1px solid rgba(200,149,42,0.25);
+      border-radius: 3px;
+      background: linear-gradient(180deg, #2a2010 0%, #1a1508 100%);
+      position: relative;
+      transition: border-color 0.2s, box-shadow 0.2s, color 0.2s;
+      margin: 0;
+      flex: 0 0 auto;
+      z-index: 2;
+    }
+    .rpg-back::before { content: '\2190'; position: absolute; left: 0.7rem; }
+    .rpg-back:hover {
+      border-color: var(--gold-light);
+      box-shadow: 0 0 18px 2px var(--gold-glow);
+      color: var(--gold-light);
+    }
+
+    .header-center {
+      flex: 1 1 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.85rem;
+      min-width: 0;
+    }
+    .header-spacer { visibility: hidden; pointer-events: none; }
+    .phoenix-mark {
+      width: 52px;
+      height: 52px;
+      object-fit: contain;
+      flex-shrink: 0;
+      filter: drop-shadow(0 0 10px rgba(200,149,42,0.5));
+    }
+    .title-block {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      min-width: 0;
+    }
+    .game-title {
+      margin: 0;
+      font-family: var(--font-display);
+      font-size: clamp(1.0rem, 3.8vw, 2rem);
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      line-height: 1.1;
+      background: linear-gradient(135deg, var(--gold-light) 0%, var(--gold) 40%, #a07020 80%, var(--gold-light) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .game-subtitle {
+      margin: 0.2rem 0 0;
+      font-style: italic;
+      color: #c8a878;
+      font-size: 0.82rem;
+      letter-spacing: 0.05em;
+    }
+
+    .main-wrap {
+      width: 100%;
+      max-width: 1180px;
+      margin: 0 auto;
+      padding: 22px 16px 36px;
+      display: grid;
+      grid-template-columns: minmax(320px, 1.18fr) minmax(280px, 0.82fr);
+      gap: 20px;
+      flex: 1;
+    }
+
+    .panel {
+      background: linear-gradient(160deg, var(--surface) 0%, var(--bg-warm) 100%);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      box-shadow: inset 0 0 30px rgba(0,0,0,0.35), 0 10px 34px rgba(0,0,0,0.45);
+      overflow: hidden;
+      position: relative;
+    }
+    .panel-header {
+      padding: 14px 16px 10px;
+      border-bottom: 1px solid rgba(200,149,42,0.14);
+      background: linear-gradient(180deg, rgba(255,255,255,0.03) 0%, rgba(255,255,255,0) 100%);
+    }
+    .panel-label {
+      font-family: var(--font-ui);
+      font-size: 0.7rem;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: var(--gold);
+      margin: 0 0 0.25rem;
+    }
+    .status-bar {
+      margin: 0;
+      min-height: 2.4rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      padding: 8px 16px 8px 28px;
+      background: rgba(0,0,0,0.32);
+      border: 1px solid rgba(200,149,42,0.18);
+      border-radius: 8px;
+      font-family: var(--font-ui);
+      font-size: 0.8rem;
+      letter-spacing: 0.08em;
+      color: var(--gold-light);
+      position: relative;
+      text-align: center;
+    }
+    .status-bar::before {
+      content: '⚜';
+      position: absolute;
+      left: 10px;
+      font-size: 10px;
+      color: var(--gold);
+      opacity: 0.7;
+    }
+
+    .board-panel { display: flex; flex-direction: column; min-height: 780px; }
+    .board-area {
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 18px;
+      flex: 1;
+      position: relative;
+    }
+
+    .metrics {
+      width: min(100%, 620px);
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 10px;
+    }
+    .metric {
+      padding: 10px 12px;
+      border-radius: 12px;
+      background: linear-gradient(180deg, rgba(255,255,255,0.04) 0%, rgba(0,0,0,0.16) 100%);
+      border: 1px solid rgba(200,149,42,0.18);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.03);
+      min-height: 68px;
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      gap: 5px;
+    }
+    .metric-label {
+      font-family: var(--font-ui);
+      font-size: 0.62rem;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: var(--gold);
+    }
+    .metric-value {
+      font-family: var(--font-display);
+      color: var(--gold-light);
+      font-size: clamp(1rem, 2.3vw, 1.35rem);
+      line-height: 1;
+    }
+
+    .board-frame {
+      width: min(100%, 620px);
+      position: relative;
+      padding: 18px;
+      border-radius: 18px;
+      background:
+        radial-gradient(circle at 50% 45%, rgba(70,40,10,0.28) 0%, rgba(20,12,4,0.96) 70%),
+        linear-gradient(160deg, #201407 0%, #100b04 100%);
+      border: 1px solid rgba(200,149,42,0.28);
+      box-shadow:
+        inset 0 1px 0 rgba(255,255,255,0.04),
+        inset 0 0 38px rgba(0,0,0,0.35),
+        0 0 0 1px rgba(0,0,0,0.35),
+        0 18px 42px rgba(0,0,0,0.45),
+        0 0 30px rgba(200,149,42,0.14);
+    }
+    .board-frame::before,
+    .board-frame::after {
+      content: '◆';
+      position: absolute;
+      color: rgba(200,149,42,0.45);
+      font-size: 10px;
+      line-height: 1;
+    }
+    .board-frame::before { top: 6px; left: 8px; }
+    .board-frame::after { bottom: 6px; right: 8px; }
+
+    .canvas-wrap {
+      position: relative;
+      width: 100%;
+      max-width: 560px;
+      aspect-ratio: 7 / 9;
+      border-radius: 16px;
+      overflow: hidden;
+      border: 1px solid rgba(200,149,42,0.18);
+      box-shadow: inset 0 0 24px rgba(0,0,0,0.28);
+      background:
+        radial-gradient(circle at 50% 15%, rgba(255,220,140,0.06) 0%, transparent 30%),
+        linear-gradient(180deg, rgba(35,22,8,0.98) 0%, rgba(10,7,3,1) 100%);
+    }
+    #game-canvas {
+      width: 100%;
+      height: 100%;
+      display: block;
+      touch-action: none;
+      cursor: crosshair;
+    }
+
+    .victory-message {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      width: var(--message-width);
+      transform: translate(-50%, -50%) scale(0.2);
+      opacity: 0;
+      pointer-events: none;
+      text-align: center;
+      padding: 18px 16px;
+      border-radius: 18px;
+      background: linear-gradient(180deg, rgba(38,24,8,0.97) 0%, rgba(15,9,3,0.98) 100%);
+      border: 1px solid rgba(240,208,128,0.55);
+      box-shadow: 0 0 26px rgba(200,149,42,0.28), inset 0 1px 0 rgba(255,255,255,0.05);
+      z-index: 5;
+    }
+    .victory-message.show { animation: victoryGrow 1.75s ease forwards; }
+    .victory-title {
+      font-family: var(--font-display);
+      font-size: clamp(1.15rem, 3.6vw, 2rem);
+      background: linear-gradient(135deg, #f7e9b0 0%, var(--gold-light) 45%, var(--gold) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      line-height: 1.1;
+      margin-bottom: 0.5rem;
+      letter-spacing: 0.04em;
+    }
+    .victory-subtitle {
+      color: #dec188;
+      font-style: italic;
+      font-size: 1rem;
+      line-height: 1.3;
+    }
+    @keyframes victoryGrow {
+      0% { opacity: 0; transform: translate(-50%, -50%) scale(0.2); }
+      43% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+      100% { opacity: 0; transform: translate(-50%, -50%) scale(1); }
+    }
+
+    .controls-row {
+      width: min(100%, 620px);
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      justify-content: center;
+    }
+    .rpg-btn {
+      font-family: var(--font-ui);
+      font-size: 0.78rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: #f0d080;
+      background: linear-gradient(180deg,rgba(40,28,8,0.9) 0%,rgba(20,14,4,0.95) 100%);
+      border: 1px solid rgba(200,149,42,0.45);
+      padding: 10px 18px;
+      border-radius: 999px;
+      cursor: pointer;
+      transition: all 0.2s;
+      box-shadow: 0 1px 0 rgba(200,149,42,0.15), inset 0 1px 0 rgba(200,149,42,0.1);
+    }
+    .rpg-btn:hover {
+      border-color: rgba(200,149,42,0.75);
+      box-shadow: 0 0 18px 2px rgba(200,149,42,0.25),0 0 48px 8px rgba(180,120,20,0.15),inset 0 1px 0 rgba(200,149,42,0.2);
+      color: #f8e898;
+      transform: translateY(-1px);
+    }
+    .rpg-btn:active { transform: translateY(0); }
+
+    .side-panel { display: flex; flex-direction: column; min-height: 780px; }
+    .side-body {
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      flex: 1;
+    }
+    .list-card {
+      border-radius: 14px;
+      border: 1px solid rgba(200,149,42,0.16);
+      background: linear-gradient(180deg, rgba(255,255,255,0.03) 0%, rgba(0,0,0,0.16) 100%);
+      padding: 14px;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.02);
+    }
+    .list-title {
+      margin: 0 0 10px;
+      font-family: var(--font-ui);
+      font-size: 0.7rem;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--gold);
+    }
+    .list-copy {
+      color: #d4bf90;
+      line-height: 1.55;
+      font-size: 0.98rem;
+    }
+    .list-copy strong { color: var(--gold-light); }
+    .next-preview {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 14px;
+      min-height: 110px;
+      border-radius: 14px;
+      background: radial-gradient(circle at 50% 40%, rgba(255,255,255,0.05), rgba(0,0,0,0.18));
+      border: 1px solid rgba(200,149,42,0.14);
+    }
+    .legend {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 10px;
+    }
+    .swatch {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: #dec188;
+      font-size: 0.85rem;
+    }
+    .swatch-dot {
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      box-shadow: 0 0 0 1px rgba(255,255,255,0.18), inset -2px -3px 5px rgba(0,0,0,0.22), inset 2px 2px 3px rgba(255,255,255,0.18);
+      flex: 0 0 auto;
+    }
+
+    .rpg-footer {
+      padding: 14px 20px 18px;
+      text-align: center;
+      color: var(--text-dim);
+      font-size: 0.82rem;
+      font-style: italic;
+    }
+
+    @media (max-width: 900px) {
+      .main-wrap { grid-template-columns: 1fr; }
+      .board-panel, .side-panel { min-height: 0; }
+    }
+    @media (max-width: 620px) {
+      .header-inner { padding: 12px 12px 10px; }
+      .header-row { gap: 10px; }
+      .phoenix-mark { width: 44px; height: 44px; }
+      .metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .legend { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .board-area { padding: 14px; }
+      .board-frame { padding: 12px; }
+      .game-subtitle { font-size: 0.76rem; }
+    }
+  </style>
+</head>
+<body>
+  <div id="app">
+    <header class="site-header">
+      <div class="header-inner">
+        <div class="header-row">
+          <a href="index.html" class="rpg-back">Hub</a>
+          <div class="header-center">
+            <img class="phoenix-mark" src="RPG Favicon no background copy.png" alt="Rising Phoenix Games logo">
+            <div class="title-block">
+              <h1 class="game-title">Bust-a-Move</h1>
+              <p class="game-subtitle">Angle the shot, shatter the cluster, and clear the hanging glass</p>
+            </div>
+          </div>
+          <a href="index.html" class="rpg-back header-spacer">Hub</a>
+        </div>
+      </div>
+    </header>
+
+    <main class="main-wrap">
+      <section class="panel board-panel">
+        <div class="panel-header">
+          <div class="panel-label">Game Status</div>
+          <div class="status-bar" id="status-text">Line up your first shot.</div>
+        </div>
+        <div class="board-area">
+          <div class="metrics">
+            <div class="metric"><div class="metric-label">Score</div><div class="metric-value" id="score-value">0</div></div>
+            <div class="metric"><div class="metric-label">Shots</div><div class="metric-value" id="shots-value">0</div></div>
+            <div class="metric"><div class="metric-label">Clusters</div><div class="metric-value" id="clusters-value">0</div></div>
+            <div class="metric"><div class="metric-label">Ceiling Drops</div><div class="metric-value" id="drops-value">0</div></div>
+          </div>
+
+          <div class="board-frame">
+            <div class="canvas-wrap">
+              <canvas id="game-canvas" width="560" height="720" aria-label="Bust-a-Move game board"></canvas>
+              <div class="victory-message" id="victory-message">
+                <div class="victory-title">Phoenix Volley Triumphant</div>
+                <div class="victory-subtitle">The final cluster has shattered and the vault stands clear.</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="controls-row">
+            <button class="rpg-btn" id="new-game-btn" type="button">New Game</button>
+            <button class="rpg-btn" id="reset-btn" type="button">Restart Round</button>
+            <button class="rpg-btn" id="surge-mode-btn" type="button" aria-pressed="false">Row Surge: Off</button>
+          </div>
+        </div>
+      </section>
+
+      <aside class="panel side-panel">
+        <div class="panel-header">
+          <div class="panel-label">Shooter Notes</div>
+          <div class="status-bar">Mouse, trackpad, touch, or drag to aim</div>
+        </div>
+        <div class="side-body">
+          <div class="list-card">
+            <h2 class="list-title">Next Bubble</h2>
+            <div class="next-preview" id="next-preview"></div>
+          </div>
+
+          <div class="list-card">
+            <h2 class="list-title">How to Play</h2>
+            <div class="list-copy">
+              Match <strong>three or more</strong> bubbles of the same color to burst them. Any bubbles left hanging without a path to the ceiling will fall away. After several missed shots, the ceiling descends. Clear the entire field before the cluster reaches the danger line.
+            </div>
+          </div>
+
+          <div class="list-card">
+            <h2 class="list-title">Row Surge Mode</h2>
+            <div class="list-copy">
+              Toggle <strong>Row Surge</strong> on to force a fresh row of random bubbles onto the ceiling after every <strong>10 launched shots</strong>. Each surge pushes all remaining bubbles downward. If any bubble touches the danger line after the surge, the round ends immediately.
+            </div>
+          </div>
+
+          <div class="list-card">
+            <h2 class="list-title">Controls</h2>
+            <div class="list-copy">
+              <strong>Aim:</strong> move the pointer or drag on the board.<br>
+              <strong>Fire:</strong> click, tap, or release after dragging.<br>
+              <strong>Wall banks:</strong> shots ricochet off both side walls.
+            </div>
+          </div>
+
+          <div class="list-card">
+            <h2 class="list-title">Bubble Palette</h2>
+            <div class="legend" id="legend"></div>
+          </div>
+        </div>
+      </aside>
+    </main>
+
+    <footer class="rpg-footer">Rising Phoenix Games · Crafted in a single-file HTML/CSS/JS format for offline play</footer>
+  </div>
+
+  <script>
+    const canvas = document.getElementById('game-canvas');
+    const ctx = canvas.getContext('2d');
+    const statusText = document.getElementById('status-text');
+    const scoreValue = document.getElementById('score-value');
+    const shotsValue = document.getElementById('shots-value');
+    const clustersValue = document.getElementById('clusters-value');
+    const dropsValue = document.getElementById('drops-value');
+    const nextPreview = document.getElementById('next-preview');
+    const legend = document.getElementById('legend');
+    const victoryMessage = document.getElementById('victory-message');
+    const newGameBtn = document.getElementById('new-game-btn');
+    const resetBtn = document.getElementById('reset-btn');
+    const surgeModeBtn = document.getElementById('surge-mode-btn');
+
+    const WIDTH = canvas.width;
+    const HEIGHT = canvas.height;
+    const RADIUS = 19;
+    const DIAMETER = RADIUS * 2;
+    const ROW_STEP = Math.round(Math.sqrt(3) * RADIUS);
+    const COLS = 13;
+    const ROWS = 14;
+    const TOP_MARGIN = 36;
+    const LEFT_MARGIN = 32;
+    const SHOOTER_Y = HEIGHT - 52;
+    const SHOOTER_X = WIDTH / 2;
+    const MISS_LIMIT = 6;
+    const DROP_AMOUNT = 1;
+    const CEILING_LOSE_Y = HEIGHT - 150;
+    const BUBBLE_COLORS = [
+      { key: 'ember', fill: '#d86a44', edge: '#ffd1a8', glow: 'rgba(216,106,68,0.32)' },
+      { key: 'sun', fill: '#d6b14a', edge: '#fff0b9', glow: 'rgba(214,177,74,0.32)' },
+      { key: 'jade', fill: '#5f9d58', edge: '#d6f1cf', glow: 'rgba(95,157,88,0.32)' },
+      { key: 'azure', fill: '#4c7fd8', edge: '#d8e6ff', glow: 'rgba(76,127,216,0.32)' },
+      { key: 'violet', fill: '#8d63c9', edge: '#efe3ff', glow: 'rgba(141,99,201,0.32)' },
+      { key: 'rose', fill: '#c4558d', edge: '#ffd5ea', glow: 'rgba(196,85,141,0.30)' }
+    ];
+
+    let grid = [];
+    let currentBubble = null;
+    let nextBubble = null;
+    let aimAngle = -Math.PI / 2;
+    let shotActive = false;
+    let shot = null;
+    let score = 0;
+    let shots = 0;
+    let clustersPopped = 0;
+    let ceilingDrops = 0;
+    let missedShots = 0;
+    let gameState = 'ready';
+    let confetti = [];
+    let animationFrameId = null;
+    let isPointerDown = false;
+    let lastPointerPos = { x: SHOOTER_X, y: SHOOTER_Y - 100 };
+    let seededRows = 6;
+    let surgeMode = false;
+    let shotsSinceSurge = 0;
+
+    function setupLegend() {
+      legend.innerHTML = '';
+      BUBBLE_COLORS.forEach(color => {
+        const row = document.createElement('div');
+        row.className = 'swatch';
+        const dot = document.createElement('span');
+        dot.className = 'swatch-dot';
+        dot.style.background = `radial-gradient(circle at 32% 28%, ${color.edge} 0%, ${color.fill} 42%, ${shadeColor(color.fill, -28)} 100%)`;
+        const label = document.createElement('span');
+        label.textContent = color.key.charAt(0).toUpperCase() + color.key.slice(1);
+        row.append(dot, label);
+        legend.appendChild(row);
+      });
+    }
+
+    function shadeColor(hex, amt) {
+      const color = hex.replace('#', '');
+      const num = parseInt(color, 16);
+      let r = (num >> 16) + amt;
+      let g = ((num >> 8) & 0x00FF) + amt;
+      let b = (num & 0x0000FF) + amt;
+      r = Math.max(0, Math.min(255, r));
+      g = Math.max(0, Math.min(255, g));
+      b = Math.max(0, Math.min(255, b));
+      return `rgb(${r}, ${g}, ${b})`;
+    }
+
+    function createBubble(colorKey = randomAvailableColor()) {
+      return { color: colorKey };
+    }
+
+    function colorByKey(key) {
+      return BUBBLE_COLORS.find(c => c.key === key) || BUBBLE_COLORS[0];
+    }
+
+    function randomAvailableColor() {
+      const active = activeColors();
+      const pool = active.length ? active : BUBBLE_COLORS.map(c => c.key);
+      return pool[Math.floor(Math.random() * pool.length)];
+    }
+
+    function activeColors() {
+      const set = new Set();
+      for (let row = 0; row < ROWS; row++) {
+        for (let col = 0; col < COLS; col++) {
+          const bubble = grid[row]?.[col];
+          if (bubble) set.add(bubble.color);
+        }
+      }
+      return [...set];
+    }
+
+    function initGrid() {
+      grid = Array.from({ length: ROWS }, () => Array(COLS).fill(null));
+      for (let row = 0; row < seededRows; row++) {
+        const fillCount = row % 2 === 0 ? COLS - 1 : COLS - 2;
+        const startCol = row % 2 === 0 ? 0 : 1;
+        for (let col = startCol; col < fillCount; col++) {
+          if (gridPosition(row, col).x > WIDTH - LEFT_MARGIN - RADIUS) continue;
+          const colorKey = BUBBLE_COLORS[(Math.floor(row / 2) + col) % BUBBLE_COLORS.length].key;
+          grid[row][col] = createBubble(colorKey);
+        }
+      }
+    }
+
+    function gridPosition(row, col) {
+      const offset = row % 2 === 1 ? RADIUS : 0;
+      return {
+        x: LEFT_MARGIN + RADIUS + col * DIAMETER + offset,
+        y: TOP_MARGIN + RADIUS + row * ROW_STEP
+      };
+    }
+
+    function nearestCell(x, y) {
+      let best = null;
+      let bestDist = Infinity;
+      for (let row = 0; row < ROWS; row++) {
+        for (let col = 0; col < COLS; col++) {
+          const pos = gridPosition(row, col);
+          if (pos.x < LEFT_MARGIN + RADIUS - 1 || pos.x > WIDTH - LEFT_MARGIN - RADIUS + 1) continue;
+          const dx = pos.x - x;
+          const dy = pos.y - y;
+          const dist = dx * dx + dy * dy;
+          if (dist < bestDist) {
+            bestDist = dist;
+            best = { row, col };
+          }
+        }
+      }
+      return best;
+    }
+
+    function neighbors(row, col) {
+      const evenOffsets = [[0,-1],[0,1],[-1,-1],[-1,0],[1,-1],[1,0]];
+      const oddOffsets  = [[0,-1],[0,1],[-1,0],[-1,1],[1,0],[1,1]];
+      const offsets = row % 2 === 0 ? evenOffsets : oddOffsets;
+      return offsets
+        .map(([dr, dc]) => ({ row: row + dr, col: col + dc }))
+        .filter(n => n.row >= 0 && n.row < ROWS && n.col >= 0 && n.col < COLS);
+    }
+
+    function findConnectedCluster(startRow, startCol, colorKey) {
+      const stack = [{ row: startRow, col: startCol }];
+      const seen = new Set();
+      const cluster = [];
+      while (stack.length) {
+        const cell = stack.pop();
+        const id = `${cell.row},${cell.col}`;
+        if (seen.has(id)) continue;
+        seen.add(id);
+        const bubble = grid[cell.row]?.[cell.col];
+        if (!bubble || bubble.color !== colorKey) continue;
+        cluster.push(cell);
+        neighbors(cell.row, cell.col).forEach(n => stack.push(n));
+      }
+      return cluster;
+    }
+
+    function findAnchored() {
+      const stack = [];
+      const anchored = new Set();
+      for (let col = 0; col < COLS; col++) {
+        if (grid[0][col]) stack.push({ row: 0, col });
+      }
+      while (stack.length) {
+        const cell = stack.pop();
+        const id = `${cell.row},${cell.col}`;
+        if (anchored.has(id)) continue;
+        const bubble = grid[cell.row]?.[cell.col];
+        if (!bubble) continue;
+        anchored.add(id);
+        neighbors(cell.row, cell.col).forEach(n => stack.push(n));
+      }
+      return anchored;
+    }
+
+    function removeFloating() {
+      const anchored = findAnchored();
+      let removed = 0;
+      for (let row = 0; row < ROWS; row++) {
+        for (let col = 0; col < COLS; col++) {
+          if (grid[row][col] && !anchored.has(`${row},${col}`)) {
+            spawnBubbleBurst(gridPosition(row, col).x, gridPosition(row, col).y, colorByKey(grid[row][col].color));
+            grid[row][col] = null;
+            removed += 1;
+          }
+        }
+      }
+      if (removed) score += removed * 15;
+      return removed;
+    }
+
+    function spawnBubbleBurst(x, y, color) {
+      for (let i = 0; i < 10; i++) {
+        confetti.push({
+          x,
+          y,
+          vx: (Math.random() - 0.5) * 4.8,
+          vy: (Math.random() - 0.6) * 4.8,
+          size: 4 + Math.random() * 5,
+          color: color.fill,
+          rot: Math.random() * Math.PI,
+          vr: (Math.random() - 0.5) * 0.28,
+          life: 34 + Math.random() * 14,
+          gravity: 0.12,
+          alpha: 1,
+          shape: Math.random() > 0.5 ? 'rect' : 'circle'
+        });
+      }
+    }
+
+    function spawnVictoryConfetti() {
+      const colors = ['#f0d080', '#d86a44', '#4c7fd8', '#5f9d58', '#c4558d', '#8d63c9'];
+      for (let burst = 0; burst < 18; burst++) {
+        const bx = 28 + Math.random() * (WIDTH - 56);
+        const by = 34 + Math.random() * (HEIGHT * 0.42);
+        for (let i = 0; i < 20; i++) {
+          confetti.push({
+            x: bx,
+            y: by,
+            vx: (Math.random() - 0.5) * 8.5,
+            vy: -2 - Math.random() * 5.5,
+            size: 5 + Math.random() * 7,
+            color: colors[Math.floor(Math.random() * colors.length)],
+            rot: Math.random() * Math.PI,
+            vr: (Math.random() - 0.5) * 0.35,
+            life: 80 + Math.random() * 40,
+            gravity: 0.13,
+            alpha: 1,
+            shape: Math.random() > 0.35 ? 'rect' : 'circle'
+          });
+        }
+      }
+    }
+
+    function drawConfetti() {
+      for (let i = confetti.length - 1; i >= 0; i--) {
+        const piece = confetti[i];
+        piece.x += piece.vx;
+        piece.y += piece.vy;
+        piece.vy += piece.gravity;
+        piece.rot += piece.vr;
+        piece.life -= 1;
+        piece.alpha = Math.max(0, piece.life / 90);
+        if (piece.life <= 0) {
+          confetti.splice(i, 1);
+          continue;
+        }
+        ctx.save();
+        ctx.globalAlpha = piece.alpha;
+        ctx.translate(piece.x, piece.y);
+        ctx.rotate(piece.rot);
+        ctx.fillStyle = piece.color;
+        if (piece.shape === 'circle') {
+          ctx.beginPath();
+          ctx.arc(0, 0, piece.size * 0.42, 0, Math.PI * 2);
+          ctx.fill();
+        } else {
+          ctx.fillRect(-piece.size / 2, -piece.size / 2, piece.size, piece.size * 0.68);
+        }
+        ctx.restore();
+      }
+    }
+
+    function fireShot() {
+      if (shotActive || gameState === 'won' || gameState === 'lost') return;
+      shotActive = true;
+      gameState = 'flying';
+      const speed = 10.6;
+      shot = {
+        x: SHOOTER_X,
+        y: SHOOTER_Y,
+        vx: Math.cos(aimAngle) * speed,
+        vy: Math.sin(aimAngle) * speed,
+        color: currentBubble.color
+      };
+      currentBubble = nextBubble;
+      nextBubble = createBubble();
+      shots += 1;
+      shotsSinceSurge += 1;
+      updatePanels();
+      statusText.textContent = surgeMode
+        ? `Bubble in flight. Row surge in ${Math.max(0, 10 - shotsSinceSurge)} shot${Math.max(0, 10 - shotsSinceSurge) === 1 ? '' : 's'}.`
+        : 'Bubble in flight.';
+    }
+
+    function updateShot() {
+      if (!shotActive || !shot) return;
+      shot.x += shot.vx;
+      shot.y += shot.vy;
+
+      const leftWall = LEFT_MARGIN + RADIUS;
+      const rightWall = WIDTH - LEFT_MARGIN - RADIUS;
+      if (shot.x <= leftWall) {
+        shot.x = leftWall;
+        shot.vx *= -1;
+      } else if (shot.x >= rightWall) {
+        shot.x = rightWall;
+        shot.vx *= -1;
+      }
+
+      if (shot.y <= TOP_MARGIN + RADIUS) {
+        attachShot(shot.x, shot.y);
+        return;
+      }
+
+      for (let row = 0; row < ROWS; row++) {
+        for (let col = 0; col < COLS; col++) {
+          const bubble = grid[row][col];
+          if (!bubble) continue;
+          const pos = gridPosition(row, col);
+          const dx = shot.x - pos.x;
+          const dy = shot.y - pos.y;
+          const dist = Math.sqrt(dx * dx + dy * dy);
+          if (dist <= DIAMETER - 2) {
+            attachShot(shot.x, shot.y);
+            return;
+          }
+        }
+      }
+    }
+
+    function attachShot(x, y) {
+      let cell = nearestCell(x, y);
+      if (!cell) cell = { row: 0, col: 0 };
+
+      if (grid[cell.row][cell.col]) {
+        const candidates = neighbors(cell.row, cell.col)
+          .filter(n => !grid[n.row][n.col])
+          .sort((a, b) => {
+            const pa = gridPosition(a.row, a.col);
+            const pb = gridPosition(b.row, b.col);
+            return distanceSq(pa.x, pa.y, x, y) - distanceSq(pb.x, pb.y, x, y);
+          });
+        if (candidates.length) cell = candidates[0];
+        else {
+          for (let row = ROWS - 1; row >= 0; row--) {
+            for (let col = 0; col < COLS; col++) {
+              if (!grid[row][col]) { cell = { row, col }; row = -1; break; }
+            }
+          }
+        }
+      }
+
+      grid[cell.row][cell.col] = createBubble(shot.color);
+      const placedColor = shot.color;
+      const placedPos = gridPosition(cell.row, cell.col);
+      shotActive = false;
+      shot = null;
+      gameState = 'settling';
+
+      const cluster = findConnectedCluster(cell.row, cell.col, placedColor);
+      if (cluster.length >= 3) {
+        clustersPopped += 1;
+        score += cluster.length * 20;
+        cluster.forEach(c => {
+          spawnBubbleBurst(gridPosition(c.row, c.col).x, gridPosition(c.row, c.col).y, colorByKey(placedColor));
+          grid[c.row][c.col] = null;
+        });
+        const dropped = removeFloating();
+        missedShots = 0;
+        statusText.textContent = dropped > 0 ? 'Cluster shattered and loose glass fell away.' : 'Cluster shattered.';
+      } else {
+        missedShots += 1;
+        statusText.textContent = 'No match. The cluster tightens.';
+      }
+
+      spawnBubbleBurst(placedPos.x, placedPos.y, colorByKey(placedColor));
+
+      if (missedShots >= MISS_LIMIT) {
+        dropCeiling();
+        missedShots = 0;
+      }
+
+      if (surgeMode && shotsSinceSurge >= 10 && gameState !== 'won' && gameState !== 'lost') {
+        addTopRow();
+        shotsSinceSurge = 0;
+      }
+
+      refreshShooterColors();
+      updatePanels();
+      checkGameState();
+      if (gameState !== 'won' && gameState !== 'lost') gameState = 'ready';
+    }
+
+    function refreshShooterColors() {
+      if (!currentBubble) currentBubble = createBubble();
+      if (!nextBubble) nextBubble = createBubble();
+      const active = activeColors();
+      if (active.length) {
+        if (!active.includes(currentBubble.color)) currentBubble = createBubble(active[Math.floor(Math.random() * active.length)]);
+        if (!active.includes(nextBubble.color)) nextBubble = createBubble(active[Math.floor(Math.random() * active.length)]);
+      }
+    }
+
+    function dropCeiling() {
+      for (let step = 0; step < DROP_AMOUNT; step++) {
+        for (let row = ROWS - 1; row > 0; row--) {
+          for (let col = 0; col < COLS; col++) {
+            grid[row][col] = grid[row - 1][col];
+          }
+        }
+        for (let col = 0; col < COLS; col++) {
+          grid[0][col] = Math.random() > 0.18 ? createBubble(randomAvailableColor()) : null;
+        }
+      }
+      ceilingDrops += 1;
+      statusText.textContent = 'The ceiling has descended.';
+    }
+
+    function addTopRow() {
+      for (let row = ROWS - 1; row > 0; row--) {
+        for (let col = 0; col < COLS; col++) {
+          grid[row][col] = grid[row - 1][col];
+        }
+      }
+      for (let col = 0; col < COLS; col++) {
+        const pos = gridPosition(0, col);
+        const inBounds = pos.x >= LEFT_MARGIN + RADIUS - 1 && pos.x <= WIDTH - LEFT_MARGIN - RADIUS + 1;
+        grid[0][col] = inBounds && Math.random() > 0.12 ? createBubble(randomAvailableColor()) : null;
+      }
+      ceilingDrops += 1;
+      statusText.textContent = 'Row surge: a new line of bubbles has formed overhead.';
+    }
+
+    function distanceSq(x1, y1, x2, y2) {
+      const dx = x2 - x1;
+      const dy = y2 - y1;
+      return dx * dx + dy * dy;
+    }
+
+    function checkGameState() {
+      let count = 0;
+      let lowestY = 0;
+      for (let row = 0; row < ROWS; row++) {
+        for (let col = 0; col < COLS; col++) {
+          if (grid[row][col]) {
+            count += 1;
+            const y = gridPosition(row, col).y;
+            if (y > lowestY) lowestY = y;
+          }
+        }
+      }
+      if (count === 0) {
+        gameState = 'won';
+        statusText.textContent = 'Victory. The hanging field is gone.';
+        victoryMessage.classList.remove('show');
+        void victoryMessage.offsetWidth;
+        victoryMessage.classList.add('show');
+        spawnVictoryConfetti();
+        return;
+      }
+      if (lowestY >= CEILING_LOSE_Y) {
+        gameState = 'lost';
+        statusText.textContent = 'Defeat. The cluster crossed the danger line.';
+      }
+    }
+
+    function drawBubble(x, y, colorKey, scale = 1) {
+      const color = colorByKey(colorKey);
+      const r = RADIUS * scale;
+      const grad = ctx.createRadialGradient(x - r * 0.35, y - r * 0.45, r * 0.18, x, y, r * 1.05);
+      grad.addColorStop(0, color.edge);
+      grad.addColorStop(0.42, color.fill);
+      grad.addColorStop(1, shadeColor(color.fill, -36));
+      ctx.save();
+      ctx.shadowColor = color.glow;
+      ctx.shadowBlur = 16;
+      ctx.fillStyle = grad;
+      ctx.beginPath();
+      ctx.arc(x, y, r, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.shadowBlur = 0;
+      ctx.lineWidth = 1.2;
+      ctx.strokeStyle = 'rgba(255,255,255,0.16)';
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.fillStyle = 'rgba(255,255,255,0.18)';
+      ctx.arc(x - r * 0.28, y - r * 0.34, r * 0.22, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+    }
+
+    function drawBoard() {
+      ctx.clearRect(0, 0, WIDTH, HEIGHT);
+      drawBackdrop();
+      drawDangerLine();
+      drawGridBubbles();
+      drawAimGuide();
+      drawShooter();
+      drawConfetti();
+      if (gameState === 'lost') drawLoseOverlay();
+    }
+
+    function drawBackdrop() {
+      const g = ctx.createLinearGradient(0, 0, 0, HEIGHT);
+      g.addColorStop(0, 'rgba(48,30,10,0.22)');
+      g.addColorStop(0.55, 'rgba(18,11,4,0.08)');
+      g.addColorStop(1, 'rgba(0,0,0,0.22)');
+      ctx.fillStyle = g;
+      ctx.fillRect(0, 0, WIDTH, HEIGHT);
+
+      ctx.save();
+      ctx.strokeStyle = 'rgba(240,208,128,0.07)';
+      ctx.lineWidth = 1;
+      for (let row = 0; row < ROWS; row++) {
+        for (let col = 0; col < COLS; col++) {
+          const pos = gridPosition(row, col);
+          if (pos.x < LEFT_MARGIN + RADIUS - 1 || pos.x > WIDTH - LEFT_MARGIN - RADIUS + 1) continue;
+          ctx.beginPath();
+          ctx.arc(pos.x, pos.y, RADIUS + 1.5, 0, Math.PI * 2);
+          ctx.stroke();
+        }
+      }
+      ctx.restore();
+    }
+
+    function drawDangerLine() {
+      ctx.save();
+      ctx.setLineDash([8, 8]);
+      ctx.strokeStyle = 'rgba(196,64,64,0.65)';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(LEFT_MARGIN, CEILING_LOSE_Y);
+      ctx.lineTo(WIDTH - LEFT_MARGIN, CEILING_LOSE_Y);
+      ctx.stroke();
+      ctx.setLineDash([]);
+      ctx.fillStyle = 'rgba(200,120,120,0.82)';
+      ctx.font = '12px Cinzel, serif';
+      ctx.textAlign = 'left';
+      ctx.fillText('Danger Line', LEFT_MARGIN + 10, CEILING_LOSE_Y - 8);
+      ctx.restore();
+    }
+
+    function drawGridBubbles() {
+      for (let row = 0; row < ROWS; row++) {
+        for (let col = 0; col < COLS; col++) {
+          const bubble = grid[row][col];
+          if (!bubble) continue;
+          const pos = gridPosition(row, col);
+          drawBubble(pos.x, pos.y, bubble.color);
+        }
+      }
+      if (shotActive && shot) drawBubble(shot.x, shot.y, shot.color);
+    }
+
+    function drawAimGuide() {
+      if (gameState === 'won' || gameState === 'lost' || shotActive) return;
+      const maxBounces = 2;
+      let x = SHOOTER_X;
+      let y = SHOOTER_Y;
+      let vx = Math.cos(aimAngle) * 10;
+      let vy = Math.sin(aimAngle) * 10;
+      let bounces = 0;
+      ctx.save();
+      ctx.strokeStyle = 'rgba(240,208,128,0.34)';
+      ctx.lineWidth = 2;
+      ctx.setLineDash([7, 9]);
+      ctx.beginPath();
+      ctx.moveTo(x, y);
+      for (let i = 0; i < 140; i++) {
+        x += vx;
+        y += vy;
+        if (x <= LEFT_MARGIN + RADIUS || x >= WIDTH - LEFT_MARGIN - RADIUS) {
+          vx *= -1;
+          bounces += 1;
+          if (bounces > maxBounces) break;
+        }
+        if (y <= TOP_MARGIN + RADIUS) break;
+        ctx.lineTo(x, y);
+      }
+      ctx.stroke();
+      ctx.restore();
+    }
+
+    function drawShooter() {
+      ctx.save();
+      ctx.translate(SHOOTER_X, SHOOTER_Y);
+      const barrelLength = 44;
+      ctx.rotate(aimAngle + Math.PI / 2);
+      ctx.fillStyle = 'rgba(200,149,42,0.18)';
+      ctx.beginPath();
+      ctx.roundRect(-11, -8, 22, barrelLength, 9);
+      ctx.fill();
+      ctx.strokeStyle = 'rgba(240,208,128,0.3)';
+      ctx.lineWidth = 1.2;
+      ctx.stroke();
+      ctx.restore();
+
+      const baseGrad = ctx.createRadialGradient(SHOOTER_X, SHOOTER_Y + 8, 4, SHOOTER_X, SHOOTER_Y + 10, 44);
+      baseGrad.addColorStop(0, 'rgba(240,208,128,0.45)');
+      baseGrad.addColorStop(1, 'rgba(30,18,5,0.96)');
+      ctx.fillStyle = baseGrad;
+      ctx.beginPath();
+      ctx.arc(SHOOTER_X, SHOOTER_Y + 10, 26, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.lineWidth = 1.4;
+      ctx.strokeStyle = 'rgba(240,208,128,0.34)';
+      ctx.stroke();
+
+      if (currentBubble) drawBubble(SHOOTER_X, SHOOTER_Y - 2, currentBubble.color, 0.98);
+    }
+
+    function drawLoseOverlay() {
+      ctx.save();
+      ctx.fillStyle = 'rgba(8,5,2,0.68)';
+      ctx.fillRect(0, 0, WIDTH, HEIGHT);
+      ctx.fillStyle = '#f0d080';
+      ctx.textAlign = 'center';
+      ctx.font = '700 34px "Cinzel Decorative", serif';
+      ctx.fillText('Cluster Collapse', WIDTH / 2, HEIGHT / 2 - 12);
+      ctx.font = 'italic 22px "IM Fell English", serif';
+      ctx.fillStyle = '#d9bf90';
+      ctx.fillText('The hanging glass crossed the line. Start a new round.', WIDTH / 2, HEIGHT / 2 + 26);
+      ctx.restore();
+    }
+
+    function updatePanels() {
+      scoreValue.textContent = score;
+      shotsValue.textContent = shots;
+      clustersValue.textContent = clustersPopped;
+      dropsValue.textContent = ceilingDrops;
+      drawNextPreview();
+    }
+
+    function drawNextPreview() {
+      nextPreview.innerHTML = '';
+      const previewCanvas = document.createElement('canvas');
+      previewCanvas.width = 120;
+      previewCanvas.height = 84;
+      previewCanvas.style.maxWidth = '100%';
+      previewCanvas.style.height = '84px';
+      const pctx = previewCanvas.getContext('2d');
+      if (nextBubble) {
+        const color = colorByKey(nextBubble.color);
+        pctx.clearRect(0, 0, previewCanvas.width, previewCanvas.height);
+        const x = previewCanvas.width / 2;
+        const y = previewCanvas.height / 2;
+        const r = 22;
+        const grad = pctx.createRadialGradient(x - r * 0.35, y - r * 0.45, r * 0.18, x, y, r * 1.05);
+        grad.addColorStop(0, color.edge);
+        grad.addColorStop(0.42, color.fill);
+        grad.addColorStop(1, shadeColor(color.fill, -36));
+        pctx.fillStyle = grad;
+        pctx.beginPath();
+        pctx.arc(x, y, r, 0, Math.PI * 2);
+        pctx.fill();
+        pctx.lineWidth = 1.2;
+        pctx.strokeStyle = 'rgba(255,255,255,0.16)';
+        pctx.stroke();
+        pctx.beginPath();
+        pctx.fillStyle = 'rgba(255,255,255,0.18)';
+        pctx.arc(x - r * 0.28, y - r * 0.34, r * 0.22, 0, Math.PI * 2);
+        pctx.fill();
+      }
+      nextPreview.appendChild(previewCanvas);
+    }
+
+    function newRound() {
+      score = 0;
+      shots = 0;
+      clustersPopped = 0;
+      ceilingDrops = 0;
+      missedShots = 0;
+      gameState = 'ready';
+      confetti = [];
+      currentBubble = createBubble();
+      nextBubble = createBubble();
+      shotActive = false;
+      shot = null;
+      seededRows = 6;
+      shotsSinceSurge = 0;
+      initGrid();
+      refreshShooterColors();
+      victoryMessage.classList.remove('show');
+      statusText.textContent = surgeMode ? 'Line up your first shot. Row surge is armed.' : 'Line up your first shot.';
+      updatePanels();
+      updateSurgeButton();
+    }
+
+    function restartRound() {
+      newRound();
+    }
+
+    function getPointerPos(evt) {
+      const rect = canvas.getBoundingClientRect();
+      const clientX = evt.touches ? evt.touches[0].clientX : evt.clientX;
+      const clientY = evt.touches ? evt.touches[0].clientY : evt.clientY;
+      const x = (clientX - rect.left) * (canvas.width / rect.width);
+      const y = (clientY - rect.top) * (canvas.height / rect.height);
+      return { x, y };
+    }
+
+    function updateAimFromPointer(pos) {
+      lastPointerPos = pos;
+      let angle = Math.atan2(pos.y - SHOOTER_Y, pos.x - SHOOTER_X);
+      const minAngle = -Math.PI + 0.26;
+      const maxAngle = -0.26;
+      angle = Math.min(maxAngle, Math.max(minAngle, angle));
+      aimAngle = angle;
+    }
+
+    canvas.addEventListener('mousemove', evt => {
+      updateAimFromPointer(getPointerPos(evt));
+    });
+
+    canvas.addEventListener('mousedown', evt => {
+      isPointerDown = true;
+      updateAimFromPointer(getPointerPos(evt));
+    });
+
+    canvas.addEventListener('mouseup', evt => {
+      updateAimFromPointer(getPointerPos(evt));
+      if (isPointerDown) fireShot();
+      isPointerDown = false;
+    });
+
+    canvas.addEventListener('mouseleave', () => {
+      isPointerDown = false;
+    });
+
+    canvas.addEventListener('touchstart', evt => {
+      evt.preventDefault();
+      isPointerDown = true;
+      updateAimFromPointer(getPointerPos(evt));
+    }, { passive: false });
+
+    canvas.addEventListener('touchmove', evt => {
+      evt.preventDefault();
+      updateAimFromPointer(getPointerPos(evt));
+    }, { passive: false });
+
+    canvas.addEventListener('touchend', evt => {
+      evt.preventDefault();
+      if (isPointerDown) fireShot();
+      isPointerDown = false;
+    }, { passive: false });
+
+    function updateSurgeButton() {
+      surgeModeBtn.textContent = `Row Surge: ${surgeMode ? 'On' : 'Off'}`;
+      surgeModeBtn.setAttribute('aria-pressed', surgeMode ? 'true' : 'false');
+      surgeModeBtn.style.borderColor = surgeMode ? 'rgba(240,208,128,0.82)' : '';
+      surgeModeBtn.style.boxShadow = surgeMode ? '0 0 18px 2px rgba(200,149,42,0.28), inset 0 1px 0 rgba(200,149,42,0.18)' : '';
+    }
+
+    newGameBtn.addEventListener('click', newRound);
+    resetBtn.addEventListener('click', restartRound);
+    surgeModeBtn.addEventListener('click', () => {
+      surgeMode = !surgeMode;
+      shotsSinceSurge = 0;
+      updateSurgeButton();
+      if (gameState !== 'won' && gameState !== 'lost') {
+        statusText.textContent = surgeMode
+          ? 'Row surge engaged. A new row will descend after every 10 launched shots.'
+          : 'Row surge disengaged. Only the standard ceiling pressure remains.';
+      }
+    });
+
+    function animate() {
+      updateShot();
+      drawBoard();
+      animationFrameId = requestAnimationFrame(animate);
+    }
+
+    setupLegend();
+    newRound();
+    animate();
+  </script>
+</body>
+</html>
