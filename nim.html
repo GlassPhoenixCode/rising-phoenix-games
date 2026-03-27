@@ -1,0 +1,1240 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>Nim · Rising Phoenix Games</title>
+  <link rel="stylesheet" href="shared.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700&family=Cinzel:wght@400;600;700;900&family=IM+Fell+English:ital@0;1&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; }
+    html, body { margin: 0; min-height: 100%; }
+
+    :root {
+      --message-width: 88%;
+      --heap-max: 7;
+      --ember-size: clamp(32px, 5vw, 42px);
+      --ember-gap: clamp(8px, 1vw, 12px);
+      --row-height: clamp(58px, 9vw, 76px);
+      --banner-glow: rgba(240, 208, 128, 0.28);
+      --select-blue: rgba(130, 185, 255, 0.95);
+      --take-red: rgba(255, 120, 110, 0.95);
+      --p1-a: #d05d47;
+      --p1-b: #7d2016;
+      --p2-a: #f3dfab;
+      --p2-b: #bf9440;
+      --ember-core: #ffd784;
+      --ember-mid: #ff8e2b;
+      --ember-edge: #9f2608;
+      --ash: rgba(255,255,255,0.12);
+    }
+
+    body {
+      font-family: var(--font-body);
+      color: var(--text);
+      background:
+        radial-gradient(ellipse 90% 55% at 15% 8%, rgba(90,48,12,0.55) 0%, transparent 58%),
+        radial-gradient(ellipse 70% 65% at 85% 90%, rgba(50,25,6,0.60) 0%, transparent 55%),
+        radial-gradient(ellipse 60% 40% at 50% 50%, rgba(30,18,5,0.40) 0%, transparent 70%),
+        linear-gradient(160deg, #1c1106 0%, #0f0c07 45%, #13100a 100%);
+      background-attachment: fixed;
+    }
+
+    #app {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      isolation: isolate;
+    }
+
+    .site-header {
+      padding: 0;
+      background: linear-gradient(180deg, #1e1508 0%, #120e06 100%);
+      border-bottom: 2px solid var(--gold);
+      box-shadow: 0 4px 24px rgba(0,0,0,0.7), 0 1px 0 rgba(200,149,42,0.15) inset;
+      position: relative;
+      overflow: hidden;
+      flex-shrink: 0;
+    }
+    .site-header::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: repeating-linear-gradient(
+        90deg,
+        transparent 0px,
+        transparent 48px,
+        rgba(200,149,42,0.04) 48px,
+        rgba(200,149,42,0.04) 49px
+      );
+      pointer-events: none;
+    }
+    .header-inner { position: relative; padding: 14px 20px 12px; }
+    .header-row { display: flex; align-items: center; margin-bottom: 6px; }
+
+    .rpg-back {
+      display: inline-block;
+      font-family: var(--font-ui);
+      font-size: 0.78rem;
+      letter-spacing: 0.08em;
+      color: var(--gold);
+      text-decoration: none;
+      padding: 0.55rem 1.1rem 0.55rem 2rem;
+      border: 1px solid rgba(200,149,42,0.25);
+      border-radius: 3px;
+      background: linear-gradient(180deg, #2a2010 0%, #1a1508 100%);
+      position: relative;
+      transition: border-color 0.2s, box-shadow 0.2s, color 0.2s;
+      margin: 0;
+      flex: 0 0 auto;
+      z-index: 2;
+    }
+    .rpg-back::before { content: '\2190'; position: absolute; left: 0.7rem; }
+    .rpg-back:hover {
+      border-color: var(--gold-light);
+      box-shadow: 0 0 18px 2px var(--gold-glow);
+      color: var(--gold-light);
+    }
+
+    .header-center {
+      flex: 1 1 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.85rem;
+      min-width: 0;
+    }
+    .header-spacer { visibility: hidden; pointer-events: none; }
+    .phoenix-mark {
+      width: 52px;
+      height: 52px;
+      object-fit: contain;
+      flex-shrink: 0;
+      filter: drop-shadow(0 0 10px rgba(200,149,42,0.5));
+    }
+    .title-block {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      min-width: 0;
+    }
+    .game-title {
+      margin: 0;
+      font-family: var(--font-display);
+      font-size: clamp(1.15rem, 3.8vw, 2rem);
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      line-height: 1.1;
+      background: linear-gradient(135deg, var(--gold-light) 0%, var(--gold) 40%, #a07020 80%, var(--gold-light) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .game-subtitle {
+      margin: 0.2rem 0 0;
+      font-style: italic;
+      color: #c8a878;
+      font-size: 0.82rem;
+      letter-spacing: 0.05em;
+    }
+
+    .main-wrap {
+      width: 100%;
+      max-width: 1180px;
+      margin: 0 auto;
+      padding: 22px 16px 36px;
+      display: grid;
+      grid-template-columns: minmax(320px, 1.2fr) minmax(280px, 0.8fr);
+      gap: 20px;
+      flex: 1;
+    }
+
+    .panel {
+      background: linear-gradient(160deg, var(--surface) 0%, var(--bg-warm) 100%);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      box-shadow: inset 0 0 30px rgba(0,0,0,0.35), 0 10px 34px rgba(0,0,0,0.45);
+      overflow: hidden;
+      position: relative;
+    }
+    .panel-header {
+      padding: 14px 16px 10px;
+      border-bottom: 1px solid rgba(200,149,42,0.14);
+      background: linear-gradient(180deg, rgba(255,255,255,0.03) 0%, rgba(255,255,255,0) 100%);
+    }
+    .panel-label {
+      font-family: var(--font-ui);
+      font-size: 0.7rem;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: var(--gold);
+      margin: 0 0 0.25rem;
+    }
+    .status-bar {
+      margin: 0;
+      min-height: 2.4rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      padding: 8px 16px 8px 28px;
+      background: rgba(0,0,0,0.32);
+      border: 1px solid rgba(200,149,42,0.18);
+      border-radius: 8px;
+      font-family: var(--font-ui);
+      font-size: 0.8rem;
+      letter-spacing: 0.08em;
+      color: var(--gold-light);
+      position: relative;
+      text-align: center;
+    }
+    .status-bar::before {
+      content: '⚜';
+      position: absolute;
+      left: 10px;
+      font-size: 10px;
+      color: var(--gold);
+      opacity: 0.7;
+    }
+
+    .board-panel {
+      display: flex;
+      flex-direction: column;
+      min-height: 760px;
+    }
+    .board-area {
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 18px;
+      flex: 1;
+      position: relative;
+    }
+
+    .top-metrics {
+      width: min(100%, 760px);
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 10px;
+    }
+    .metric {
+      padding: 10px 12px;
+      border-radius: 12px;
+      background: linear-gradient(180deg, rgba(255,255,255,0.04) 0%, rgba(0,0,0,0.16) 100%);
+      border: 1px solid rgba(200,149,42,0.18);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.03);
+      text-align: center;
+      min-height: 68px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      gap: 5px;
+    }
+    .metric-label {
+      font-family: var(--font-ui);
+      font-size: 0.62rem;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: var(--gold);
+    }
+    .metric-value {
+      font-family: var(--font-display);
+      color: var(--gold-light);
+      font-size: clamp(0.9rem, 2.4vw, 1.35rem);
+      line-height: 1;
+    }
+    .metric-sub {
+      color: var(--text-muted);
+      font-size: 0.8rem;
+      font-style: italic;
+      line-height: 1.1;
+    }
+
+    .nim-frame {
+      width: min(100%, 760px);
+      position: relative;
+      padding: 18px;
+      border-radius: 18px;
+      background:
+        radial-gradient(circle at 50% 42%, rgba(76,42,11,0.34) 0%, rgba(20,12,4,0.96) 72%),
+        linear-gradient(160deg, #201407 0%, #100b04 100%);
+      border: 1px solid rgba(200,149,42,0.28);
+      box-shadow:
+        inset 0 1px 0 rgba(255,255,255,0.04),
+        inset 0 0 38px rgba(0,0,0,0.35),
+        0 0 0 1px rgba(0,0,0,0.35),
+        0 18px 42px rgba(0,0,0,0.45),
+        0 0 30px rgba(200,149,42,0.14);
+      overflow: hidden;
+      isolation: isolate;
+    }
+    .nim-frame::before,
+    .nim-frame::after {
+      content: '◆';
+      position: absolute;
+      color: rgba(200,149,42,0.45);
+      font-size: 10px;
+      line-height: 1;
+      z-index: 2;
+    }
+    .nim-frame::before { top: 6px; left: 8px; }
+    .nim-frame::after { bottom: 6px; right: 8px; }
+
+    .heaps {
+      display: grid;
+      gap: 14px;
+      position: relative;
+      z-index: 1;
+    }
+    .heap-row {
+      display: grid;
+      grid-template-columns: 92px 1fr;
+      gap: 14px;
+      align-items: center;
+      min-height: var(--row-height);
+      padding: 12px 14px;
+      border-radius: 16px;
+      border: 1px solid rgba(200,149,42,0.16);
+      background: linear-gradient(180deg, rgba(255,255,255,0.03), rgba(0,0,0,0.14));
+      transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.15s ease;
+    }
+    .heap-row.active {
+      border-color: rgba(130, 185, 255, 0.5);
+      box-shadow: 0 0 0 1px rgba(130, 185, 255, 0.15), 0 0 24px rgba(70, 130, 220, 0.1);
+    }
+    .heap-row.cleared {
+      opacity: 0.45;
+      filter: saturate(0.6);
+    }
+    .heap-label {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      text-align: center;
+      min-height: 100%;
+      border-radius: 12px;
+      background: rgba(0,0,0,0.22);
+      border: 1px solid rgba(200,149,42,0.12);
+      padding: 10px 8px;
+    }
+    .heap-name {
+      font-family: var(--font-ui);
+      font-size: 0.72rem;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--gold);
+    }
+    .heap-count {
+      font-family: var(--font-display);
+      color: var(--gold-light);
+      font-size: clamp(1rem, 2.1vw, 1.3rem);
+      line-height: 1;
+    }
+
+    .heap-track {
+      display: flex;
+      flex-wrap: nowrap;
+      gap: var(--ember-gap);
+      align-items: center;
+      justify-content: flex-start;
+      min-height: var(--row-height);
+      overflow-x: auto;
+      padding: 4px 2px 4px 0;
+      scrollbar-width: thin;
+      scrollbar-color: rgba(200,149,42,0.22) transparent;
+    }
+
+    .ember {
+      width: var(--ember-size);
+      height: var(--ember-size);
+      border-radius: 50%;
+      border: 1px solid rgba(255, 190, 110, 0.3);
+      background:
+        radial-gradient(circle at 38% 34%, var(--ember-core) 0 10%, #ffcf66 10%, var(--ember-mid) 36%, var(--ember-edge) 70%, rgba(0,0,0,0.95) 100%);
+      box-shadow:
+        inset 0 1px 0 rgba(255,255,255,0.18),
+        0 0 0 1px rgba(0,0,0,0.28),
+        0 0 8px rgba(255,130,40,0.22),
+        0 0 18px rgba(255,90,20,0.1);
+      cursor: pointer;
+      position: relative;
+      transition: transform 0.12s ease, box-shadow 0.16s ease, border-color 0.16s ease, filter 0.16s ease;
+      flex: 0 0 auto;
+    }
+    .ember::before {
+      content: '';
+      position: absolute;
+      inset: 13% 14% 40% 18%;
+      border-radius: 50%;
+      background: radial-gradient(circle at 50% 55%, rgba(255,255,255,0.68), rgba(255,255,255,0) 70%);
+      pointer-events: none;
+      opacity: 0.8;
+    }
+    .ember::after {
+      content: '';
+      position: absolute;
+      left: 50%;
+      bottom: calc(100% - 6px);
+      width: 58%;
+      height: 62%;
+      transform: translateX(-50%);
+      border-radius: 50% 50% 46% 46%;
+      background: radial-gradient(circle at 50% 72%, rgba(255,230,170,0.95), rgba(255,150,35,0.86) 55%, rgba(255,90,15,0) 80%);
+      filter: blur(1px);
+      opacity: 0.88;
+      pointer-events: none;
+    }
+    .ember:hover {
+      transform: translateY(-1px) scale(1.03);
+      border-color: rgba(255, 220, 150, 0.5);
+      box-shadow: 0 0 0 1px rgba(255,170,80,0.16), 0 0 14px rgba(255,130,50,0.28), 0 0 30px rgba(255,90,20,0.12);
+    }
+    .ember.selected {
+      border-color: rgba(122, 255, 150, 0.9);
+      box-shadow: 0 0 0 2px rgba(64, 214, 108, 0.42), 0 0 18px rgba(64, 214, 108, 0.42), 0 0 30px rgba(30, 160, 70, 0.22);
+      filter: saturate(1.15) brightness(1.05);
+      transform: translateY(-1px) scale(1.05);
+    }
+    .ember.to-remove {
+      border-color: rgba(255, 150, 140, 0.7);
+      box-shadow: 0 0 0 2px rgba(255,120,110,0.24), 0 0 18px rgba(255,120,110,0.26), 0 0 30px rgba(255,80,30,0.2);
+      filter: saturate(1.15);
+    }
+    .ember.ai-focus {
+      animation: aiPulse 0.6s ease-in-out 2;
+    }
+    @keyframes aiPulse {
+      0%,100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(240,208,128,0.0), 0 0 18px rgba(255,90,20,0.1); }
+      50% { transform: scale(1.08); box-shadow: 0 0 0 4px rgba(240,208,128,0.18), 0 0 26px rgba(240,208,128,0.26); }
+    }
+
+    .selection-bar {
+      width: min(100%, 760px);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+      padding: 14px 16px;
+      border-radius: 14px;
+      border: 1px solid rgba(200,149,42,0.18);
+      background: rgba(0,0,0,0.24);
+    }
+    .selection-copy {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      min-width: 220px;
+      flex: 1;
+    }
+    .selection-label {
+      font-family: var(--font-ui);
+      font-size: 0.66rem;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: var(--gold);
+    }
+    .selection-text {
+      color: #d9bf8d;
+      font-size: 1rem;
+      line-height: 1.25;
+      min-height: 1.5em;
+    }
+    .selection-text strong {
+      color: var(--gold-light);
+      font-family: var(--font-ui);
+      font-size: 0.92rem;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+    }
+
+    .controls-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      justify-content: center;
+    }
+    .rpg-btn {
+      font-family: var(--font-ui);
+      font-size: 0.78rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: #f0d080;
+      background: linear-gradient(180deg,rgba(40,28,8,0.9) 0%,rgba(20,14,4,0.95) 100%);
+      border: 1px solid rgba(200,149,42,0.45);
+      padding: 10px 18px;
+      border-radius: 999px;
+      cursor: pointer;
+      transition: all 0.2s;
+      box-shadow: 0 1px 0 rgba(200,149,42,0.15), inset 0 1px 0 rgba(200,149,42,0.1);
+    }
+    .rpg-btn:hover {
+      border-color: rgba(200,149,42,0.75);
+      box-shadow: 0 0 18px 2px rgba(200,149,42,0.25),0 0 48px 8px rgba(180,120,20,0.15),inset 0 1px 0 rgba(200,149,42,0.2);
+      color: #f8e898;
+      transform: translateY(-1px);
+    }
+    .rpg-btn:active { transform: translateY(0); }
+    .rpg-btn:disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
+      transform: none;
+      box-shadow: none;
+    }
+
+    .message-banner {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      width: 18%;
+      max-width: calc(100% - 40px);
+      transform: translate(-50%, -50%) scale(0.35);
+      opacity: 0;
+      pointer-events: none;
+      z-index: 7;
+      border-radius: 18px;
+      border: 1px solid rgba(240,208,128,0.5);
+      background:
+        linear-gradient(180deg, rgba(80,42,10,0.96) 0%, rgba(20,12,4,0.96) 100%);
+      box-shadow: 0 0 0 1px rgba(0,0,0,0.35), 0 0 44px var(--banner-glow), inset 0 1px 0 rgba(255,255,255,0.08);
+      text-align: center;
+      padding: 16px 14px;
+    }
+    .message-banner.show { animation: victoryGrow 1.75s ease forwards; }
+    .banner-title {
+      font-family: var(--font-display);
+      font-size: clamp(1rem, 3vw, 2rem);
+      line-height: 1.05;
+      background: linear-gradient(135deg, #fff0b2 0%, #f0d080 38%, #c8952a 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin: 0;
+      letter-spacing: 0.05em;
+    }
+    .banner-subtitle {
+      margin: 0.35rem 0 0;
+      font-size: clamp(0.82rem, 1.8vw, 1rem);
+      color: #dcc18a;
+      font-style: italic;
+      letter-spacing: 0.04em;
+    }
+    @keyframes victoryGrow {
+      0% { opacity: 0; width: 18%; transform: translate(-50%, -50%) scale(0.35); }
+      10% { opacity: 1; }
+      43% { opacity: 1; width: var(--message-width); transform: translate(-50%, -50%) scale(1); }
+      85% { opacity: 1; width: var(--message-width); transform: translate(-50%, -50%) scale(1); }
+      100% { opacity: 0; width: var(--message-width); transform: translate(-50%, -50%) scale(1); }
+    }
+
+    .side-panel {
+      display: flex;
+      flex-direction: column;
+      min-height: 760px;
+    }
+    .side-content {
+      padding: 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      flex: 1;
+    }
+    .card {
+      border-radius: 14px;
+      border: 1px solid rgba(200,149,42,0.14);
+      background: linear-gradient(180deg, rgba(255,255,255,0.03), rgba(0,0,0,0.14));
+      padding: 14px;
+    }
+    .card-title {
+      margin: 0 0 10px;
+      font-family: var(--font-ui);
+      font-size: 0.7rem;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: var(--gold);
+    }
+    .segment {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+    .segment button,
+    .preset-grid button {
+      border-radius: 12px;
+      border: 1px solid rgba(200,149,42,0.24);
+      background: linear-gradient(180deg, rgba(48,32,10,0.95), rgba(18,12,4,0.95));
+      color: #d8bf89;
+      font-family: var(--font-ui);
+      font-size: 0.72rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      padding: 10px 10px;
+      cursor: pointer;
+      transition: all 0.18s ease;
+    }
+    .segment button.active,
+    .preset-grid button.active,
+    .segment button:hover,
+    .preset-grid button:hover {
+      border-color: rgba(240,208,128,0.64);
+      color: #f6e8bc;
+      box-shadow: 0 0 0 1px rgba(240,208,128,0.16), 0 0 16px rgba(200,149,42,0.14);
+      transform: translateY(-1px);
+    }
+    .segment button.active,
+    .preset-grid button.active {
+      background: linear-gradient(180deg, rgba(92,58,15,0.98), rgba(28,18,6,0.98));
+    }
+    .preset-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 8px;
+    }
+    .card p,
+    .card li {
+      color: #d0b37a;
+      margin: 0;
+      line-height: 1.45;
+      font-size: 0.97rem;
+    }
+    .card ul {
+      margin: 0;
+      padding-left: 1.15rem;
+      display: grid;
+      gap: 8px;
+    }
+    .turn-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 12px;
+      border-radius: 999px;
+      border: 1px solid rgba(200,149,42,0.18);
+      background: rgba(0,0,0,0.28);
+      font-family: var(--font-ui);
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--gold-light);
+      font-size: 0.75rem;
+    }
+    .turn-dot {
+      width: 13px;
+      height: 13px;
+      border-radius: 50%;
+      box-shadow: 0 0 12px rgba(255,140,40,0.2);
+      background: radial-gradient(circle at 35% 35%, var(--p1-a), var(--p1-b));
+    }
+    .turn-dot.player-2 {
+      background: radial-gradient(circle at 35% 35%, var(--p2-a), var(--p2-b));
+      box-shadow: 0 0 12px rgba(240,208,128,0.18);
+    }
+    .mini-log {
+      display: grid;
+      gap: 8px;
+      max-height: 190px;
+      overflow: auto;
+      padding-right: 4px;
+    }
+    .log-item {
+      border-radius: 12px;
+      padding: 10px 12px;
+      background: rgba(0,0,0,0.24);
+      border: 1px solid rgba(200,149,42,0.12);
+      color: #cfb684;
+      line-height: 1.35;
+      font-size: 0.92rem;
+    }
+    .log-item strong {
+      color: var(--gold-light);
+      font-family: var(--font-ui);
+      font-size: 0.76rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .confetti-layer {
+      position: fixed;
+      inset: 0;
+      overflow: hidden;
+      pointer-events: none;
+      z-index: 30;
+    }
+    .confetti {
+      position: absolute;
+      width: 12px;
+      height: 18px;
+      border-radius: 2px;
+      opacity: 0;
+      animation: confettiFall 1300ms ease-out forwards;
+      box-shadow: 0 0 12px rgba(255,255,255,0.12);
+      transform-origin: center;
+    }
+    @keyframes confettiFall {
+      0% {
+        opacity: 1;
+        transform: translate3d(0, 0, 0) rotate(0deg) scale(1);
+      }
+      100% {
+        opacity: 0;
+        transform: translate3d(var(--dx), var(--dy), 0) rotate(var(--rot)) scale(0.55);
+      }
+    }
+
+    .rpg-footer {
+      padding: 10px 20px 14px;
+      border-top: 1px solid rgba(200,149,42,0.1);
+      font-family: var(--font-body);
+      font-style: italic;
+      font-size: 11px;
+      color: var(--text-dim);
+      letter-spacing: 0.5px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: auto;
+    }
+
+    @media (max-width: 940px) {
+      .main-wrap {
+        grid-template-columns: 1fr;
+      }
+      .board-panel, .side-panel { min-height: auto; }
+      .top-metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    }
+
+    @media (max-width: 640px) {
+      .header-inner { padding-inline: 12px; }
+      .main-wrap { padding-inline: 12px; }
+      .top-metrics { grid-template-columns: 1fr 1fr; }
+      .heap-row { grid-template-columns: 78px 1fr; gap: 10px; padding: 10px; }
+      .selection-bar { padding: 12px; }
+      .controls-row { width: 100%; justify-content: stretch; }
+      .controls-row .rpg-btn { flex: 1 1 100%; justify-content: center; }
+      .segment { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <div id="app">
+    <header class="site-header">
+      <div class="header-inner">
+        <div class="header-row">
+          <a href="index.html" class="rpg-back">Hub</a>
+          <div class="header-center">
+            <img class="phoenix-mark" alt="Rising Phoenix Games logo" src="data:image/png;base64,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">
+            <div class="title-block">
+              <h1 class="game-title">Nim</h1>
+              <p class="game-subtitle">Tend the pyres. Leave no winning ember behind.</p>
+            </div>
+          </div>
+          <a href="index.html" class="rpg-back header-spacer">Hub</a>
+        </div>
+      </div>
+    </header>
+
+    <main class="main-wrap">
+      <section class="panel board-panel">
+        <div class="panel-header">
+          <div class="panel-label">Game State</div>
+          <div id="status-bar" class="status-bar">Select a glowing ember from one pyre, then take it.</div>
+        </div>
+
+        <div class="board-area">
+          <div class="top-metrics">
+            <div class="metric">
+              <div class="metric-label">Mode</div>
+              <div id="metric-mode" class="metric-value">Oracle</div>
+              <div class="metric-sub">Solo duel</div>
+            </div>
+            <div class="metric">
+              <div class="metric-label">Turn</div>
+              <div id="metric-turn" class="metric-value">Player 1</div>
+              <div id="metric-turn-sub" class="metric-sub">Make the first cut</div>
+            </div>
+            <div class="metric">
+              <div class="metric-label">Pyres Left</div>
+              <div id="metric-heaps" class="metric-value">16</div>
+              <div class="metric-sub">Across all rows</div>
+            </div>
+            <div class="metric">
+              <div class="metric-label">Position</div>
+              <div id="metric-position" class="metric-value">Balanced</div>
+              <div id="metric-position-sub" class="metric-sub">Read the xor</div>
+            </div>
+          </div>
+
+          <div class="nim-frame">
+            <div id="heaps" class="heaps"></div>
+            <div id="message-banner" class="message-banner" aria-hidden="true">
+              <h2 id="banner-title" class="banner-title">✦ Victory ✦</h2>
+              <p id="banner-subtitle" class="banner-subtitle">The last ember yields.</p>
+            </div>
+          </div>
+
+          <div class="selection-bar">
+            <div class="selection-copy">
+              <div class="selection-label">Current Selection</div>
+              <div id="selection-text" class="selection-text">Choose a pyre and mark how many embers to remove.</div>
+            </div>
+            <div class="controls-row">
+              <button id="btn-take" class="rpg-btn">Take Selected</button>
+              <button id="btn-clear" class="rpg-btn">Clear Choice</button>
+              <button id="btn-reset" class="rpg-btn">New Game</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <aside class="panel side-panel">
+        <div class="panel-header">
+          <div class="panel-label">Strategist's Ledger</div>
+          <div class="status-bar">One turn removes any number from a single pyre.</div>
+        </div>
+
+        <div class="side-content">
+          <section class="card">
+            <h3 class="card-title">Turn Marker</h3>
+            <div class="turn-pill"><span id="turn-dot" class="turn-dot"></span><span id="turn-pill-text">Player 1 to act</span></div>
+          </section>
+
+          <section class="card">
+            <h3 class="card-title">Mode</h3>
+            <div id="mode-segment" class="segment">
+              <button data-mode="ai" class="active">Oracle</button>
+              <button data-mode="hotseat">Duel</button>
+            </div>
+          </section>
+
+          <section class="card">
+            <h3 class="card-title">Opening Pyres</h3>
+            <div id="preset-grid" class="preset-grid">
+              <button data-preset="classic" class="active">Classic 1 · 3 · 5 · 7</button>
+              <button data-preset="staggered">Staggered 2 · 4 · 6</button>
+              <button data-preset="gauntlet">Gauntlet 1 · 4 · 7 · 8</button>
+              <button data-preset="random">Random Four Pyres</button>
+            </div>
+          </section>
+
+          <section class="card">
+            <h3 class="card-title">Rules</h3>
+            <ul>
+              <li>Choose exactly one pyre on your turn.</li>
+              <li>Remove one or more embers from that pyre.</li>
+              <li>The player who takes the final ember wins.</li>
+            </ul>
+          </section>
+
+          <section class="card">
+            <h3 class="card-title">Tactical Note</h3>
+            <p id="strategy-note">A balanced board can still hide danger. The Oracle plays optimal Nim, so any unforced error can be punished immediately.</p>
+          </section>
+
+          <section class="card">
+            <h3 class="card-title">Move Chronicle</h3>
+            <div id="move-log" class="mini-log"></div>
+          </section>
+        </div>
+      </aside>
+    </main>
+
+    <footer class="rpg-footer">
+      <span>© <span id="year"></span> Rising Phoenix Games</span>
+      <span>Michigan City, Indiana · Crafted in the Rising Phoenix style</span>
+    </footer>
+  </div>
+
+  <div id="confetti-layer" class="confetti-layer" aria-hidden="true"></div>
+
+  <script>
+    const PRESETS = {
+      classic: [1, 3, 5, 7],
+      staggered: [2, 4, 6],
+      gauntlet: [1, 4, 7, 8],
+      random: null
+    };
+
+    const modeSegment = document.getElementById('mode-segment');
+    const presetGrid = document.getElementById('preset-grid');
+    const heapsEl = document.getElementById('heaps');
+    const statusBar = document.getElementById('status-bar');
+    const selectionText = document.getElementById('selection-text');
+    const btnTake = document.getElementById('btn-take');
+    const btnClear = document.getElementById('btn-clear');
+    const btnReset = document.getElementById('btn-reset');
+    const metricMode = document.getElementById('metric-mode');
+    const metricTurn = document.getElementById('metric-turn');
+    const metricTurnSub = document.getElementById('metric-turn-sub');
+    const metricHeaps = document.getElementById('metric-heaps');
+    const metricPosition = document.getElementById('metric-position');
+    const metricPositionSub = document.getElementById('metric-position-sub');
+    const turnDot = document.getElementById('turn-dot');
+    const turnPillText = document.getElementById('turn-pill-text');
+    const strategyNote = document.getElementById('strategy-note');
+    const moveLog = document.getElementById('move-log');
+    const confettiLayer = document.getElementById('confetti-layer');
+    const banner = document.getElementById('message-banner');
+    const bannerTitle = document.getElementById('banner-title');
+    const bannerSubtitle = document.getElementById('banner-subtitle');
+
+    let state = {
+      mode: 'ai',
+      preset: 'classic',
+      heaps: [1, 3, 5, 7],
+      currentPlayer: 1,
+      selection: null,
+      log: [],
+      isGameOver: false,
+      isAiThinking: false
+    };
+
+    function randomPreset() {
+      const count = 4;
+      const arr = [];
+      for (let i = 0; i < count; i++) {
+        arr.push(1 + Math.floor(Math.random() * 8));
+      }
+      if (arr.every(v => v === 0)) arr[0] = 3;
+      return arr;
+    }
+
+    function getPresetHeaps(name) {
+      return name === 'random' ? randomPreset() : [...PRESETS[name]];
+    }
+
+    function totalEmbers() {
+      return state.heaps.reduce((sum, value) => sum + value, 0);
+    }
+
+    function nimSum() {
+      return state.heaps.reduce((acc, value) => acc ^ value, 0);
+    }
+
+    function positionLabel() {
+      const xor = nimSum();
+      if (totalEmbers() === 0) return { title: 'Ended', subtitle: 'No embers remain' };
+      if (xor === 0) return { title: 'Balanced', subtitle: 'Cold position' };
+      return { title: 'Advantage', subtitle: 'A winning cut exists' };
+    }
+
+    function playerName(player) {
+      if (state.mode === 'ai') return player === 1 ? 'Player 1' : 'Oracle';
+      return player === 1 ? 'Player 1' : 'Player 2';
+    }
+
+    function currentPlayerName() {
+      return playerName(state.currentPlayer);
+    }
+
+    function setStatus(text) {
+      statusBar.textContent = text;
+    }
+
+    function updateControls() {
+      const disabled = state.isGameOver || state.isAiThinking;
+      btnTake.disabled = disabled || !state.selection;
+      btnClear.disabled = disabled || !state.selection;
+      btnReset.disabled = false;
+    }
+
+    function renderMetrics() {
+      const position = positionLabel();
+      metricMode.textContent = state.mode === 'ai' ? 'Oracle' : 'Duel';
+      metricTurn.textContent = state.isGameOver ? 'Resolved' : currentPlayerName();
+      metricTurnSub.textContent = state.isGameOver ? 'Await a new match' : (state.currentPlayer === 1 ? 'Choose a cut' : (state.mode === 'ai' ? 'The Oracle studies' : 'Second hand to move'));
+      metricHeaps.textContent = String(totalEmbers());
+      metricPosition.textContent = position.title;
+      metricPositionSub.textContent = position.subtitle;
+      turnDot.className = 'turn-dot' + ((state.currentPlayer === 2) ? ' player-2' : '');
+      turnPillText.textContent = state.isGameOver ? 'Match complete' : `${currentPlayerName()} to act`;
+
+      const xor = nimSum();
+      if (state.mode === 'ai') {
+        if (state.isGameOver) {
+          strategyNote.textContent = 'The pyres are extinguished. Start a new arrangement to test another line.';
+        } else if (xor === 0) {
+          strategyNote.textContent = 'The board is currently balanced. In perfect play, the side to move has no forced edge.';
+        } else {
+          strategyNote.textContent = 'The board contains a winning cut. Reduce one pyre so the nim-sum becomes zero.';
+        }
+      } else {
+        strategyNote.textContent = 'In duel mode, track parity carefully. A single careless cut can hand the final ember to the other player.';
+      }
+    }
+
+    function renderSelectionText() {
+      if (state.isGameOver) {
+        selectionText.innerHTML = `The fires are spent. <strong>Start a new game</strong> to rekindle the pyres.`;
+        return;
+      }
+      if (state.isAiThinking) {
+        selectionText.innerHTML = `<strong>Oracle is choosing</strong> its cut.`;
+        return;
+      }
+      if (!state.selection) {
+        selectionText.innerHTML = `Choose a pyre and mark how many embers to remove.`;
+        return;
+      }
+      const row = state.selection.heapIndex + 1;
+      const count = state.selection.removeCount;
+      selectionText.innerHTML = `<strong>${currentPlayerName()}</strong> will take <strong>${count}</strong> ${count === 1 ? 'ember' : 'embers'} from <strong>Pyre ${row}</strong>.`;
+    }
+
+    function renderLog() {
+      if (!state.log.length) {
+        moveLog.innerHTML = '<div class="log-item">No cuts yet. The opening player chooses the first pyre.</div>';
+        return;
+      }
+      moveLog.innerHTML = state.log.map(entry => `<div class="log-item"><strong>${entry.actor}</strong><br>${entry.text}</div>`).join('');
+      moveLog.scrollTop = moveLog.scrollHeight;
+    }
+
+    function selectMove(heapIndex, removeCount) {
+      if (state.isGameOver || state.isAiThinking) return;
+      if (state.mode === 'ai' && state.currentPlayer === 2) return;
+      if (state.heaps[heapIndex] < removeCount || removeCount <= 0) return;
+      state.selection = { heapIndex, removeCount };
+      render();
+    }
+
+    function clearSelection() {
+      state.selection = null;
+      render();
+    }
+
+    function renderHeaps() {
+      heapsEl.innerHTML = '';
+      state.heaps.forEach((count, heapIndex) => {
+        const row = document.createElement('div');
+        row.className = 'heap-row' + (count === 0 ? ' cleared' : '') + (state.selection && state.selection.heapIndex === heapIndex ? ' active' : '');
+
+        const label = document.createElement('div');
+        label.className = 'heap-label';
+        label.innerHTML = `<div class="heap-name">Pyre ${heapIndex + 1}</div><div class="heap-count">${count}</div>`;
+
+        const track = document.createElement('div');
+        track.className = 'heap-track';
+
+        if (count === 0) {
+          const empty = document.createElement('div');
+          empty.className = 'log-item';
+          empty.style.margin = '0';
+          empty.style.width = '100%';
+          empty.style.textAlign = 'center';
+          empty.textContent = 'Ashes only';
+          track.appendChild(empty);
+        } else {
+          for (let emberIndex = 0; emberIndex < count; emberIndex++) {
+            const ember = document.createElement('button');
+            ember.type = 'button';
+            ember.className = 'ember';
+            ember.setAttribute('aria-label', `Select ${count - emberIndex} from pyre ${heapIndex + 1}`);
+            const removeCount = count - emberIndex;
+            if (state.selection && state.selection.heapIndex === heapIndex) {
+              ember.classList.add('selected');
+              if (emberIndex >= count - state.selection.removeCount) ember.classList.add('to-remove');
+            }
+            ember.addEventListener('click', () => selectMove(heapIndex, removeCount));
+            track.appendChild(ember);
+          }
+        }
+
+        row.appendChild(label);
+        row.appendChild(track);
+        heapsEl.appendChild(row);
+      });
+    }
+
+    function render() {
+      renderHeaps();
+      renderMetrics();
+      renderSelectionText();
+      renderLog();
+      updateControls();
+    }
+
+    function addLog(actor, text) {
+      state.log.push({ actor, text });
+      if (state.log.length > 24) state.log = state.log.slice(-24);
+    }
+
+    function endGame(winner) {
+      state.isGameOver = true;
+      state.selection = null;
+      setStatus(`${winner} claims the final ember.`);
+      showVictoryMessage(winner === 'Oracle' ? '✦ Oracle Triumph ✦' : `✦ ${winner} Prevails ✦`, winner === 'Oracle' ? 'The pyres obey perfect calculation.' : 'The last ember yields to your hand.');
+      burstConfetti();
+      render();
+    }
+
+    function performMove(actorName, heapIndex, removeCount, opts = {}) {
+      state.heaps[heapIndex] = Math.max(0, state.heaps[heapIndex] - removeCount);
+      addLog(actorName, `Took ${removeCount} ${removeCount === 1 ? 'ember' : 'embers'} from Pyre ${heapIndex + 1}.`);
+      state.selection = null;
+
+      const remaining = totalEmbers();
+      if (remaining === 0) {
+        endGame(actorName);
+        return;
+      }
+
+      state.currentPlayer = state.currentPlayer === 1 ? 2 : 1;
+      if (!opts.silentStatus) {
+        setStatus(`${actorName} removed ${removeCount} from Pyre ${heapIndex + 1}. ${currentPlayerName()} now acts.`);
+      }
+      render();
+
+      if (state.mode === 'ai' && state.currentPlayer === 2 && !state.isGameOver) {
+        queueAiMove();
+      }
+    }
+
+    function optimalAiMove() {
+      const xor = nimSum();
+      if (xor !== 0) {
+        for (let i = 0; i < state.heaps.length; i++) {
+          const target = state.heaps[i] ^ xor;
+          if (target < state.heaps[i]) {
+            return { heapIndex: i, removeCount: state.heaps[i] - target };
+          }
+        }
+      }
+      const nonEmpty = state.heaps
+        .map((value, index) => ({ value, index }))
+        .filter(item => item.value > 0)
+        .sort((a, b) => b.value - a.value);
+      const fallback = nonEmpty[0];
+      return { heapIndex: fallback.index, removeCount: 1 };
+    }
+
+    function animateAiChoice(heapIndex, removeCount) {
+      const row = heapsEl.children[heapIndex];
+      if (!row) return;
+      const embers = Array.from(row.querySelectorAll('.ember'));
+      const start = embers.length - removeCount;
+      embers.slice(start).forEach(el => el.classList.add('ai-focus'));
+    }
+
+    function queueAiMove() {
+      state.isAiThinking = true;
+      setStatus('The Oracle studies the pyres...');
+      render();
+      const move = optimalAiMove();
+      animateAiChoice(move.heapIndex, move.removeCount);
+      window.setTimeout(() => {
+        state.isAiThinking = false;
+        performMove('Oracle', move.heapIndex, move.removeCount, { silentStatus: false });
+      }, 780);
+    }
+
+    function handleTake() {
+      if (!state.selection || state.isGameOver || state.isAiThinking) return;
+      const actor = currentPlayerName();
+      const { heapIndex, removeCount } = state.selection;
+      performMove(actor, heapIndex, removeCount);
+    }
+
+    function applyMode(newMode) {
+      state.mode = newMode;
+      Array.from(modeSegment.querySelectorAll('button')).forEach(btn => btn.classList.toggle('active', btn.dataset.mode === newMode));
+      resetGame(false);
+    }
+
+    function applyPreset(newPreset) {
+      state.preset = newPreset;
+      Array.from(presetGrid.querySelectorAll('button')).forEach(btn => btn.classList.toggle('active', btn.dataset.preset === newPreset));
+      resetGame(false);
+    }
+
+    function resetGame(showStatus = true) {
+      state.heaps = getPresetHeaps(state.preset);
+      state.currentPlayer = 1;
+      state.selection = null;
+      state.log = [];
+      state.isGameOver = false;
+      state.isAiThinking = false;
+      metricMode.textContent = state.mode === 'ai' ? 'Oracle' : 'Duel';
+      if (showStatus) {
+        setStatus(state.mode === 'ai' ? 'Select a glowing ember from one pyre, then take it.' : 'Player 1 begins. Remove any number from a single pyre.');
+      }
+      render();
+    }
+
+    function showVictoryMessage(title, subtitle) {
+      bannerTitle.textContent = title;
+      bannerSubtitle.textContent = subtitle;
+      banner.classList.remove('show');
+      void banner.offsetWidth;
+      banner.classList.add('show');
+      window.setTimeout(() => banner.classList.remove('show'), 1800);
+    }
+
+    function burstConfetti() {
+      const colors = ['#f0d080', '#c8952a', '#cf5346', '#8ed7ff', '#7aaa5a', '#ffdca8'];
+      confettiLayer.innerHTML = '';
+      const bursts = 48;
+      for (let i = 0; i < bursts; i++) {
+        const piece = document.createElement('div');
+        piece.className = 'confetti';
+        const left = Math.random() * 100;
+        const top = 10 + Math.random() * 38;
+        const dx = (Math.random() * 240 - 120).toFixed(0) + 'px';
+        const dy = (220 + Math.random() * 260).toFixed(0) + 'px';
+        const rot = (Math.random() * 720 - 360).toFixed(0) + 'deg';
+        const color = colors[Math.floor(Math.random() * colors.length)];
+        piece.style.left = left + '%';
+        piece.style.top = top + '%';
+        piece.style.background = color;
+        piece.style.setProperty('--dx', dx);
+        piece.style.setProperty('--dy', dy);
+        piece.style.setProperty('--rot', rot);
+        piece.style.animationDelay = (Math.random() * 220).toFixed(0) + 'ms';
+        piece.style.transform = `rotate(${Math.random() * 180}deg)`;
+        confettiLayer.appendChild(piece);
+      }
+      window.setTimeout(() => { confettiLayer.innerHTML = ''; }, 1800);
+    }
+
+    btnTake.addEventListener('click', handleTake);
+    btnClear.addEventListener('click', clearSelection);
+    btnReset.addEventListener('click', () => resetGame(true));
+
+    modeSegment.addEventListener('click', event => {
+      const button = event.target.closest('button[data-mode]');
+      if (!button) return;
+      applyMode(button.dataset.mode);
+    });
+
+    presetGrid.addEventListener('click', event => {
+      const button = event.target.closest('button[data-preset]');
+      if (!button) return;
+      applyPreset(button.dataset.preset);
+    });
+
+    document.addEventListener('keydown', event => {
+      if ((event.key === 'Enter' || event.key === ' ') && state.selection && !state.isAiThinking && !state.isGameOver) {
+        if (document.activeElement && document.activeElement.classList.contains('ember')) return;
+        event.preventDefault();
+        handleTake();
+      }
+      if (event.key === 'Escape') {
+        clearSelection();
+      }
+      if (event.key.toLowerCase() === 'r') {
+        resetGame(true);
+      }
+    });
+
+    document.getElementById('year').textContent = new Date().getFullYear();
+    resetGame(true);
+  </script>
+</body>
+</html>

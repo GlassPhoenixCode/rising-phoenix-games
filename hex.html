@@ -1,0 +1,1081 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>Hex · Rising Phoenix Games</title>
+  <link rel="stylesheet" href="shared.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700&family=Cinzel:wght@400;600;700;900&family=IM+Fell+English:ital@0;1&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; }
+    html, body { margin: 0; min-height: 100%; }
+
+    :root {
+      --board-size: min(84vw, 760px);
+      --message-width: 88%;
+      --cell-a: #2a1a0d;
+      --cell-b: #1a1007;
+      --cell-edge: rgba(200,149,42,0.24);
+      --cell-edge-bright: rgba(240,208,128,0.72);
+      --p1-a: #bb4a3c;
+      --p1-b: #6f1712;
+      --p2-a: #4f86d9;
+      --p2-b: #1f3f75;
+      --p1-glow: rgba(196,64,64,0.36);
+      --p2-glow: rgba(79,134,217,0.36);
+      --hint-ring: rgba(136,220,145,0.82);
+      --select-ring: rgba(240,208,128,0.85);
+      --trail-gold: rgba(240,208,128,0.9);
+    }
+
+    body {
+      font-family: var(--font-body);
+      color: var(--text);
+      background:
+        radial-gradient(ellipse 90% 55% at 15% 8%, rgba(90,48,12,0.55) 0%, transparent 58%),
+        radial-gradient(ellipse 70% 65% at 85% 90%, rgba(50,25,6,0.60) 0%, transparent 55%),
+        radial-gradient(ellipse 60% 40% at 50% 50%, rgba(30,18,5,0.40) 0%, transparent 70%),
+        linear-gradient(160deg, #1c1106 0%, #0f0c07 45%, #13100a 100%);
+      background-attachment: fixed;
+    }
+
+    #app {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      isolation: isolate;
+    }
+
+    .site-header {
+      padding: 0;
+      background: linear-gradient(180deg, #1e1508 0%, #120e06 100%);
+      border-bottom: 2px solid var(--gold);
+      box-shadow: 0 4px 24px rgba(0,0,0,0.7), 0 1px 0 rgba(200,149,42,0.15) inset;
+      position: relative;
+      overflow: hidden;
+      flex-shrink: 0;
+    }
+    .site-header::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: repeating-linear-gradient(
+        90deg,
+        transparent 0px,
+        transparent 48px,
+        rgba(200,149,42,0.04) 48px,
+        rgba(200,149,42,0.04) 49px
+      );
+      pointer-events: none;
+    }
+    .header-inner { position: relative; padding: 14px 20px 12px; }
+    .header-row { display: flex; align-items: center; margin-bottom: 6px; }
+
+    .rpg-back {
+      display: inline-block;
+      font-family: var(--font-ui);
+      font-size: 0.78rem;
+      letter-spacing: 0.08em;
+      color: var(--gold);
+      text-decoration: none;
+      padding: 0.55rem 1.1rem 0.55rem 2rem;
+      border: 1px solid rgba(200,149,42,0.25);
+      border-radius: 3px;
+      background: linear-gradient(180deg, #2a2010 0%, #1a1508 100%);
+      position: relative;
+      transition: border-color 0.2s, box-shadow 0.2s, color 0.2s;
+      margin: 0;
+      flex: 0 0 auto;
+      z-index: 2;
+    }
+    .rpg-back::before { content: '\2190'; position: absolute; left: 0.7rem; }
+    .rpg-back:hover {
+      border-color: var(--gold-light);
+      box-shadow: 0 0 18px 2px var(--gold-glow);
+      color: var(--gold-light);
+    }
+
+    .header-center {
+      flex: 1 1 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.85rem;
+      min-width: 0;
+    }
+    .header-spacer { visibility: hidden; pointer-events: none; }
+    .phoenix-mark {
+      width: 52px;
+      height: 52px;
+      object-fit: contain;
+      flex-shrink: 0;
+      filter: drop-shadow(0 0 10px rgba(200,149,42,0.5));
+    }
+    .title-block {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      min-width: 0;
+    }
+    .game-title {
+      margin: 0;
+      font-family: var(--font-display);
+      font-size: clamp(1.05rem, 3.8vw, 2rem);
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      line-height: 1.1;
+      background: linear-gradient(135deg, var(--gold-light) 0%, var(--gold) 40%, #a07020 80%, var(--gold-light) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .game-subtitle {
+      margin: 0.2rem 0 0;
+      font-style: italic;
+      color: #c8a878;
+      font-size: 0.82rem;
+      letter-spacing: 0.05em;
+    }
+
+    .main-wrap {
+      width: 100%;
+      max-width: 1220px;
+      margin: 0 auto;
+      padding: 22px 16px 36px;
+      display: grid;
+      grid-template-columns: minmax(320px, 1.16fr) minmax(280px, 0.84fr);
+      gap: 20px;
+      flex: 1;
+    }
+
+    .panel {
+      background: linear-gradient(160deg, var(--surface) 0%, var(--bg-warm) 100%);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      box-shadow: inset 0 0 30px rgba(0,0,0,0.35), 0 10px 34px rgba(0,0,0,0.45);
+      overflow: hidden;
+      position: relative;
+    }
+    .panel-header {
+      padding: 14px 16px 10px;
+      border-bottom: 1px solid rgba(200,149,42,0.14);
+      background: linear-gradient(180deg, rgba(255,255,255,0.03) 0%, rgba(255,255,255,0) 100%);
+    }
+    .panel-label {
+      font-family: var(--font-ui);
+      font-size: 0.7rem;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: var(--gold);
+      margin: 0 0 0.25rem;
+    }
+    .status-bar {
+      margin: 0;
+      min-height: 2.4rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      padding: 8px 16px 8px 28px;
+      background: rgba(0,0,0,0.32);
+      border: 1px solid rgba(200,149,42,0.18);
+      border-radius: 8px;
+      font-family: var(--font-ui);
+      font-size: 0.8rem;
+      letter-spacing: 0.08em;
+      color: var(--gold-light);
+      position: relative;
+      text-align: center;
+    }
+    .status-bar::before {
+      content: '⚜';
+      position: absolute;
+      left: 10px;
+      font-size: 10px;
+      color: var(--gold);
+      opacity: 0.7;
+    }
+
+    .board-panel {
+      display: flex;
+      flex-direction: column;
+      min-height: 780px;
+    }
+    .board-area {
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 18px;
+      flex: 1;
+      position: relative;
+    }
+
+    .metrics {
+      width: min(100%, 760px);
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 10px;
+    }
+    .metric {
+      padding: 10px 12px;
+      border-radius: 12px;
+      background: linear-gradient(180deg, rgba(255,255,255,0.04) 0%, rgba(0,0,0,0.16) 100%);
+      border: 1px solid rgba(200,149,42,0.18);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.03);
+      text-align: center;
+      min-height: 68px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      gap: 5px;
+    }
+    .metric-label {
+      font-family: var(--font-ui);
+      font-size: 0.62rem;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: var(--gold);
+    }
+    .metric-value {
+      font-family: var(--font-display);
+      color: var(--gold-light);
+      font-size: clamp(1rem, 2.4vw, 1.35rem);
+      line-height: 1;
+    }
+
+    .board-frame {
+      width: min(100%, 760px);
+      position: relative;
+      padding: 18px;
+      border-radius: 18px;
+      background:
+        radial-gradient(circle at 50% 45%, rgba(70,40,10,0.28) 0%, rgba(20,12,4,0.96) 70%),
+        linear-gradient(160deg, #201407 0%, #100b04 100%);
+      border: 1px solid rgba(200,149,42,0.28);
+      box-shadow:
+        inset 0 1px 0 rgba(255,255,255,0.04),
+        inset 0 0 38px rgba(0,0,0,0.35),
+        0 0 0 1px rgba(0,0,0,0.35),
+        0 18px 42px rgba(0,0,0,0.45),
+        0 0 30px rgba(200,149,42,0.14);
+    }
+    .board-frame::before,
+    .board-frame::after {
+      content: '◆';
+      position: absolute;
+      color: rgba(200,149,42,0.45);
+      font-size: 10px;
+      line-height: 1;
+    }
+    .board-frame::before { top: 6px; left: 8px; }
+    .board-frame::after { bottom: 6px; right: 8px; }
+
+    .board-wrap {
+      position: relative;
+      width: 100%;
+      overflow: auto hidden;
+      padding: 8px 0 10px;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    .connection-edge {
+      stroke: rgba(240,208,128,0.22);
+      stroke-width: 6;
+      stroke-linecap: round;
+      fill: none;
+      pointer-events: none;
+      filter: drop-shadow(0 0 6px rgba(200,149,42,0.10));
+    }
+    .connection-edge.win {
+      stroke: var(--trail-gold);
+      stroke-width: 7;
+      filter: drop-shadow(0 0 8px rgba(240,208,128,0.5));
+    }
+
+    .hex-cell {
+      cursor: pointer;
+      transition: transform 0.15s ease, filter 0.2s ease;
+      transform-origin: center center;
+    }
+    .hex-cell:hover { transform: translateY(-1px) scale(1.02); }
+    .hex-body {
+      fill: url(#hexFill);
+      stroke: var(--cell-edge);
+      stroke-width: 2.2;
+      transition: stroke 0.2s ease, filter 0.2s ease, fill 0.2s ease;
+    }
+    .hex-cell:hover .hex-body {
+      stroke: var(--cell-edge-bright);
+      filter: drop-shadow(0 0 7px rgba(200,149,42,0.25));
+    }
+
+    .stone-shadow {
+      fill: rgba(0,0,0,0.22);
+      pointer-events: none;
+    }
+    .stone {
+      opacity: 0;
+      transform-origin: center center;
+      animation: stone-pop 0.28s ease forwards, breathe var(--breathe, 4.8s) ease-in-out infinite;
+      animation-delay: 0s, var(--delay, -2.2s);
+      transform-box: fill-box;
+      transform-origin: center;
+    }
+    .stone.p1 { filter: drop-shadow(0 0 10px var(--p1-glow)); }
+    .stone.p2 { filter: drop-shadow(0 0 10px var(--p2-glow)); }
+    .stone.win { filter: drop-shadow(0 0 14px rgba(240,208,128,0.72)); }
+    .stone-ring {
+      fill: none;
+      stroke-width: 2.5;
+      opacity: 0.85;
+      pointer-events: none;
+    }
+    .stone.p1 .stone-ring { stroke: rgba(255,220,205,0.34); }
+    .stone.p2 .stone-ring { stroke: rgba(214,232,255,0.34); }
+
+    .marker {
+      font-family: var(--font-ui);
+      font-size: 15px;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      fill: rgba(240,208,128,0.88);
+      filter: drop-shadow(0 0 3px rgba(0,0,0,0.55));
+      pointer-events: none;
+    }
+    .axis-label {
+      font-family: var(--font-ui);
+      font-size: 12px;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      fill: rgba(200,170,100,0.72);
+      pointer-events: none;
+    }
+
+    .controls-row {
+      width: min(100%, 760px);
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      justify-content: center;
+      align-items: center;
+    }
+    .segmented {
+      display: inline-flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 8px;
+    }
+    .segmented button,
+    .rpg-btn {
+      font-family: var(--font-ui);
+      font-size: 0.78rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: #f0d080;
+      background: linear-gradient(180deg,rgba(40,28,8,0.9) 0%,rgba(20,14,4,0.95) 100%);
+      border: 1px solid rgba(200,149,42,0.45);
+      padding: 10px 18px;
+      border-radius: 999px;
+      cursor: pointer;
+      transition: all 0.2s;
+      box-shadow: 0 1px 0 rgba(200,149,42,0.15), inset 0 1px 0 rgba(200,149,42,0.1);
+    }
+    .segmented button:hover,
+    .rpg-btn:hover {
+      border-color: rgba(200,149,42,0.75);
+      box-shadow: 0 0 18px 2px rgba(200,149,42,0.25),0 0 48px 8px rgba(180,120,20,0.15),inset 0 1px 0 rgba(200,149,42,0.2);
+      color: #f8e898;
+      transform: translateY(-1px);
+    }
+    .segmented button.active {
+      background: linear-gradient(180deg, rgba(86,55,12,0.95), rgba(34,22,7,0.98));
+      border-color: rgba(240,208,128,0.82);
+      color: #fff0b5;
+      box-shadow: 0 0 18px rgba(200,149,42,0.28), inset 0 1px 0 rgba(255,255,255,0.08);
+    }
+    .rpg-btn:active, .segmented button:active { transform: translateY(0); }
+
+    .victory-message {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      pointer-events: none;
+      z-index: 20;
+    }
+    .victory-banner {
+      width: 0;
+      max-width: var(--message-width);
+      opacity: 0;
+      transform: scale(0.2);
+      padding: 18px 20px;
+      border-radius: 18px;
+      text-align: center;
+      background: linear-gradient(180deg, rgba(54,36,10,0.96) 0%, rgba(18,11,4,0.98) 100%);
+      border: 1px solid rgba(240,208,128,0.66);
+      box-shadow: 0 18px 50px rgba(0,0,0,0.5), 0 0 24px rgba(200,149,42,0.28);
+    }
+    .victory-banner.show {
+      animation: phoenix-win 1.75s ease forwards;
+    }
+    .victory-title {
+      margin: 0;
+      font-family: var(--font-display);
+      font-size: clamp(1.05rem, 3vw, 1.9rem);
+      letter-spacing: 0.06em;
+      line-height: 1.15;
+      background: linear-gradient(135deg, #fff2b3 0%, var(--gold-light) 35%, var(--gold) 70%, #f6e4aa 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .victory-copy {
+      margin: 0.5rem 0 0;
+      color: #d7bf8a;
+      font-size: 1rem;
+      font-style: italic;
+    }
+
+    .side-panel .side-body {
+      padding: 18px 16px 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+    .list-card {
+      padding: 14px;
+      border-radius: 14px;
+      background: linear-gradient(180deg, rgba(255,255,255,0.03) 0%, rgba(0,0,0,0.16) 100%);
+      border: 1px solid rgba(200,149,42,0.14);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.03);
+    }
+    .list-title {
+      margin: 0 0 0.55rem;
+      font-family: var(--font-ui);
+      font-size: 0.78rem;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: var(--gold-light);
+    }
+    .list-copy, .legend-copy {
+      margin: 0;
+      color: #cfb584;
+      line-height: 1.55;
+      font-size: 1rem;
+    }
+    .legend-stack {
+      display: grid;
+      gap: 10px;
+    }
+    .legend-item {
+      display: grid;
+      grid-template-columns: 28px 1fr;
+      gap: 10px;
+      align-items: center;
+    }
+    .legend-chip {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      border: 1px solid rgba(255,255,255,0.18);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.15), 0 0 14px rgba(0,0,0,0.22);
+    }
+    .legend-chip.p1 { background: radial-gradient(circle at 30% 28%, var(--p1-a), var(--p1-b)); }
+    .legend-chip.p2 { background: radial-gradient(circle at 30% 28%, var(--p2-a), var(--p2-b)); }
+
+    .rpg-footer {
+      margin-top: auto;
+      padding: 14px 16px 20px;
+      text-align: center;
+      color: rgba(200,170,100,0.62);
+      font-size: 0.82rem;
+      font-style: italic;
+      letter-spacing: 0.04em;
+    }
+
+    #confetti-layer {
+      position: fixed;
+      inset: 0;
+      overflow: hidden;
+      pointer-events: none;
+      z-index: 60;
+    }
+    .confetti {
+      position: absolute;
+      width: 12px;
+      height: 18px;
+      border-radius: 3px;
+      opacity: 0;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%) rotate(0deg);
+      animation: confetti-burst 1.55s ease-out forwards;
+      box-shadow: 0 0 12px rgba(255,255,255,0.12);
+    }
+
+    @keyframes stone-pop {
+      0% { opacity: 0; transform: scale(0.25); }
+      75% { opacity: 1; transform: scale(1.08); }
+      100% { opacity: 1; transform: scale(1); }
+    }
+    @keyframes breathe {
+      0%,100% { transform: translateY(0) scale(1); }
+      50% { transform: translateY(-1.5px) scale(1.028); }
+    }
+    @keyframes confetti-burst {
+      0% {
+        opacity: 0;
+        transform: translate(-50%, -50%) rotate(0deg) scale(0.3);
+      }
+      12% {
+        opacity: 1;
+        transform:
+          translate(calc(-50% + var(--dx) * 0.22), calc(-50% + var(--dy) * 0.18))
+          rotate(calc(var(--rot) * 0.2)) scale(1);
+      }
+      100% {
+        opacity: 0;
+        transform:
+          translate(calc(-50% + var(--dx)), calc(-50% + var(--dy) + 120px))
+          rotate(var(--rot)) scale(0.72);
+      }
+    }
+    @keyframes phoenix-win {
+      0% {
+        width: 0;
+        opacity: 0;
+        transform: scale(0.12);
+      }
+      43% {
+        width: var(--message-width);
+        opacity: 1;
+        transform: scale(1);
+      }
+      72% {
+        width: var(--message-width);
+        opacity: 1;
+        transform: scale(1);
+      }
+      100% {
+        width: var(--message-width);
+        opacity: 0;
+        transform: scale(1);
+      }
+    }
+
+    @media (max-width: 980px) {
+      .main-wrap { grid-template-columns: 1fr; }
+      .board-panel { min-height: initial; }
+    }
+    @media (max-width: 760px) {
+      .metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .header-inner { padding-left: 12px; padding-right: 12px; }
+      .board-area { padding: 16px 12px 18px; }
+      .board-frame { padding: 14px; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .stone, .victory-banner.show, .confetti, .hex-cell { animation: none !important; transition: none !important; }
+    }
+  </style>
+</head>
+<body>
+<div id="app">
+  <header class="site-header">
+    <div class="header-inner">
+      <div class="header-row">
+        <a href="index.html" class="rpg-back">Hub</a>
+        <div class="header-center">
+          <img class="phoenix-mark" src="RPG Favicon.png" alt="Rising Phoenix Games logo">
+          <div class="title-block">
+            <h1 class="game-title">Hex</h1>
+            <p class="game-subtitle">Claim a continuous path and bind one side of the board to the other</p>
+          </div>
+        </div>
+        <a href="index.html" class="rpg-back header-spacer" aria-hidden="true" tabindex="-1">Hub</a>
+      </div>
+    </div>
+  </header>
+
+  <main class="main-wrap">
+    <section class="panel board-panel" aria-label="Hex board panel">
+      <div class="panel-header">
+        <div class="panel-label">Current Match</div>
+        <div class="status-bar" id="statusBar">Crimson seeks a left-to-right chain. Azure seeks a top-to-bottom chain.</div>
+      </div>
+      <div class="board-area">
+        <div class="metrics">
+          <div class="metric"><div class="metric-label">Board</div><div class="metric-value" id="boardSizeValue">11 × 11</div></div>
+          <div class="metric"><div class="metric-label">Turn</div><div class="metric-value" id="turnValue">Crimson</div></div>
+          <div class="metric"><div class="metric-label">Moves</div><div class="metric-value" id="movesValue">0</div></div>
+          <div class="metric"><div class="metric-label">Victor</div><div class="metric-value" id="winnerValue">—</div></div>
+        </div>
+
+        <div class="board-frame">
+          <div class="board-wrap">
+            <svg id="boardSvg" viewBox="0 0 860 700" width="100%" aria-label="Hex game board" role="img"></svg>
+            <div class="victory-message" aria-hidden="true">
+              <div class="victory-banner" id="victoryBanner" aria-hidden="true">
+                <h2 class="victory-title" id="victoryTitle">The Crimson Chain Prevails</h2>
+                <p class="victory-copy" id="victoryCopy">A seamless route now spans the board.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="controls-row">
+          <div class="segmented" id="sizeButtons" aria-label="Board size selector">
+            <button type="button" data-size="7">7 × 7</button>
+            <button type="button" data-size="9">9 × 9</button>
+            <button type="button" data-size="11" class="active">11 × 11</button>
+            <button type="button" data-size="13">13 × 13</button>
+          </div>
+          <button class="rpg-btn" id="newGameBtn" type="button">New Game</button>
+          <button class="rpg-btn" id="undoBtn" type="button">Undo</button>
+        </div>
+      </div>
+    </section>
+
+    <aside class="panel side-panel" aria-label="Hex notes panel">
+      <div class="panel-header">
+        <div class="panel-label">Field Notes</div>
+        <div class="status-bar" id="sideStatus">Place one stone per turn. Crossings are impossible in Hex.</div>
+      </div>
+      <div class="side-body">
+        <div class="list-card">
+          <h2 class="list-title">Victory Conditions</h2>
+          <div class="legend-stack">
+            <div class="legend-item">
+              <div class="legend-chip p1"></div>
+              <div class="legend-copy"><strong>Crimson</strong> wins by linking the <strong>left edge</strong> to the <strong>right edge</strong>.</div>
+            </div>
+            <div class="legend-item">
+              <div class="legend-chip p2"></div>
+              <div class="legend-copy"><strong>Azure</strong> wins by linking the <strong>top edge</strong> to the <strong>bottom edge</strong>.</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="list-card">
+          <h2 class="list-title">How to Play</h2>
+          <p class="list-copy">Choose any empty hex on your turn. Once placed, stones never move. The board can never end in a draw, so every complete game has exactly one victor.</p>
+        </div>
+
+        <div class="list-card">
+          <h2 class="list-title">Tactical Reminder</h2>
+          <p class="list-copy">Central influence is powerful, but virtual connections and forcing responses matter more than surface symmetry. Think in linked groups rather than isolated stones.</p>
+        </div>
+      </div>
+    </aside>
+  </main>
+
+  <footer class="rpg-footer">© <span id="year"></span> Rising Phoenix Gallery · Michigan City, IN · Crafted by John Ryszka II</footer>
+</div>
+<div id="confetti-layer" aria-hidden="true"></div>
+
+<script>
+  document.getElementById('year').textContent = new Date().getFullYear();
+
+  const boardSvg = document.getElementById('boardSvg');
+  const statusBar = document.getElementById('statusBar');
+  const sideStatus = document.getElementById('sideStatus');
+  const turnValue = document.getElementById('turnValue');
+  const movesValue = document.getElementById('movesValue');
+  const winnerValue = document.getElementById('winnerValue');
+  const boardSizeValue = document.getElementById('boardSizeValue');
+  const victoryBanner = document.getElementById('victoryBanner');
+  const victoryTitle = document.getElementById('victoryTitle');
+  const victoryCopy = document.getElementById('victoryCopy');
+  const confettiLayer = document.getElementById('confetti-layer');
+  const sizeButtons = Array.from(document.querySelectorAll('#sizeButtons button'));
+  const newGameBtn = document.getElementById('newGameBtn');
+  const undoBtn = document.getElementById('undoBtn');
+
+  const PLAYER_CRIMSON = 1;
+  const PLAYER_AZURE = 2;
+
+  const PLAYER_META = {
+    [PLAYER_CRIMSON]: {
+      name: 'Crimson',
+      title: 'The Crimson Chain Prevails',
+      copy: 'A blazing left-to-right route now binds the board.',
+      stoneGradient: ['var(--p1-a)', 'var(--p1-b)'],
+      objective: 'left-to-right chain',
+      edgeClass: 'crimson'
+    },
+    [PLAYER_AZURE]: {
+      name: 'Azure',
+      title: 'The Azure Current Holds',
+      copy: 'A full top-to-bottom current now courses through the field.',
+      stoneGradient: ['var(--p2-a)', 'var(--p2-b)'],
+      objective: 'top-to-bottom chain',
+      edgeClass: 'azure'
+    }
+  };
+
+  let boardSize = 11;
+  let board = [];
+  let currentPlayer = PLAYER_CRIMSON;
+  let winner = 0;
+  let moveHistory = [];
+  let layout = null;
+  let winPath = [];
+
+  function initGame(size) {
+    boardSize = size;
+    board = Array.from({ length: size }, () => Array(size).fill(0));
+    currentPlayer = PLAYER_CRIMSON;
+    winner = 0;
+    moveHistory = [];
+    winPath = [];
+    boardSizeValue.textContent = `${size} × ${size}`;
+    movesValue.textContent = '0';
+    winnerValue.textContent = '—';
+    turnValue.textContent = PLAYER_META[currentPlayer].name;
+    setStatus(`${PLAYER_META[currentPlayer].name} to move. Claim a ${PLAYER_META[currentPlayer].objective}.`);
+    setSideStatus('Place one stone per turn. Crossings are impossible in Hex.');
+    sizeButtons.forEach((btn) => btn.classList.toggle('active', Number(btn.dataset.size) === size));
+    renderBoard();
+  }
+
+  function setStatus(text) {
+    statusBar.textContent = text;
+  }
+
+  function setSideStatus(text) {
+    sideStatus.textContent = text;
+  }
+
+  function pointKey(r, c) {
+    return `${r},${c}`;
+  }
+
+  function getNeighbors(r, c) {
+    return [
+      [r - 1, c],
+      [r - 1, c + 1],
+      [r, c - 1],
+      [r, c + 1],
+      [r + 1, c - 1],
+      [r + 1, c]
+    ].filter(([nr, nc]) => nr >= 0 && nr < boardSize && nc >= 0 && nc < boardSize);
+  }
+
+  function computeLayout() {
+    const radius = Math.max(18, Math.min(28, 240 / (boardSize / 2 + 3)));
+    const stepX = Math.sqrt(3) * radius;
+    const stepY = 1.5 * radius;
+    const marginX = 110;
+    const marginY = 90;
+    const centers = [];
+    let maxX = 0;
+    let maxY = 0;
+
+    for (let r = 0; r < boardSize; r++) {
+      centers[r] = [];
+      for (let c = 0; c < boardSize; c++) {
+        const x = marginX + c * stepX + r * (stepX / 2);
+        const y = marginY + r * stepY;
+        centers[r][c] = { x, y };
+        maxX = Math.max(maxX, x + radius + 70);
+        maxY = Math.max(maxY, y + radius + 70);
+      }
+    }
+
+    const width = maxX + 40;
+    const height = maxY + 40;
+    return { radius, stepX, stepY, centers, width, height };
+  }
+
+  function hexPoints(cx, cy, radius) {
+    const points = [];
+    for (let i = 0; i < 6; i++) {
+      const angle = (Math.PI / 180) * (60 * i - 30);
+      points.push(`${(cx + radius * Math.cos(angle)).toFixed(2)},${(cy + radius * Math.sin(angle)).toFixed(2)}`);
+    }
+    return points.join(' ');
+  }
+
+  function edgePolygons() {
+    const firstRow = layout.centers[0];
+    const lastRow = layout.centers[boardSize - 1];
+    const leftCol = layout.centers.map((row) => row[0]);
+    const rightCol = layout.centers.map((row) => row[boardSize - 1]);
+    const r = layout.radius;
+
+    const top = [
+      `${firstRow[0].x},${firstRow[0].y - r - 30}`,
+      ...firstRow.map((p) => `${p.x},${p.y - r - 8}`),
+      `${firstRow[firstRow.length - 1].x + r},${firstRow[firstRow.length - 1].y - 8}`,
+      `${firstRow[0].x - r},${firstRow[0].y - 8}`
+    ].join(' ');
+
+    const bottom = [
+      `${lastRow[0].x - r},${lastRow[0].y + 8}`,
+      ...lastRow.map((p) => `${p.x},${p.y + r + 8}`),
+      `${lastRow[lastRow.length - 1].x + r},${lastRow[lastRow.length - 1].y + 8}`,
+      `${lastRow[0].x},${lastRow[0].y + r + 30}`
+    ].join(' ');
+
+    const left = [
+      `${leftCol[0].x - r - 34},${leftCol[0].y}`,
+      ...leftCol.map((p) => `${p.x - r - 8},${p.y}`),
+      `${leftCol[leftCol.length - 1].x - 8},${leftCol[leftCol.length - 1].y + r}`,
+      `${leftCol[0].x - 8},${leftCol[0].y - r}`
+    ].join(' ');
+
+    const right = [
+      `${rightCol[0].x + r + 34},${rightCol[0].y}`,
+      ...rightCol.map((p) => `${p.x + r + 8},${p.y}`),
+      `${rightCol[rightCol.length - 1].x + 8},${rightCol[rightCol.length - 1].y + r}`,
+      `${rightCol[0].x + 8},${rightCol[0].y - r}`
+    ].join(' ');
+
+    return { top, bottom, left, right };
+  }
+
+  function renderBoard() {
+    layout = computeLayout();
+    boardSvg.setAttribute('viewBox', `0 0 ${layout.width} ${layout.height}`);
+    const edges = edgePolygons();
+
+    let html = `
+      <defs>
+        <linearGradient id="hexFill" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stop-color="var(--cell-a)"></stop>
+          <stop offset="100%" stop-color="var(--cell-b)"></stop>
+        </linearGradient>
+        <radialGradient id="stoneCrimson" cx="30%" cy="28%" r="72%">
+          <stop offset="0%" stop-color="var(--p1-a)"></stop>
+          <stop offset="100%" stop-color="var(--p1-b)"></stop>
+        </radialGradient>
+        <radialGradient id="stoneAzure" cx="30%" cy="28%" r="72%">
+          <stop offset="0%" stop-color="var(--p2-a)"></stop>
+          <stop offset="100%" stop-color="var(--p2-b)"></stop>
+        </radialGradient>
+      </defs>
+      <g>
+        <polygon points="${edges.left}" fill="rgba(196,64,64,0.18)" stroke="rgba(196,64,64,0.34)" stroke-width="2"></polygon>
+        <polygon points="${edges.right}" fill="rgba(196,64,64,0.18)" stroke="rgba(196,64,64,0.34)" stroke-width="2"></polygon>
+        <polygon points="${edges.top}" fill="rgba(79,134,217,0.18)" stroke="rgba(79,134,217,0.34)" stroke-width="2"></polygon>
+        <polygon points="${edges.bottom}" fill="rgba(79,134,217,0.18)" stroke="rgba(79,134,217,0.34)" stroke-width="2"></polygon>
+      </g>
+    `;
+
+    html += '<g id="edges">';
+    for (let r = 0; r < boardSize; r++) {
+      for (let c = 0; c < boardSize; c++) {
+        const { x, y } = layout.centers[r][c];
+        const neighbors = [[r, c + 1], [r + 1, c], [r + 1, c - 1]];
+        neighbors.forEach(([nr, nc]) => {
+          if (nr >= 0 && nr < boardSize && nc >= 0 && nc < boardSize) {
+            const other = layout.centers[nr][nc];
+            const onPath = winPath.some((p, idx) => idx < winPath.length - 1 && ((p[0] === r && p[1] === c && winPath[idx + 1][0] === nr && winPath[idx + 1][1] === nc) || (p[0] === nr && p[1] === nc && winPath[idx + 1][0] === r && winPath[idx + 1][1] === c)));
+            html += `<line class="connection-edge${onPath ? ' win' : ''}" x1="${x}" y1="${y}" x2="${other.x}" y2="${other.y}"></line>`;
+          }
+        });
+      }
+    }
+    html += '</g>';
+
+    html += '<g id="cells">';
+    for (let r = 0; r < boardSize; r++) {
+      for (let c = 0; c < boardSize; c++) {
+        const { x, y } = layout.centers[r][c];
+        const points = hexPoints(x, y, layout.radius);
+        const stone = board[r][c];
+        const isWinStone = winPath.some(([wr, wc]) => wr === r && wc === c);
+        html += `<g class="hex-cell" data-row="${r}" data-col="${c}" aria-label="Row ${r + 1}, column ${c + 1}">`;
+        html += `<polygon class="hex-body" points="${points}"></polygon>`;
+        if (stone) {
+          const breathe = (3.8 + ((r * 17 + c * 13) % 18) / 10).toFixed(2);
+          const delay = (-((r * 11 + c * 7) % 29) / 10).toFixed(2);
+          const grad = stone === PLAYER_CRIMSON ? 'stoneCrimson' : 'stoneAzure';
+          const cls = stone === PLAYER_CRIMSON ? 'p1' : 'p2';
+          html += `<ellipse class="stone-shadow" cx="${x}" cy="${y + 4}" rx="${layout.radius * 0.56}" ry="${layout.radius * 0.36}"></ellipse>`;
+          html += `<g class="stone ${cls}${isWinStone ? ' win' : ''}" style="--breathe:${breathe}s;--delay:${delay}s;">`;
+          html += `<circle cx="${x}" cy="${y}" r="${layout.radius * 0.54}" fill="url(#${grad})"></circle>`;
+          html += `<circle class="stone-ring" cx="${x}" cy="${y}" r="${layout.radius * 0.38}"></circle>`;
+          html += `</g>`;
+        }
+        html += '</g>';
+      }
+    }
+    html += '</g>';
+
+    html += '<g id="markers">';
+    const topStart = layout.centers[0][0];
+    const topEnd = layout.centers[0][boardSize - 1];
+    const bottomStart = layout.centers[boardSize - 1][0];
+    const bottomEnd = layout.centers[boardSize - 1][boardSize - 1];
+    const leftStart = layout.centers[0][0];
+    const leftEnd = layout.centers[boardSize - 1][0];
+    const rightStart = layout.centers[0][boardSize - 1];
+    const rightEnd = layout.centers[boardSize - 1][boardSize - 1];
+    html += `<text class="marker" x="${(leftStart.x + rightStart.x) / 2}" y="${topStart.y - layout.radius - 24}" text-anchor="middle">Azure</text>`;
+    html += `<text class="marker" x="${(bottomStart.x + bottomEnd.x) / 2}" y="${bottomStart.y + layout.radius + 36}" text-anchor="middle">Azure</text>`;
+    html += `<text class="marker" x="${leftStart.x - layout.radius - 52}" y="${(leftStart.y + leftEnd.y) / 2}" text-anchor="middle" transform="rotate(-90 ${leftStart.x - layout.radius - 52} ${(leftStart.y + leftEnd.y) / 2})">Crimson</text>`;
+    html += `<text class="marker" x="${rightStart.x + layout.radius + 52}" y="${(rightStart.y + rightEnd.y) / 2}" text-anchor="middle" transform="rotate(90 ${rightStart.x + layout.radius + 52} ${(rightStart.y + rightEnd.y) / 2})">Crimson</text>`;
+    html += '</g>';
+
+    boardSvg.innerHTML = html;
+    boardSvg.querySelectorAll('.hex-cell').forEach((cell) => {
+      cell.addEventListener('click', onCellClick);
+    });
+  }
+
+  function onCellClick(event) {
+    if (winner) return;
+    const row = Number(event.currentTarget.dataset.row);
+    const col = Number(event.currentTarget.dataset.col);
+    if (board[row][col] !== 0) {
+      setSideStatus('That hex is already claimed. Choose an empty cell.');
+      return;
+    }
+
+    board[row][col] = currentPlayer;
+    moveHistory.push({ row, col, player: currentPlayer });
+    movesValue.textContent = String(moveHistory.length);
+    setSideStatus(`${PLAYER_META[currentPlayer].name} claims row ${row + 1}, column ${col + 1}.`);
+
+    const result = checkWinner(currentPlayer);
+    if (result.won) {
+      winner = currentPlayer;
+      winPath = result.path;
+      winnerValue.textContent = PLAYER_META[winner].name;
+      turnValue.textContent = '—';
+      renderBoard();
+      triggerVictory(winner);
+      return;
+    }
+
+    currentPlayer = currentPlayer === PLAYER_CRIMSON ? PLAYER_AZURE : PLAYER_CRIMSON;
+    turnValue.textContent = PLAYER_META[currentPlayer].name;
+    setStatus(`${PLAYER_META[currentPlayer].name} to move. Claim a ${PLAYER_META[currentPlayer].objective}.`);
+    renderBoard();
+  }
+
+  function checkWinner(player) {
+    const stack = [];
+    const visited = new Set();
+    const parent = new Map();
+
+    if (player === PLAYER_CRIMSON) {
+      for (let r = 0; r < boardSize; r++) {
+        if (board[r][0] === player) {
+          stack.push([r, 0]);
+          visited.add(pointKey(r, 0));
+        }
+      }
+    } else {
+      for (let c = 0; c < boardSize; c++) {
+        if (board[0][c] === player) {
+          stack.push([0, c]);
+          visited.add(pointKey(0, c));
+        }
+      }
+    }
+
+    while (stack.length) {
+      const [r, c] = stack.pop();
+      if ((player === PLAYER_CRIMSON && c === boardSize - 1) || (player === PLAYER_AZURE && r === boardSize - 1)) {
+        const path = [[r, c]];
+        let current = pointKey(r, c);
+        while (parent.has(current)) {
+          current = parent.get(current);
+          const [pr, pc] = current.split(',').map(Number);
+          path.push([pr, pc]);
+        }
+        path.reverse();
+        return { won: true, path };
+      }
+
+      getNeighbors(r, c).forEach(([nr, nc]) => {
+        const key = pointKey(nr, nc);
+        if (board[nr][nc] === player && !visited.has(key)) {
+          visited.add(key);
+          parent.set(key, pointKey(r, c));
+          stack.push([nr, nc]);
+        }
+      });
+    }
+
+    return { won: false, path: [] };
+  }
+
+  function triggerVictory(player) {
+    const meta = PLAYER_META[player];
+    victoryTitle.textContent = meta.title;
+    victoryCopy.textContent = meta.copy;
+    victoryBanner.classList.remove('show');
+    void victoryBanner.offsetWidth;
+    victoryBanner.classList.add('show');
+
+    setStatus(`${meta.name} wins by completing a ${meta.objective}.`);
+    setSideStatus('A victory chain has been traced in gold across the board.');
+    createConfettiBursts();
+    setTimeout(() => victoryBanner.classList.remove('show'), 1850);
+  }
+
+  function createConfettiBursts() {
+    confettiLayer.innerHTML = '';
+    const burstCount = 7;
+    const colors = ['#f0d080', '#c04040', '#4f86d9', '#7aaa5a', '#f6e4aa'];
+    for (let burst = 0; burst < burstCount; burst++) {
+      const baseX = 14 + (72 / Math.max(1, burstCount - 1)) * burst;
+      const baseY = burst % 2 === 0 ? 28 : 40;
+      for (let i = 0; i < 22; i++) {
+        const piece = document.createElement('span');
+        piece.className = 'confetti';
+        const angle = (Math.PI * 2 * i) / 22 + burst * 0.35;
+        const distance = 90 + Math.random() * 170;
+        const dx = Math.cos(angle) * distance;
+        const dy = Math.sin(angle) * distance - (40 + Math.random() * 50);
+        piece.style.left = `${baseX}%`;
+        piece.style.top = `${baseY}%`;
+        piece.style.setProperty('--dx', `${dx}px`);
+        piece.style.setProperty('--dy', `${dy}px`);
+        piece.style.setProperty('--rot', `${(Math.random() * 720 - 360).toFixed(1)}deg`);
+        piece.style.background = colors[(i + burst) % colors.length];
+        piece.style.animationDelay = `${(burst * 0.06 + Math.random() * 0.16).toFixed(2)}s`;
+        confettiLayer.appendChild(piece);
+      }
+    }
+    setTimeout(() => { confettiLayer.innerHTML = ''; }, 2200);
+  }
+
+  function undoMove() {
+    if (!moveHistory.length || winner) {
+      if (winner) {
+        setSideStatus('Start a fresh match to continue after a victory.');
+      }
+      return;
+    }
+    const last = moveHistory.pop();
+    board[last.row][last.col] = 0;
+    currentPlayer = last.player;
+    winner = 0;
+    winPath = [];
+    turnValue.textContent = PLAYER_META[currentPlayer].name;
+    winnerValue.textContent = '—';
+    movesValue.textContent = String(moveHistory.length);
+    setStatus(`${PLAYER_META[currentPlayer].name} to move. The previous stone has been withdrawn.`);
+    setSideStatus(`Move undone: row ${last.row + 1}, column ${last.col + 1}.`);
+    renderBoard();
+  }
+
+  sizeButtons.forEach((button) => {
+    button.addEventListener('click', () => initGame(Number(button.dataset.size)));
+  });
+  newGameBtn.addEventListener('click', () => initGame(boardSize));
+  undoBtn.addEventListener('click', undoMove);
+
+  initGame(11);
+</script>
+</body>
+</html>
