@@ -1,0 +1,1372 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>Minesweeper · Rising Phoenix Games</title>
+  <link rel="stylesheet" href="shared.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700&family=Cinzel:wght@400;600;700;900&family=IM+Fell+English:ital@0;1&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; }
+    html, body { margin: 0; min-height: 100%; }
+
+    :root {
+      --message-width: 88%;
+      --cell-size: 34px;
+      --board-gap: 3px;
+      --board-pad: 12px;
+      --revealed: #b1905c;
+      --revealed-2: #8d6b3f;
+      --covered: #26180b;
+      --covered-2: #120c06;
+      --covered-edge: rgba(240,208,128,0.18);
+      --covered-edge-bright: rgba(240,208,128,0.55);
+      --mine-a: #ff845f;
+      --mine-b: #8b1a1a;
+      --flag-a: #f0d080;
+      --flag-b: #c8952a;
+      --safe-glow: rgba(122, 170, 90, 0.18);
+      --danger-glow: rgba(212, 85, 63, 0.18);
+      --n1: #75b8ff;
+      --n2: #8cd087;
+      --n3: #ff9585;
+      --n4: #bba4ff;
+      --n5: #ffd488;
+      --n6: #89e3dc;
+      --n7: #efe0bf;
+      --n8: #c0a57a;
+    }
+
+    body {
+      font-family: var(--font-body);
+      color: var(--text);
+      background:
+        radial-gradient(ellipse 90% 55% at 15% 8%, rgba(90,48,12,0.55) 0%, transparent 58%),
+        radial-gradient(ellipse 70% 65% at 85% 90%, rgba(50,25,6,0.60) 0%, transparent 55%),
+        radial-gradient(ellipse 60% 40% at 50% 50%, rgba(30,18,5,0.40) 0%, transparent 70%),
+        linear-gradient(160deg, #1c1106 0%, #0f0c07 45%, #13100a 100%);
+      background-attachment: fixed;
+    }
+
+    #app {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      isolation: isolate;
+    }
+
+    .site-header {
+      padding: 0;
+      background: linear-gradient(180deg, #1e1508 0%, #120e06 100%);
+      border-bottom: 2px solid var(--gold);
+      box-shadow: 0 4px 24px rgba(0,0,0,0.7), 0 1px 0 rgba(200,149,42,0.15) inset;
+      position: relative;
+      overflow: hidden;
+      flex-shrink: 0;
+    }
+    .site-header::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: repeating-linear-gradient(
+        90deg,
+        transparent 0px,
+        transparent 48px,
+        rgba(200,149,42,0.04) 48px,
+        rgba(200,149,42,0.04) 49px
+      );
+      pointer-events: none;
+    }
+    .header-inner { position: relative; padding: 14px 20px 12px; }
+    .header-row { display: flex; align-items: center; margin-bottom: 6px; }
+
+    .rpg-back {
+      display: inline-block;
+      font-family: var(--font-ui);
+      font-size: 0.78rem;
+      letter-spacing: 0.08em;
+      color: var(--gold);
+      text-decoration: none;
+      padding: 0.55rem 1.1rem 0.55rem 2rem;
+      border: 1px solid rgba(200,149,42,0.25);
+      border-radius: 3px;
+      background: linear-gradient(180deg, #2a2010 0%, #1a1508 100%);
+      position: relative;
+      transition: border-color 0.2s, box-shadow 0.2s, color 0.2s;
+      margin: 0;
+      flex: 0 0 auto;
+      z-index: 2;
+    }
+    .rpg-back::before { content: '\2190'; position: absolute; left: 0.7rem; }
+    .rpg-back:hover {
+      border-color: var(--gold-light);
+      box-shadow: 0 0 18px 2px var(--gold-glow);
+      color: var(--gold-light);
+    }
+
+    .header-center {
+      flex: 1 1 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.85rem;
+      min-width: 0;
+    }
+    .header-spacer { visibility: hidden; pointer-events: none; }
+    .phoenix-mark {
+      width: 52px;
+      height: 52px;
+      object-fit: contain;
+      flex-shrink: 0;
+      filter: drop-shadow(0 0 10px rgba(200,149,42,0.5));
+    }
+    .title-block {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      min-width: 0;
+    }
+    .game-title {
+      margin: 0;
+      font-family: var(--font-display);
+      font-size: clamp(1rem, 3.8vw, 2rem);
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      line-height: 1.1;
+      background: linear-gradient(135deg, var(--gold-light) 0%, var(--gold) 40%, #a07020 80%, var(--gold-light) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .game-subtitle {
+      margin: 0.2rem 0 0;
+      font-style: italic;
+      color: #c8a878;
+      font-size: 0.82rem;
+      letter-spacing: 0.05em;
+    }
+
+    .main-wrap {
+      width: 100%;
+      max-width: 1180px;
+      margin: 0 auto;
+      padding: 22px 16px 36px;
+      display: grid;
+      grid-template-columns: minmax(320px, 1.16fr) minmax(280px, 0.84fr);
+      gap: 20px;
+      flex: 1;
+    }
+
+    .panel {
+      background: linear-gradient(160deg, var(--surface) 0%, var(--bg-warm) 100%);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      box-shadow: inset 0 0 30px rgba(0,0,0,0.35), 0 10px 34px rgba(0,0,0,0.45);
+      overflow: hidden;
+      position: relative;
+    }
+    .panel-header {
+      padding: 14px 16px 10px;
+      border-bottom: 1px solid rgba(200,149,42,0.14);
+      background: linear-gradient(180deg, rgba(255,255,255,0.03) 0%, rgba(255,255,255,0) 100%);
+    }
+    .panel-label {
+      font-family: var(--font-ui);
+      font-size: 0.7rem;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: var(--gold);
+      margin: 0 0 0.25rem;
+    }
+    .status-bar {
+      margin: 0;
+      min-height: 2.4rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      padding: 8px 16px 8px 28px;
+      background: rgba(0,0,0,0.32);
+      border: 1px solid rgba(200,149,42,0.18);
+      border-radius: 8px;
+      font-family: var(--font-ui);
+      font-size: 0.8rem;
+      letter-spacing: 0.08em;
+      color: var(--gold-light);
+      position: relative;
+      text-align: center;
+    }
+    .status-bar::before {
+      content: '⚜';
+      position: absolute;
+      left: 10px;
+      font-size: 10px;
+      color: var(--gold);
+      opacity: 0.7;
+    }
+
+    .board-panel {
+      display: flex;
+      flex-direction: column;
+      min-height: 760px;
+    }
+    .board-area {
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 18px;
+      flex: 1;
+      position: relative;
+    }
+
+    .top-actions {
+      width: min(100%, 760px);
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 10px;
+    }
+    .metric {
+      padding: 10px 12px;
+      border-radius: 12px;
+      background: linear-gradient(180deg, rgba(255,255,255,0.04) 0%, rgba(0,0,0,0.16) 100%);
+      border: 1px solid rgba(200,149,42,0.18);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.03);
+      text-align: center;
+      min-height: 72px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      gap: 5px;
+    }
+    .metric-label {
+      font-family: var(--font-ui);
+      font-size: 0.62rem;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: var(--gold);
+    }
+    .metric-value {
+      font-family: var(--font-display);
+      color: var(--gold-light);
+      font-size: clamp(1rem, 2.5vw, 1.35rem);
+      line-height: 1;
+    }
+    .metric-sub {
+      color: var(--text-muted);
+      font-size: 0.82rem;
+      font-style: italic;
+      line-height: 1.1;
+    }
+
+    .difficulty-row,
+    .control-row {
+      width: min(100%, 760px);
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .chip,
+    .rpg-btn {
+      font-family: var(--font-ui);
+      font-size: 0.78rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: #f0d080;
+      background: linear-gradient(180deg,rgba(40,28,8,0.9) 0%,rgba(20,14,4,0.95) 100%);
+      border: 1px solid rgba(200,149,42,0.45);
+      padding: 10px 18px;
+      border-radius: 999px;
+      cursor: pointer;
+      transition: all 0.2s;
+      box-shadow: 0 1px 0 rgba(200,149,42,0.15), inset 0 1px 0 rgba(200,149,42,0.1);
+    }
+    .chip:hover,
+    .rpg-btn:hover {
+      border-color: rgba(200,149,42,0.75);
+      box-shadow: 0 0 18px 2px rgba(200,149,42,0.25),0 0 48px 8px rgba(180,120,20,0.15),inset 0 1px 0 rgba(200,149,42,0.2);
+      color: #f8e898;
+      transform: translateY(-1px);
+    }
+    .chip:active,
+    .rpg-btn:active { transform: translateY(0); }
+    .chip.active {
+      color: #fff5d0;
+      border-color: rgba(240,208,128,0.82);
+      box-shadow: 0 0 0 1px rgba(240,208,128,0.22), 0 0 22px rgba(200,149,42,0.22), inset 0 1px 0 rgba(255,255,255,0.08);
+      background: linear-gradient(180deg, rgba(82, 56, 15, 0.96) 0%, rgba(36, 23, 7, 0.98) 100%);
+    }
+    .chip.mode-flag.active {
+      border-color: rgba(212,85,63,0.78);
+      box-shadow: 0 0 0 1px rgba(212,85,63,0.16), 0 0 22px rgba(212,85,63,0.18);
+    }
+    .chip.mode-reveal.active {
+      border-color: rgba(122,170,90,0.78);
+      box-shadow: 0 0 0 1px rgba(122,170,90,0.16), 0 0 22px rgba(122,170,90,0.18);
+    }
+
+    .board-frame {
+      width: min(100%, 760px);
+      position: relative;
+      padding: 18px;
+      border-radius: 18px;
+      background:
+        radial-gradient(circle at 50% 45%, rgba(70,40,10,0.28) 0%, rgba(20,12,4,0.96) 70%),
+        linear-gradient(160deg, #201407 0%, #100b04 100%);
+      border: 1px solid rgba(200,149,42,0.28);
+      box-shadow:
+        inset 0 1px 0 rgba(255,255,255,0.04),
+        inset 0 0 38px rgba(0,0,0,0.35),
+        0 0 0 1px rgba(0,0,0,0.35),
+        0 18px 42px rgba(0,0,0,0.45),
+        0 0 30px rgba(200,149,42,0.14);
+    }
+    .board-frame::before,
+    .board-frame::after {
+      content: '◆';
+      position: absolute;
+      color: rgba(200,149,42,0.45);
+      font-size: 10px;
+      line-height: 1;
+    }
+    .board-frame::before { top: 6px; left: 8px; }
+    .board-frame::after { bottom: 6px; right: 8px; }
+
+    .board-shell {
+      position: relative;
+      width: 100%;
+      overflow: auto hidden;
+      padding-bottom: 2px;
+      scrollbar-color: rgba(200,149,42,0.45) rgba(0,0,0,0.18);
+    }
+
+    .board {
+      display: grid;
+      grid-template-columns: repeat(var(--cols), var(--cell-size));
+      gap: var(--board-gap);
+      justify-content: center;
+      padding: var(--board-pad);
+      border-radius: 16px;
+      background:
+        linear-gradient(180deg, rgba(255,255,255,0.04) 0%, rgba(0,0,0,0.12) 100%),
+        rgba(16,10,4,0.94);
+      border: 1px solid rgba(200,149,42,0.16);
+      box-shadow: inset 0 0 32px rgba(0,0,0,0.42), 0 0 18px rgba(200,149,42,0.08);
+      width: fit-content;
+      margin: 0 auto;
+      position: relative;
+      z-index: 1;
+    }
+
+    .cell {
+      width: var(--cell-size);
+      height: var(--cell-size);
+      position: relative;
+      border-radius: 8px;
+      border: 1px solid var(--covered-edge);
+      background:
+        linear-gradient(180deg, rgba(255,255,255,0.05) 0%, rgba(0,0,0,0.18) 100%),
+        linear-gradient(160deg, var(--covered) 0%, var(--covered-2) 100%);
+      box-shadow:
+        inset 0 1px 0 rgba(255,255,255,0.04),
+        inset 0 -2px 8px rgba(0,0,0,0.24),
+        0 1px 0 rgba(255,255,255,0.02);
+      cursor: pointer;
+      user-select: none;
+      -webkit-user-select: none;
+      transition: transform 0.12s ease, box-shadow 0.18s ease, border-color 0.18s ease, background 0.18s ease;
+      font-family: var(--font-ui);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .cell::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      border-radius: inherit;
+      background: linear-gradient(135deg, rgba(255,255,255,0.04) 0%, transparent 48%, rgba(200,149,42,0.04) 100%);
+      pointer-events: none;
+    }
+    .cell:hover:not(.revealed):not(.game-over) {
+      transform: translateY(-1px);
+      border-color: var(--covered-edge-bright);
+      box-shadow: 0 0 18px rgba(200,149,42,0.14), inset 0 1px 0 rgba(255,255,255,0.05);
+    }
+    .cell:active:not(.revealed):not(.game-over) { transform: translateY(0); }
+    .cell.revealed {
+      cursor: default;
+      background:
+        linear-gradient(180deg, rgba(255,255,255,0.03) 0%, rgba(0,0,0,0.1) 100%),
+        linear-gradient(160deg, var(--revealed) 0%, var(--revealed-2) 100%);
+      border-color: rgba(84, 54, 20, 0.35);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.03), inset 0 0 10px rgba(0,0,0,0.18);
+    }
+    .cell.revealed.safe-clear {
+      box-shadow: 0 0 0 1px rgba(122,170,90,0.12), 0 0 18px var(--safe-glow), inset 0 0 10px rgba(0,0,0,0.18);
+    }
+    .cell.flagged {
+      border-color: rgba(212,85,63,0.45);
+      box-shadow: 0 0 0 1px rgba(212,85,63,0.08), 0 0 16px rgba(212,85,63,0.08);
+    }
+    .cell.exploded {
+      background:
+        radial-gradient(circle at 50% 35%, rgba(255,200,160,0.2) 0%, rgba(0,0,0,0) 45%),
+        linear-gradient(160deg, #5a110f 0%, #2c0a08 100%);
+      border-color: rgba(255,140,120,0.72);
+      box-shadow: 0 0 0 1px rgba(255,140,120,0.2), 0 0 20px rgba(212,85,63,0.22);
+    }
+    .cell.mine.revealed:not(.exploded) {
+      background:
+        radial-gradient(circle at 50% 35%, rgba(255,230,180,0.14) 0%, rgba(0,0,0,0) 45%),
+        linear-gradient(160deg, #3a100d 0%, #190908 100%);
+      border-color: rgba(212,85,63,0.38);
+    }
+    .cell.game-over { cursor: default; }
+
+    .cell-value {
+      position: relative;
+      z-index: 1;
+      font-family: var(--font-display);
+      font-size: clamp(0.92rem, calc(var(--cell-size) * 0.45), 1.28rem);
+      line-height: 1;
+      text-shadow: 0 1px 6px rgba(0,0,0,0.35);
+      transform: translateY(-1px);
+    }
+    .cell-value.number-1 { color: var(--n1); }
+    .cell-value.number-2 { color: var(--n2); }
+    .cell-value.number-3 { color: var(--n3); }
+    .cell-value.number-4 { color: var(--n4); }
+    .cell-value.number-5 { color: var(--n5); }
+    .cell-value.number-6 { color: var(--n6); }
+    .cell-value.number-7 { color: var(--n7); }
+    .cell-value.number-8 { color: var(--n8); }
+    .cell-value.flag {
+      background: linear-gradient(135deg, var(--flag-a) 0%, var(--flag-b) 75%, #fff4bf 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      font-size: clamp(1rem, calc(var(--cell-size) * 0.46), 1.34rem);
+      filter: drop-shadow(0 0 8px rgba(200,149,42,0.18));
+    }
+    .cell-value.mine {
+      background: linear-gradient(135deg, #ffe2b6 0%, var(--mine-a) 40%, var(--mine-b) 85%, #ffe2b6 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      font-size: clamp(1rem, calc(var(--cell-size) * 0.46), 1.36rem);
+      filter: drop-shadow(0 0 8px rgba(212,85,63,0.16));
+    }
+
+    .board-overlay {
+      position: absolute;
+      inset: 18px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      pointer-events: none;
+      z-index: 6;
+      overflow: hidden;
+    }
+    .victory-message {
+      width: var(--message-width);
+      max-width: calc(100% - 28px);
+      padding: 18px 20px;
+      text-align: center;
+      border-radius: 18px;
+      border: 1px solid rgba(240,208,128,0.65);
+      background:
+        radial-gradient(circle at 50% 50%, rgba(240,208,128,0.18) 0%, rgba(30,18,5,0.94) 70%),
+        linear-gradient(160deg, rgba(45,28,8,0.95) 0%, rgba(18,12,5,0.95) 100%);
+      box-shadow:
+        0 0 18px rgba(200,149,42,0.28),
+        0 0 48px rgba(180,120,20,0.14),
+        inset 0 1px 0 rgba(255,255,255,0.08);
+      opacity: 0;
+      transform: scale(0.18);
+    }
+    .victory-message.show { animation: victoryBloom 1.75s ease forwards; }
+    .victory-title {
+      font-family: var(--font-display);
+      font-size: clamp(1rem, 3.4vw, 2rem);
+      line-height: 1.05;
+      letter-spacing: 0.06em;
+      margin: 0 0 8px;
+      background: linear-gradient(135deg, #fff4bf 0%, #f0d080 38%, #c8952a 70%, #fff4bf 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .victory-sub {
+      margin: 0;
+      color: #d8c090;
+      font-size: clamp(0.86rem, 2.1vw, 1.05rem);
+      letter-spacing: 0.03em;
+      font-style: italic;
+    }
+    @keyframes victoryBloom {
+      0% { opacity: 0; transform: scale(0.18); }
+      42.8% { opacity: 1; transform: scale(1); }
+      100% { opacity: 1; transform: scale(1); }
+    }
+
+    .confetti-canvas {
+      position: fixed;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 30;
+    }
+
+    .info-panel { display: flex; flex-direction: column; }
+    .info-body {
+      padding: 16px 16px 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+      flex: 1;
+    }
+    .info-copy {
+      color: #d2bc92;
+      font-size: 1rem;
+      line-height: 1.55;
+      margin: 0;
+    }
+    .rule-card,
+    .legend-card,
+    .history-card {
+      padding: 14px 14px 12px;
+      border-radius: 12px;
+      border: 1px solid rgba(200,149,42,0.16);
+      background: linear-gradient(180deg, rgba(255,255,255,0.03), rgba(0,0,0,0.10));
+    }
+    .card-title {
+      margin: 0 0 8px;
+      font-family: var(--font-ui);
+      font-size: 0.68rem;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: var(--gold);
+    }
+    .rule-list,
+    .legend-list,
+    .history-list {
+      margin: 0;
+      padding-left: 1.1rem;
+      color: #d3bd94;
+      line-height: 1.5;
+    }
+    .legend-list li + li,
+    .rule-list li + li,
+    .history-list li + li { margin-top: 0.3rem; }
+    .legend-list strong,
+    .rule-list strong { color: #f1ddb0; }
+
+    .best-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 8px;
+    }
+    .best-box {
+      min-height: 72px;
+      border-radius: 12px;
+      border: 1px solid rgba(200,149,42,0.16);
+      background: linear-gradient(180deg, rgba(255,255,255,0.03), rgba(0,0,0,0.12));
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      gap: 5px;
+      text-align: center;
+      padding: 8px;
+    }
+    .best-name {
+      font-family: var(--font-ui);
+      font-size: 0.6rem;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--gold);
+    }
+    .best-time {
+      font-family: var(--font-display);
+      font-size: 1.05rem;
+      color: var(--gold-light);
+      line-height: 1;
+    }
+    .best-extra {
+      color: var(--text-muted);
+      font-size: 0.78rem;
+      font-style: italic;
+    }
+
+    .tiny-note {
+      margin: 0;
+      color: rgba(200,170,100,0.6);
+      font-size: 0.84rem;
+      line-height: 1.5;
+      font-style: italic;
+    }
+
+    .rpg-footer {
+      margin-top: auto;
+      padding: 14px 18px 20px;
+      text-align: center;
+      color: rgba(200,170,100,0.45);
+      font-size: 0.8rem;
+      font-style: italic;
+      letter-spacing: 0.03em;
+    }
+
+    @media (max-width: 960px) {
+      .main-wrap { grid-template-columns: 1fr; }
+      .board-panel { min-height: unset; }
+      .info-panel { order: 2; }
+    }
+
+    @media (max-width: 760px) {
+      .top-actions { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    }
+
+    @media (max-width: 560px) {
+      .header-inner { padding-inline: 12px; }
+      .main-wrap { padding-inline: 12px; }
+      .board-area { padding: 16px 12px 18px; }
+      .board-frame { padding: 12px; }
+      .board-overlay { inset: 12px; }
+      .best-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <canvas class="confetti-canvas" id="confetti-canvas" aria-hidden="true"></canvas>
+
+  <div id="app">
+    <header class="site-header">
+      <div class="header-inner">
+        <div class="header-row">
+          <a href="index.html" class="rpg-back">Hub</a>
+          <div class="header-center">
+            <img class="phoenix-mark" src="data:image/png;base64,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" alt="Rising Phoenix Games logo">
+            <div class="title-block">
+              <h1 class="game-title">Minesweeper</h1>
+              <p class="game-subtitle">Clear the field, read the runes, avoid the buried flames</p>
+            </div>
+          </div>
+          <a href="index.html" class="rpg-back header-spacer" aria-hidden="true">Hub</a>
+        </div>
+      </div>
+    </header>
+
+    <main class="main-wrap">
+      <section class="panel board-panel" aria-labelledby="board-title">
+        <div class="panel-header">
+          <div class="panel-label" id="board-title">The Ember Field</div>
+          <p class="status-bar" id="status-bar">Choose a difficulty, then reveal the first safe square.</p>
+        </div>
+
+        <div class="board-area">
+          <div class="top-actions" aria-label="Game metrics">
+            <div class="metric">
+              <div class="metric-label">Mines Left</div>
+              <div class="metric-value" id="mines-left">0</div>
+              <div class="metric-sub">Flags track this total</div>
+            </div>
+            <div class="metric">
+              <div class="metric-label">Time</div>
+              <div class="metric-value" id="timer">0:00</div>
+              <div class="metric-sub">Starts on first reveal</div>
+            </div>
+            <div class="metric">
+              <div class="metric-label">Cleared</div>
+              <div class="metric-value" id="cleared-count">0</div>
+              <div class="metric-sub" id="safe-total">0 safe tiles</div>
+            </div>
+            <div class="metric">
+              <div class="metric-label">Mode</div>
+              <div class="metric-value" id="mode-display">Reveal</div>
+              <div class="metric-sub" id="difficulty-display">Beginner</div>
+            </div>
+          </div>
+
+          <div class="difficulty-row" aria-label="Difficulty options">
+            <button class="chip difficulty active" data-difficulty="beginner">Beginner · 9 × 9 · 10</button>
+            <button class="chip difficulty" data-difficulty="adventurer">Adventurer · 14 × 14 · 28</button>
+            <button class="chip difficulty" data-difficulty="inferno">Inferno · 20 × 14 · 55</button>
+          </div>
+
+          <div class="control-row" aria-label="Game controls">
+            <button class="chip mode-chip mode-reveal active" id="mode-reveal">Reveal Mode</button>
+            <button class="chip mode-chip mode-flag" id="mode-flag">Flag Mode</button>
+            <button class="rpg-btn" id="new-game">New Field</button>
+            <button class="rpg-btn" id="reset-same">Reset Same Field</button>
+          </div>
+
+          <div class="board-frame">
+            <div class="board-shell">
+              <div class="board" id="board" aria-label="Minesweeper board"></div>
+            </div>
+            <div class="board-overlay" aria-hidden="true">
+              <div class="victory-message" id="victory-message">
+                <h2 class="victory-title">✦ Ember Field Purified ✦</h2>
+                <p class="victory-sub" id="victory-sub">Every hidden charge has been accounted for.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <aside class="panel info-panel" aria-labelledby="info-title">
+        <div class="panel-header">
+          <div class="panel-label" id="info-title">Field Notes</div>
+          <p class="status-bar">Desktop: left click reveals, right click flags. Touch: use mode buttons.</p>
+        </div>
+
+        <div class="info-body">
+          <p class="info-copy">
+            Each revealed square tells you how many mines touch it in the eight surrounding spaces. Use those counts to infer where the hidden charges lie and mark them before you open the rest of the field.
+          </p>
+
+          <div class="rule-card">
+            <h3 class="card-title">How to Play</h3>
+            <ul class="rule-list">
+              <li><strong>Reveal</strong> a tile to inspect it. The first reveal is always safe.</li>
+              <li><strong>Numbers</strong> show how many mines touch that tile, including diagonals.</li>
+              <li><strong>Flags</strong> mark suspected mines. They do not win the game by themselves.</li>
+              <li><strong>Win</strong> by revealing every safe tile. All unrevealed tiles left at that point are mines.</li>
+              <li><strong>Tip:</strong> click a revealed number again to chord nearby tiles once you have placed the correct number of flags around it.</li>
+            </ul>
+          </div>
+
+          <div class="legend-card">
+            <h3 class="card-title">Legend</h3>
+            <ul class="legend-list">
+              <li><strong>Reveal Mode:</strong> opens covered tiles.</li>
+              <li><strong>Flag Mode:</strong> places or removes a flag on a covered tile.</li>
+              <li><strong>Chord Reveal:</strong> on a revealed number, open all unflagged neighbors if the surrounding flag count matches the number.</li>
+            </ul>
+          </div>
+
+          <div class="history-card">
+            <h3 class="card-title">Best Times</h3>
+            <div class="best-grid">
+              <div class="best-box">
+                <div class="best-name">Beginner</div>
+                <div class="best-time" id="best-beginner">—</div>
+                <div class="best-extra" id="best-beginner-extra">No clear yet</div>
+              </div>
+              <div class="best-box">
+                <div class="best-name">Adventurer</div>
+                <div class="best-time" id="best-adventurer">—</div>
+                <div class="best-extra" id="best-adventurer-extra">No clear yet</div>
+              </div>
+              <div class="best-box">
+                <div class="best-name">Inferno</div>
+                <div class="best-time" id="best-inferno">—</div>
+                <div class="best-extra" id="best-inferno-extra">No clear yet</div>
+              </div>
+            </div>
+          </div>
+
+          <p class="tiny-note">
+            The first reveal also protects the surrounding ring, creating a meaningful opening instead of a blind guess.
+          </p>
+        </div>
+      </aside>
+    </main>
+
+    <footer class="rpg-footer">
+      © <span id="year"></span> Rising Phoenix Games · Michigan City, Indiana · Crafted for John Ryszka II
+    </footer>
+  </div>
+
+  <script>
+    const DIFFICULTIES = {
+      beginner:   { label: 'Beginner', cols: 9,  rows: 9,  mines: 10 },
+      adventurer: { label: 'Adventurer', cols: 14, rows: 14, mines: 28 },
+      inferno:    { label: 'Inferno', cols: 20, rows: 14, mines: 55 }
+    };
+
+    const boardEl = document.getElementById('board');
+    const statusBar = document.getElementById('status-bar');
+    const minesLeftEl = document.getElementById('mines-left');
+    const timerEl = document.getElementById('timer');
+    const clearedCountEl = document.getElementById('cleared-count');
+    const safeTotalEl = document.getElementById('safe-total');
+    const difficultyDisplay = document.getElementById('difficulty-display');
+    const modeDisplay = document.getElementById('mode-display');
+    const victoryMessage = document.getElementById('victory-message');
+    const victorySub = document.getElementById('victory-sub');
+    const confettiCanvas = document.getElementById('confetti-canvas');
+    const confettiCtx = confettiCanvas.getContext('2d');
+
+    const state = {
+      difficultyKey: 'beginner',
+      mode: 'reveal',
+      cols: 0,
+      rows: 0,
+      mines: 0,
+      board: [],
+      firstRevealDone: false,
+      gameOver: false,
+      won: false,
+      revealedCount: 0,
+      flagsPlaced: 0,
+      timerSeconds: 0,
+      timerId: null,
+      victoryTimeout: null,
+      confettiParticles: [],
+      confettiRaf: null,
+      seedClick: null
+    };
+
+    function cellKey(r, c) { return `${r}:${c}`; }
+
+    function createEmptyBoard(rows, cols) {
+      const grid = [];
+      for (let r = 0; r < rows; r++) {
+        const row = [];
+        for (let c = 0; c < cols; c++) {
+          row.push({
+            row: r,
+            col: c,
+            mine: false,
+            revealed: false,
+            flagged: false,
+            adjacent: 0,
+            exploded: false
+          });
+        }
+        grid.push(row);
+      }
+      return grid;
+    }
+
+    function setDifficulty(key) {
+      if (!DIFFICULTIES[key]) return;
+      state.difficultyKey = key;
+      const diff = DIFFICULTIES[key];
+      state.cols = diff.cols;
+      state.rows = diff.rows;
+      state.mines = diff.mines;
+      difficultyDisplay.textContent = diff.label;
+      document.querySelectorAll('.difficulty').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.difficulty === key);
+      });
+      newGame();
+    }
+
+    function newGame() {
+      stopTimer();
+      clearVictoryMessage();
+      state.board = createEmptyBoard(state.rows, state.cols);
+      state.firstRevealDone = false;
+      state.gameOver = false;
+      state.won = false;
+      state.revealedCount = 0;
+      state.flagsPlaced = 0;
+      state.timerSeconds = 0;
+      state.seedClick = null;
+      updateBoardSizing();
+      renderBoard();
+      updateStats();
+      setMode(state.mode);
+      setStatus(`New ${DIFFICULTIES[state.difficultyKey].label.toLowerCase()} field prepared. Reveal a tile to begin.`);
+    }
+
+    function resetSameField() {
+      newGame();
+    }
+
+    function setMode(mode) {
+      state.mode = mode === 'flag' ? 'flag' : 'reveal';
+      modeDisplay.textContent = state.mode === 'flag' ? 'Flag' : 'Reveal';
+      document.getElementById('mode-reveal').classList.toggle('active', state.mode === 'reveal');
+      document.getElementById('mode-flag').classList.toggle('active', state.mode === 'flag');
+    }
+
+    function setStatus(text) {
+      statusBar.textContent = text;
+    }
+
+    function updateBoardSizing() {
+      const diff = DIFFICULTIES[state.difficultyKey];
+      const viewportWidth = window.innerWidth;
+      let available = Math.min(viewportWidth - (viewportWidth < 560 ? 78 : 132), 708);
+      if (viewportWidth < 560) available = Math.min(viewportWidth - 50, 708);
+      const raw = Math.floor((available - (state.cols - 1) * 3 - 24) / state.cols);
+      const maxCell = diff.cols <= 9 ? 42 : diff.cols <= 14 ? 34 : 28;
+      const minCell = diff.cols <= 9 ? 28 : diff.cols <= 14 ? 22 : 18;
+      const cellSize = Math.max(minCell, Math.min(maxCell, raw));
+      boardEl.style.setProperty('--cell-size', `${cellSize}px`);
+      boardEl.style.setProperty('--cols', String(state.cols));
+    }
+
+    function updateStats() {
+      minesLeftEl.textContent = String(Math.max(0, state.mines - state.flagsPlaced));
+      timerEl.textContent = formatTime(state.timerSeconds);
+      clearedCountEl.textContent = String(state.revealedCount);
+      const safeTiles = state.rows * state.cols - state.mines;
+      safeTotalEl.textContent = `${safeTiles} safe tiles`;
+    }
+
+    function formatTime(seconds) {
+      const mins = Math.floor(seconds / 60);
+      const secs = seconds % 60;
+      return `${mins}:${String(secs).padStart(2, '0')}`;
+    }
+
+    function startTimer() {
+      if (state.timerId || state.gameOver || state.won) return;
+      state.timerId = window.setInterval(() => {
+        state.timerSeconds += 1;
+        timerEl.textContent = formatTime(state.timerSeconds);
+      }, 1000);
+    }
+
+    function stopTimer() {
+      if (state.timerId) {
+        clearInterval(state.timerId);
+        state.timerId = null;
+      }
+    }
+
+    function getNeighbors(row, col) {
+      const neighbors = [];
+      for (let dr = -1; dr <= 1; dr++) {
+        for (let dc = -1; dc <= 1; dc++) {
+          if (dr === 0 && dc === 0) continue;
+          const nr = row + dr;
+          const nc = col + dc;
+          if (nr >= 0 && nr < state.rows && nc >= 0 && nc < state.cols) {
+            neighbors.push(state.board[nr][nc]);
+          }
+        }
+      }
+      return neighbors;
+    }
+
+    function placeMines(safeRow, safeCol) {
+      const protectedCells = new Set([cellKey(safeRow, safeCol)]);
+      getNeighbors(safeRow, safeCol).forEach(cell => protectedCells.add(cellKey(cell.row, cell.col)));
+
+      const candidates = [];
+      for (let r = 0; r < state.rows; r++) {
+        for (let c = 0; c < state.cols; c++) {
+          if (!protectedCells.has(cellKey(r, c))) candidates.push(state.board[r][c]);
+        }
+      }
+
+      for (let i = candidates.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [candidates[i], candidates[j]] = [candidates[j], candidates[i]];
+      }
+
+      for (let i = 0; i < state.mines && i < candidates.length; i++) {
+        candidates[i].mine = true;
+      }
+
+      for (let r = 0; r < state.rows; r++) {
+        for (let c = 0; c < state.cols; c++) {
+          const cell = state.board[r][c];
+          cell.adjacent = getNeighbors(r, c).filter(n => n.mine).length;
+        }
+      }
+    }
+
+    function ensureFirstReveal(row, col) {
+      if (state.firstRevealDone) return;
+      placeMines(row, col);
+      state.firstRevealDone = true;
+      startTimer();
+    }
+
+    function revealCell(row, col, fromChord = false) {
+      if (state.gameOver || state.won) return;
+      const cell = state.board[row][col];
+      if (!cell || cell.flagged || cell.revealed) return;
+
+      ensureFirstReveal(row, col);
+      revealFlood(cell);
+      renderBoard();
+      updateStats();
+
+      if (state.gameOver) return;
+
+      if (fromChord) {
+        setStatus('Chord reveal resolved the surrounding tiles.');
+      } else if (cell.adjacent > 0) {
+        setStatus(`The rune shows ${cell.adjacent} nearby ${cell.adjacent === 1 ? 'mine' : 'mines'}.`);
+      } else {
+        setStatus('A clear pocket opened through the ash.');
+      }
+      checkWin();
+    }
+
+    function revealFlood(startCell) {
+      const queue = [startCell];
+      while (queue.length) {
+        const cell = queue.shift();
+        if (cell.revealed || cell.flagged) continue;
+
+        cell.revealed = true;
+        state.revealedCount += 1;
+
+        if (cell.mine) {
+          cell.exploded = true;
+          loseGame(cell);
+          return;
+        }
+
+        if (cell.adjacent === 0) {
+          getNeighbors(cell.row, cell.col).forEach(neighbor => {
+            if (!neighbor.revealed && !neighbor.flagged) queue.push(neighbor);
+          });
+        }
+      }
+    }
+
+    function toggleFlag(row, col) {
+      if (state.gameOver || state.won) return;
+      const cell = state.board[row][col];
+      if (!cell || cell.revealed) return;
+      cell.flagged = !cell.flagged;
+      state.flagsPlaced += cell.flagged ? 1 : -1;
+      renderBoard();
+      updateStats();
+      if (cell.flagged) {
+        setStatus('A warning sigil marks that tile as dangerous.');
+      } else {
+        setStatus('The warning sigil has been removed.');
+      }
+    }
+
+    function chordReveal(row, col) {
+      if (state.gameOver || state.won) return;
+      const cell = state.board[row][col];
+      if (!cell || !cell.revealed || cell.mine || cell.adjacent === 0) return;
+      const neighbors = getNeighbors(row, col);
+      const flaggedCount = neighbors.filter(n => n.flagged).length;
+      if (flaggedCount !== cell.adjacent) {
+        setStatus(`Chord reveal needs ${cell.adjacent} surrounding flags; you currently have ${flaggedCount}.`);
+        return;
+      }
+      for (const neighbor of neighbors) {
+        if (!neighbor.flagged && !neighbor.revealed) {
+          revealCell(neighbor.row, neighbor.col, true);
+          if (state.gameOver) return;
+        }
+      }
+      renderBoard();
+      updateStats();
+      checkWin();
+    }
+
+    function loseGame(triggerCell) {
+      state.gameOver = true;
+      stopTimer();
+      for (let r = 0; r < state.rows; r++) {
+        for (let c = 0; c < state.cols; c++) {
+          const cell = state.board[r][c];
+          if (cell.mine) cell.revealed = true;
+        }
+      }
+      renderBoard();
+      updateStats();
+      setStatus(`The field detonated at row ${triggerCell.row + 1}, column ${triggerCell.col + 1}. Reset and try another route.`);
+    }
+
+    function checkWin() {
+      if (state.gameOver || state.won) return;
+      const safeTiles = state.rows * state.cols - state.mines;
+      if (state.revealedCount !== safeTiles) return;
+      state.won = true;
+      stopTimer();
+
+      for (let r = 0; r < state.rows; r++) {
+        for (let c = 0; c < state.cols; c++) {
+          const cell = state.board[r][c];
+          if (cell.mine && !cell.flagged) {
+            cell.flagged = true;
+            state.flagsPlaced += 1;
+          }
+        }
+      }
+
+      renderBoard();
+      updateStats();
+      setStatus('Every safe tile stands revealed. The buried charges have all been accounted for.');
+      showVictory();
+      saveBestTime();
+    }
+
+    function showVictory() {
+      clearVictoryMessage();
+      victorySub.textContent = `Cleared in ${formatTime(state.timerSeconds)} on ${DIFFICULTIES[state.difficultyKey].label}.`;
+      victoryMessage.classList.add('show');
+      launchConfettiBursts();
+      state.victoryTimeout = window.setTimeout(clearVictoryMessage, 1750);
+    }
+
+    function clearVictoryMessage() {
+      if (state.victoryTimeout) {
+        clearTimeout(state.victoryTimeout);
+        state.victoryTimeout = null;
+      }
+      victoryMessage.classList.remove('show');
+    }
+
+    function renderBoard() {
+      boardEl.innerHTML = '';
+      boardEl.setAttribute('role', 'grid');
+      boardEl.setAttribute('aria-rowcount', String(state.rows));
+      boardEl.setAttribute('aria-colcount', String(state.cols));
+
+      for (let r = 0; r < state.rows; r++) {
+        for (let c = 0; c < state.cols; c++) {
+          const cell = state.board[r][c];
+          const button = document.createElement('button');
+          button.type = 'button';
+          button.className = 'cell';
+          button.dataset.row = String(r);
+          button.dataset.col = String(c);
+          button.setAttribute('role', 'gridcell');
+          button.setAttribute('aria-label', describeCell(cell));
+
+          if (cell.revealed) button.classList.add('revealed');
+          if (cell.flagged) button.classList.add('flagged');
+          if (cell.mine) button.classList.add('mine');
+          if (cell.exploded) button.classList.add('exploded');
+          if (cell.revealed && !cell.mine && cell.adjacent === 0) button.classList.add('safe-clear');
+          if (state.gameOver || state.won) button.classList.add('game-over');
+
+          const value = document.createElement('span');
+          value.className = 'cell-value';
+
+          if (cell.flagged && !cell.revealed) {
+            value.textContent = '⚑';
+            value.classList.add('flag');
+            button.appendChild(value);
+          } else if (cell.revealed && cell.mine) {
+            value.textContent = '✹';
+            value.classList.add('mine');
+            button.appendChild(value);
+          } else if (cell.revealed && cell.adjacent > 0) {
+            value.textContent = String(cell.adjacent);
+            value.classList.add(`number-${cell.adjacent}`);
+            button.appendChild(value);
+          }
+
+          boardEl.appendChild(button);
+        }
+      }
+    }
+
+    function describeCell(cell) {
+      if (cell.flagged && !cell.revealed) return `Flagged tile at row ${cell.row + 1}, column ${cell.col + 1}`;
+      if (!cell.revealed) return `Covered tile at row ${cell.row + 1}, column ${cell.col + 1}`;
+      if (cell.mine) return `Mine at row ${cell.row + 1}, column ${cell.col + 1}`;
+      if (cell.adjacent === 0) return `Clear tile at row ${cell.row + 1}, column ${cell.col + 1}`;
+      return `${cell.adjacent} adjacent ${cell.adjacent === 1 ? 'mine' : 'mines'} at row ${cell.row + 1}, column ${cell.col + 1}`;
+    }
+
+    function boardAction(row, col, intendedMode) {
+      const cell = state.board[row][col];
+      if (!cell) return;
+
+      if (cell.revealed) {
+        if (intendedMode === 'reveal') chordReveal(row, col);
+        return;
+      }
+
+      if (intendedMode === 'flag') {
+        toggleFlag(row, col);
+      } else {
+        revealCell(row, col);
+      }
+    }
+
+    boardEl.addEventListener('click', (event) => {
+      const target = event.target.closest('.cell');
+      if (!target) return;
+      const row = Number(target.dataset.row);
+      const col = Number(target.dataset.col);
+      boardAction(row, col, state.mode);
+    });
+
+    boardEl.addEventListener('contextmenu', (event) => {
+      const target = event.target.closest('.cell');
+      if (!target) return;
+      event.preventDefault();
+      const row = Number(target.dataset.row);
+      const col = Number(target.dataset.col);
+      const cell = state.board[row][col];
+      if (cell && cell.revealed) {
+        chordReveal(row, col);
+      } else {
+        boardAction(row, col, 'flag');
+      }
+    });
+
+    document.getElementById('mode-reveal').addEventListener('click', () => setMode('reveal'));
+    document.getElementById('mode-flag').addEventListener('click', () => setMode('flag'));
+    document.getElementById('new-game').addEventListener('click', newGame);
+    document.getElementById('reset-same').addEventListener('click', resetSameField);
+
+    document.querySelectorAll('.difficulty').forEach(button => {
+      button.addEventListener('click', () => setDifficulty(button.dataset.difficulty));
+    });
+
+    window.addEventListener('resize', () => {
+      updateBoardSizing();
+      resizeConfettiCanvas();
+    });
+
+    function loadBestTimes() {
+      let data = {};
+      try {
+        data = JSON.parse(localStorage.getItem('rpg_minesweeper_best_times') || '{}');
+      } catch (err) {
+        data = {};
+      }
+      Object.keys(DIFFICULTIES).forEach(key => {
+        const record = data[key];
+        const timeEl = document.getElementById(`best-${key}`);
+        const extraEl = document.getElementById(`best-${key}-extra`);
+        if (record && Number.isFinite(record.seconds)) {
+          timeEl.textContent = formatTime(record.seconds);
+          extraEl.textContent = `${record.date || 'Recorded'} clear`;
+        } else {
+          timeEl.textContent = '—';
+          extraEl.textContent = 'No clear yet';
+        }
+      });
+    }
+
+    function saveBestTime() {
+      let data = {};
+      try {
+        data = JSON.parse(localStorage.getItem('rpg_minesweeper_best_times') || '{}');
+      } catch (err) {
+        data = {};
+      }
+      const current = data[state.difficultyKey];
+      if (!current || state.timerSeconds < current.seconds) {
+        const stamped = new Date();
+        data[state.difficultyKey] = {
+          seconds: state.timerSeconds,
+          date: stamped.toLocaleDateString()
+        };
+        try {
+          localStorage.setItem('rpg_minesweeper_best_times', JSON.stringify(data));
+        } catch (err) {
+          /* ignore local storage failure */
+        }
+        loadBestTimes();
+      }
+    }
+
+    function resizeConfettiCanvas() {
+      const dpr = window.devicePixelRatio || 1;
+      confettiCanvas.width = Math.floor(window.innerWidth * dpr);
+      confettiCanvas.height = Math.floor(window.innerHeight * dpr);
+      confettiCanvas.style.width = window.innerWidth + 'px';
+      confettiCanvas.style.height = window.innerHeight + 'px';
+      confettiCtx.setTransform(1, 0, 0, 1, 0, 0);
+      confettiCtx.scale(dpr, dpr);
+    }
+
+    function launchConfettiBursts() {
+      resizeConfettiCanvas();
+      const bursts = 18;
+      for (let i = 0; i < bursts; i++) {
+        const x = ((i + 0.5) / bursts) * window.innerWidth + (Math.random() - 0.5) * (window.innerWidth * 0.06);
+        const y = window.innerHeight * (0.16 + Math.random() * 0.46);
+        spawnConfettiBurst(x, y, 24 + Math.floor(Math.random() * 18));
+      }
+      if (!state.confettiRaf) animateConfetti();
+    }
+
+    function spawnConfettiBurst(x, y, count) {
+      const colors = ['#f0d080', '#c8952a', '#d4553f', '#7aaa5a', '#8ed7ff', '#fff4bf', '#b56cff'];
+      for (let i = 0; i < count; i++) {
+        const angle = (Math.PI * 2 * i / count) + (Math.random() * 0.4 - 0.2);
+        const speed = 2.2 + Math.random() * 5.8;
+        const life = 44 + Math.random() * 30;
+        state.confettiParticles.push({
+          x,
+          y,
+          vx: Math.cos(angle) * speed,
+          vy: Math.sin(angle) * speed - (1.6 + Math.random() * 2.4),
+          size: 4 + Math.random() * 8,
+          width: 4 + Math.random() * 8,
+          height: 6 + Math.random() * 9,
+          color: colors[Math.floor(Math.random() * colors.length)],
+          life,
+          maxLife: life,
+          rotation: Math.random() * Math.PI * 2,
+          spin: (Math.random() - 0.5) * 0.35,
+          shape: Math.random() < 0.5 ? 'rect' : 'circle'
+        });
+      }
+    }
+
+    function animateConfetti() {
+      state.confettiRaf = requestAnimationFrame(animateConfetti);
+      confettiCtx.clearRect(0, 0, window.innerWidth, window.innerHeight);
+
+      state.confettiParticles = state.confettiParticles.filter(p => p.life > 0);
+      for (const p of state.confettiParticles) {
+        p.life -= 1;
+        p.vy += 0.12;
+        p.x += p.vx;
+        p.y += p.vy;
+        p.rotation += p.spin;
+        const alpha = Math.max(0, p.life / p.maxLife);
+
+        confettiCtx.save();
+        confettiCtx.globalAlpha = alpha;
+        confettiCtx.translate(p.x, p.y);
+        confettiCtx.rotate(p.rotation);
+        confettiCtx.fillStyle = p.color;
+
+        if (p.shape === 'rect') {
+          confettiCtx.fillRect(-p.width / 2, -p.height / 2, p.width, p.height);
+        } else {
+          confettiCtx.beginPath();
+          confettiCtx.arc(0, 0, p.size / 2, 0, Math.PI * 2);
+          confettiCtx.fill();
+        }
+        confettiCtx.restore();
+      }
+
+      if (!state.confettiParticles.length) {
+        cancelAnimationFrame(state.confettiRaf);
+        state.confettiRaf = null;
+        confettiCtx.clearRect(0, 0, window.innerWidth, window.innerHeight);
+      }
+    }
+
+    document.addEventListener('keydown', (event) => {
+      if (event.key.toLowerCase() === 'f') {
+        setMode(state.mode === 'flag' ? 'reveal' : 'flag');
+      }
+      if (event.key.toLowerCase() === 'n') {
+        newGame();
+      }
+    });
+
+    document.getElementById('year').textContent = new Date().getFullYear();
+    resizeConfettiCanvas();
+    loadBestTimes();
+    setDifficulty('beginner');
+  </script>
+</body>
+</html>
