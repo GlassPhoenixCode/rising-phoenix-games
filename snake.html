@@ -1,0 +1,927 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>Snake · Rising Phoenix Games</title>
+  <link rel="stylesheet" href="shared.css">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; }
+    html, body { margin: 0; min-height: 100%; }
+    :root {
+      --cols: 18;
+      --rows: 18;
+      --cell-size: min(4.45vw, 28px);
+      --cell-gap: 2px;
+      --board-pad: 12px;
+      --message-width: 88%;
+      --snake-a: #6bb54f;
+      --snake-b: #2f6a27;
+      --head-a: #b8ec87;
+      --head-b: #4f992f;
+      --food-a: #d86b4c;
+      --food-b: #8d2618;
+      --board-shadow: rgba(105, 180, 105, 0.18);
+      --goal: 12;
+    }
+
+    body {
+      font-family: var(--font-body);
+      color: var(--text);
+      background:
+        radial-gradient(ellipse 90% 55% at 15% 8%, rgba(90,48,12,0.55) 0%, transparent 58%),
+        radial-gradient(ellipse 70% 65% at 85% 90%, rgba(50,25,6,0.60) 0%, transparent 55%),
+        radial-gradient(ellipse 60% 40% at 50% 50%, rgba(30,18,5,0.40) 0%, transparent 70%),
+        linear-gradient(160deg, #1c1106 0%, #0f0c07 45%, #13100a 100%);
+      background-attachment: fixed;
+    }
+
+    #app {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      isolation: isolate;
+    }
+
+    .site-header {
+      padding: 0;
+      background: linear-gradient(180deg, #1e1508 0%, #120e06 100%);
+      border-bottom: 2px solid var(--gold);
+      box-shadow: 0 4px 24px rgba(0,0,0,0.7), 0 1px 0 rgba(200,149,42,0.15) inset;
+      position: relative;
+      overflow: hidden;
+      flex-shrink: 0;
+    }
+    .site-header::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: repeating-linear-gradient(90deg, transparent 0px, transparent 48px, rgba(200,149,42,0.04) 48px, rgba(200,149,42,0.04) 49px);
+      pointer-events: none;
+    }
+    .header-inner { position: relative; padding: 14px 20px 12px; }
+    .header-row { display: flex; align-items: center; }
+    .rpg-back {
+      display: inline-block;
+      font-family: var(--font-ui);
+      font-size: 0.78rem;
+      letter-spacing: 0.08em;
+      color: var(--gold);
+      text-decoration: none;
+      padding: 0.55rem 1.1rem 0.55rem 2rem;
+      border: 1px solid rgba(200,149,42,0.25);
+      border-radius: 3px;
+      background: linear-gradient(180deg, #2a2010 0%, #1a1508 100%);
+      position: relative;
+      transition: border-color 0.2s, box-shadow 0.2s, color 0.2s;
+      flex: 0 0 auto;
+      z-index: 2;
+    }
+    .rpg-back::before { content: '\2190'; position: absolute; left: 0.7rem; }
+    .rpg-back:hover {
+      border-color: var(--gold-light);
+      box-shadow: 0 0 18px 2px var(--gold-glow);
+      color: var(--gold-light);
+    }
+    .header-center {
+      flex: 1 1 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.85rem;
+      min-width: 0;
+    }
+    .header-spacer { visibility: hidden; pointer-events: none; }
+    .phoenix-mark {
+      width: 52px;
+      height: 52px;
+      object-fit: contain;
+      flex-shrink: 0;
+      filter: drop-shadow(0 0 10px rgba(200,149,42,0.5));
+    }
+    .title-block {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      min-width: 0;
+    }
+    .game-title {
+      margin: 0;
+      font-family: var(--font-display);
+      font-size: clamp(1.05rem, 3.8vw, 2rem);
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      line-height: 1.1;
+      background: linear-gradient(135deg, var(--gold-light) 0%, var(--gold) 40%, #a07020 80%, var(--gold-light) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .game-subtitle {
+      margin: 0.2rem 0 0;
+      font-style: italic;
+      color: #c8a878;
+      font-size: 0.82rem;
+      letter-spacing: 0.05em;
+    }
+
+    .main-wrap {
+      width: 100%;
+      max-width: 1180px;
+      margin: 0 auto;
+      padding: 22px 16px 30px;
+      display: grid;
+      grid-template-columns: minmax(320px, 1.15fr) minmax(280px, 0.85fr);
+      gap: 20px;
+      flex: 1;
+    }
+    .panel {
+      background: linear-gradient(160deg, var(--surface) 0%, var(--bg-warm) 100%);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      box-shadow: inset 0 0 30px rgba(0,0,0,0.35), 0 10px 34px rgba(0,0,0,0.45);
+      overflow: hidden;
+      position: relative;
+    }
+    .panel-header {
+      padding: 14px 16px 10px;
+      border-bottom: 1px solid rgba(200,149,42,0.14);
+      background: linear-gradient(180deg, rgba(255,255,255,0.03) 0%, rgba(255,255,255,0) 100%);
+    }
+    .panel-label {
+      font-family: var(--font-ui);
+      font-size: 0.7rem;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: var(--gold);
+      margin: 0 0 0.25rem;
+    }
+    .status-bar {
+      margin: 0;
+      min-height: 2.4rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 8px 16px 8px 28px;
+      background: rgba(0,0,0,0.32);
+      border: 1px solid rgba(200,149,42,0.18);
+      border-radius: 8px;
+      font-family: var(--font-ui);
+      font-size: 0.8rem;
+      letter-spacing: 0.08em;
+      color: var(--gold-light);
+      position: relative;
+      text-align: center;
+    }
+    .status-bar::before {
+      content: '⚜';
+      position: absolute;
+      left: 10px;
+      font-size: 10px;
+      color: var(--gold);
+      opacity: 0.7;
+    }
+
+    .board-panel { display: flex; flex-direction: column; min-height: 760px; }
+    .board-area {
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+      align-items: center;
+      flex: 1;
+      position: relative;
+    }
+    .score-strip {
+      width: min(100%, 680px);
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 10px;
+    }
+    .score-card {
+      padding: 12px;
+      border-radius: 14px;
+      background: linear-gradient(180deg, rgba(255,255,255,0.04) 0%, rgba(0,0,0,0.16) 100%);
+      border: 1px solid rgba(200,149,42,0.18);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.03);
+      text-align: center;
+    }
+    .score-label {
+      font-family: var(--font-ui);
+      font-size: 0.62rem;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: var(--gold);
+      margin-bottom: 4px;
+    }
+    .score-value {
+      font-family: var(--font-display);
+      color: var(--gold-light);
+      font-size: clamp(1rem, 2.6vw, 1.45rem);
+      line-height: 1;
+    }
+    .score-sub {
+      color: var(--text-muted);
+      font-size: 0.82rem;
+      font-style: italic;
+      margin-top: 4px;
+    }
+
+    .board-frame {
+      width: min(100%, 680px);
+      position: relative;
+      padding: 18px;
+      border-radius: 20px;
+      background:
+        radial-gradient(circle at 50% 45%, rgba(58,92,31,0.18) 0%, rgba(18,12,5,0.96) 70%),
+        linear-gradient(160deg, #201407 0%, #100b04 100%);
+      border: 1px solid rgba(200,149,42,0.28);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.04), inset 0 0 38px rgba(0,0,0,0.35), 0 0 0 1px rgba(0,0,0,0.35), 0 18px 42px rgba(0,0,0,0.45), 0 0 30px rgba(200,149,42,0.18);
+    }
+    .board-shell {
+      position: relative;
+      width: 100%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      overflow: hidden;
+      border-radius: 16px;
+    }
+    .board {
+      display: grid;
+      grid-template-columns: repeat(var(--cols), minmax(0, 1fr));
+      gap: var(--cell-gap);
+      padding: var(--board-pad);
+      background: linear-gradient(180deg, rgba(255,255,255,0.03), rgba(0,0,0,0.14)), rgba(17, 11, 4, 0.98);
+      border: 1px solid rgba(200,149,42,0.24);
+      border-radius: 16px;
+      box-shadow: inset 0 0 30px rgba(0,0,0,0.35), 0 0 20px rgba(110, 190, 110, 0.08);
+      touch-action: none;
+      user-select: none;
+      width: fit-content;
+      max-width: 100%;
+    }
+    .cell {
+      width: var(--cell-size);
+      aspect-ratio: 1 / 1;
+      border-radius: 7px;
+      position: relative;
+      overflow: hidden;
+      background: linear-gradient(180deg, rgba(255,255,255,0.025), rgba(0,0,0,0.08)), rgba(40, 25, 10, 0.42);
+      border: 1px solid rgba(200,149,42,0.05);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.02);
+    }
+    .cell.snake {
+      background: linear-gradient(180deg, rgba(255,255,255,0.06), rgba(0,0,0,0.12)), linear-gradient(135deg, var(--snake-a), var(--snake-b));
+      border-color: rgba(150, 220, 130, 0.22);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.06), 0 0 10px rgba(88,180,90,0.10);
+    }
+    .cell.alt { filter: brightness(1.06); }
+    .cell.head {
+      background: radial-gradient(circle at 35% 32%, rgba(255,255,255,0.18), transparent 25%), linear-gradient(135deg, var(--head-a), var(--head-b));
+      border-color: rgba(180, 235, 140, 0.4);
+      box-shadow: 0 0 18px rgba(110, 210, 120, 0.28), inset 0 1px 0 rgba(255,255,255,0.09);
+    }
+    .cell.head::before, .cell.head::after {
+      content: '';
+      position: absolute;
+      width: 16%;
+      height: 16%;
+      background: rgba(22, 18, 10, 0.85);
+      border-radius: 50%;
+      top: 28%;
+      z-index: 1;
+    }
+    .cell.head::before { left: 26%; }
+    .cell.head::after { right: 26%; }
+    .cell.food {
+      background: radial-gradient(circle at 50% 50%, rgba(255,240,210,0.25), transparent 38%), linear-gradient(135deg, var(--food-a), var(--food-b));
+      border-color: rgba(255, 160, 140, 0.4);
+      box-shadow: 0 0 18px rgba(209,81,69,0.25), inset 0 1px 0 rgba(255,255,255,0.1);
+      animation: foodPulse 1s ease-in-out infinite;
+    }
+    .cell.food::before {
+      content: '';
+      position: absolute;
+      width: 20%;
+      height: 20%;
+      border-radius: 50%;
+      background: rgba(240,208,128,0.62);
+      left: 50%;
+      top: 50%;
+      transform: translate(-50%, -50%);
+      box-shadow: 0 0 12px rgba(240,208,128,0.35);
+    }
+    @keyframes foodPulse {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.07); }
+    }
+
+    .controls-row, .speed-row {
+      width: min(100%, 680px);
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      justify-content: center;
+      align-items: center;
+    }
+    .rpg-btn-pill {
+      font-family: var(--font-ui);
+      font-size: 0.78rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: #f0d080;
+      background: linear-gradient(180deg,rgba(40,28,8,0.9) 0%,rgba(20,14,4,0.95) 100%);
+      border: 1px solid rgba(200,149,42,0.45);
+      padding: 10px 18px;
+      border-radius: 999px;
+      cursor: pointer;
+      transition: all 0.2s;
+      box-shadow: 0 1px 0 rgba(200,149,42,0.15), inset 0 1px 0 rgba(200,149,42,0.1);
+    }
+    .rpg-btn-pill:hover {
+      border-color: rgba(200,149,42,0.75);
+      box-shadow: 0 0 18px 2px rgba(200,149,42,0.25), 0 0 48px 8px rgba(180,120,20,0.15), inset 0 1px 0 rgba(200,149,42,0.2);
+      color: #f8e898;
+      transform: translateY(-1px);
+    }
+    .rpg-btn-sage { border-color: rgba(74,122,58,0.58); color: #cde8b6; background: linear-gradient(180deg, rgba(48,76,35,0.96), rgba(25,41,18,0.98)); }
+    .rpg-btn-sage:hover { border-color: rgba(126,188,105,0.84); box-shadow: 0 0 18px 2px rgba(90,160,90,0.24), 0 0 40px 8px rgba(60,110,60,0.16), inset 0 1px 0 rgba(210,255,210,0.12); color: #ebffd9; }
+    .speed-label {
+      font-family: var(--font-ui);
+      font-size: 0.68rem;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: var(--gold);
+      margin-right: 2px;
+    }
+    .chip {
+      font-family: var(--font-ui);
+      font-size: 0.73rem;
+      letter-spacing: 0.08em;
+      color: #d9c892;
+      background: rgba(28, 18, 8, 0.9);
+      border: 1px solid rgba(200,149,42,0.24);
+      border-radius: 999px;
+      padding: 8px 14px;
+      cursor: pointer;
+    }
+    .chip.active {
+      border-color: rgba(140, 210, 120, 0.65);
+      color: #e7f7cc;
+      box-shadow: 0 0 18px rgba(100, 180, 100, 0.18);
+      background: linear-gradient(180deg, rgba(44, 68, 31, 0.96), rgba(22, 35, 16, 0.98));
+    }
+
+    .confetti-layer {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      overflow: hidden;
+      z-index: 12;
+    }
+    .confetti {
+      position: absolute;
+      width: 10px;
+      height: 16px;
+      border-radius: 2px;
+      opacity: 0;
+      animation: confettiFall 1.4s ease-out forwards;
+      transform-origin: center;
+    }
+    @keyframes confettiFall {
+      0% { opacity: 0; transform: translate(0, 0) rotate(0deg) scale(0.4); }
+      10% { opacity: 1; }
+      100% { opacity: 0; transform: translate(var(--dx), var(--dy)) rotate(var(--rot)) scale(1); }
+    }
+    .victory-banner {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      width: min(var(--message-width), calc(100% - 38px));
+      transform: translate(-50%, -50%) scale(0.18);
+      transform-origin: center center;
+      background: linear-gradient(180deg, rgba(255,255,255,0.07), rgba(0,0,0,0.20)), linear-gradient(135deg, rgba(40,78,28,0.96), rgba(18,33,12,0.98));
+      border: 1px solid rgba(180, 230, 150, 0.6);
+      border-radius: 18px;
+      box-shadow: 0 0 0 1px rgba(0,0,0,0.25), 0 0 28px rgba(98, 190, 110, 0.35), inset 0 1px 0 rgba(255,255,255,0.08);
+      padding: 20px 24px;
+      text-align: center;
+      opacity: 0;
+      z-index: 15;
+      pointer-events: none;
+    }
+    .victory-banner.visible { animation: victoryPulse 1.75s ease forwards; }
+    .victory-overline {
+      font-family: var(--font-ui);
+      font-size: 0.66rem;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: #cbe7ad;
+      margin-bottom: 0.45rem;
+    }
+    .victory-title {
+      font-family: var(--font-display);
+      font-size: clamp(1.25rem, 3.8vw, 2.3rem);
+      line-height: 1.05;
+      margin: 0;
+      background: linear-gradient(135deg, #f5f1b8 0%, #bce08d 45%, #f0d080 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .victory-copy {
+      margin-top: 0.55rem;
+      color: #d9eabf;
+      font-size: 1rem;
+      font-style: italic;
+    }
+    @keyframes victoryPulse {
+      0% { opacity: 0; transform: translate(-50%, -50%) scale(0.18); }
+      43% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+      82% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+      100% { opacity: 0; transform: translate(-50%, -50%) scale(1); }
+    }
+
+    .touch-pad {
+      display: none;
+      width: min(100%, 360px);
+      gap: 10px;
+      flex-direction: column;
+      align-items: center;
+    }
+    .pad-row { display: flex; gap: 10px; }
+    .pad-btn, .pad-spacer {
+      width: 72px;
+      height: 72px;
+      border-radius: 18px;
+    }
+    .pad-btn {
+      border: 1px solid rgba(200,149,42,0.28);
+      background: linear-gradient(180deg, rgba(255,255,255,0.05), rgba(0,0,0,0.15)), rgba(20,13,5,0.96);
+      color: var(--gold-light);
+      font-family: var(--font-ui);
+      font-size: 1.45rem;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.04), 0 10px 20px rgba(0,0,0,0.28);
+      cursor: pointer;
+    }
+    .pad-spacer { visibility: hidden; }
+
+    .sidebar { display: flex; flex-direction: column; gap: 20px; }
+    .info-panel { padding: 18px; }
+    .section-copy {
+      color: #d2c49a;
+      font-size: 0.96rem;
+      line-height: 1.55;
+      margin: 0.55rem 0 0;
+    }
+    .section-copy strong { color: #f0d080; font-weight: 600; }
+    .bullet-list { margin: 0.75rem 0 0; padding-left: 1.15rem; color: #d2c49a; }
+    .bullet-list li { margin: 0.45rem 0; line-height: 1.45; }
+    .key-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; margin-top: 0.85rem; }
+    .key-card {
+      border: 1px solid rgba(200,149,42,0.16);
+      border-radius: 12px;
+      background: rgba(0,0,0,0.22);
+      padding: 10px 12px;
+    }
+    .key-card-label {
+      font-family: var(--font-ui);
+      font-size: 0.62rem;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--gold);
+      margin-bottom: 4px;
+    }
+    .key-card-value { color: #f0e2b6; font-size: 0.96rem; line-height: 1.35; }
+    .footer-note {
+      font-family: var(--font-body);
+      color: rgba(240,208,128,0.7);
+      font-style: italic;
+      text-align: center;
+      padding: 0 12px 18px;
+      font-size: 0.82rem;
+    }
+
+    @media (max-width: 980px) {
+      .main-wrap { grid-template-columns: 1fr; }
+      .board-panel { min-height: auto; }
+    }
+    @media (max-width: 760px) {
+      :root { --cell-size: min(4.65vw, 22px); }
+      .score-strip { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .touch-pad { display: flex; }
+    }
+    @media (max-width: 520px) {
+      :root { --cell-size: min(4.55vw, 18px); }
+      .header-inner { padding-inline: 12px; }
+      .main-wrap { padding-inline: 12px; }
+      .board-area { padding: 16px 14px 20px; }
+      .board-frame { padding: 12px; }
+      .key-grid { grid-template-columns: 1fr; }
+      .rpg-back, .header-spacer { transform: scale(0.92); transform-origin: left center; }
+    }
+  </style>
+</head>
+<body>
+  <div id="app">
+    <header class="site-header">
+      <div class="header-inner">
+        <div class="header-row">
+          <a href="index.html" class="rpg-back" aria-label="Return to the hub">Hub</a>
+          <div class="header-center">
+            <img class="phoenix-mark" src="RPG Favicon.png" alt="Rising Phoenix Games logo">
+            <div class="title-block">
+              <h1 class="game-title">Snake</h1>
+              <p class="game-subtitle">Guide the ember serpent and gather relics without breaking the coil</p>
+            </div>
+          </div>
+          <a href="index.html" class="rpg-back header-spacer" aria-hidden="true" tabindex="-1">Hub</a>
+        </div>
+      </div>
+    </header>
+
+    <main class="main-wrap">
+      <section class="panel board-panel">
+        <div class="panel-header">
+          <div class="panel-label">Game Board</div>
+          <div class="status-bar" id="statusBar">Press Start or Space to wake the serpent.</div>
+        </div>
+        <div class="board-area">
+          <div class="score-strip">
+            <div class="score-card"><div class="score-label">Score</div><div class="score-value" id="scoreValue">0</div><div class="score-sub">Relics claimed</div></div>
+            <div class="score-card"><div class="score-label">Length</div><div class="score-value" id="lengthValue">4</div><div class="score-sub">Current coil</div></div>
+            <div class="score-card"><div class="score-label">Goal</div><div class="score-value" id="goalValue">12</div><div class="score-sub">Victory threshold</div></div>
+            <div class="score-card"><div class="score-label">Best</div><div class="score-value" id="bestValue">0</div><div class="score-sub">Stored locally</div></div>
+          </div>
+
+          <div class="board-frame">
+            <div class="board-shell">
+              <div class="board" id="board" aria-label="Snake board"></div>
+              <div class="confetti-layer" id="confettiLayer" aria-hidden="true"></div>
+              <div class="victory-banner" id="victoryBanner" aria-hidden="true">
+                <div class="victory-overline">Rising Phoenix Games</div>
+                <h2 class="victory-title" id="victoryTitle">The Serpent Ascends</h2>
+                <div class="victory-copy" id="victoryCopy">You gathered every ember relic and mastered the coil.</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="controls-row">
+            <button class="rpg-btn-pill rpg-btn-sage" id="startBtn" type="button">Start / Resume</button>
+            <button class="rpg-btn-pill" id="pauseBtn" type="button">Pause</button>
+            <button class="rpg-btn-pill" id="restartBtn" type="button">New Game</button>
+          </div>
+
+          <div class="speed-row">
+            <span class="speed-label">Speed</span>
+            <button class="chip active" data-speed="slow" type="button">Ember</button>
+            <button class="chip" data-speed="normal" type="button">Ash</button>
+            <button class="chip" data-speed="fast" type="button">Inferno</button>
+          </div>
+
+          <div class="touch-pad" aria-label="Touch controls">
+            <div class="pad-row"><div class="pad-spacer"></div><button class="pad-btn" data-dir="up" type="button" aria-label="Move up">▲</button><div class="pad-spacer"></div></div>
+            <div class="pad-row"><button class="pad-btn" data-dir="left" type="button" aria-label="Move left">◀</button><button class="pad-btn" data-dir="down" type="button" aria-label="Move down">▼</button><button class="pad-btn" data-dir="right" type="button" aria-label="Move right">▶</button></div>
+          </div>
+        </div>
+      </section>
+
+      <aside class="sidebar">
+        <section class="panel info-panel">
+          <div class="panel-label">How to Play</div>
+          <p class="section-copy">Guide the serpent across the board, consume the glowing relic, and keep clear of the arena walls and your own body. Each relic extends the serpent by one segment.</p>
+          <ul class="bullet-list">
+            <li><strong>Win condition:</strong> reach 12 relics and trigger the victory rite.</li>
+            <li><strong>Loss condition:</strong> collide with a wall or your own coil.</li>
+            <li><strong>Movement:</strong> use arrow keys, WASD, or the touch pad.</li>
+            <li><strong>Pause:</strong> press P or use the pause button.</li>
+          </ul>
+        </section>
+
+        <section class="panel info-panel">
+          <div class="panel-label">Controls</div>
+          <div class="key-grid">
+            <div class="key-card"><div class="key-card-label">Move</div><div class="key-card-value">Arrow keys or WASD</div></div>
+            <div class="key-card"><div class="key-card-label">Start</div><div class="key-card-value">Space</div></div>
+            <div class="key-card"><div class="key-card-label">Pause</div><div class="key-card-value">P</div></div>
+            <div class="key-card"><div class="key-card-label">Restart</div><div class="key-card-value">R</div></div>
+          </div>
+        </section>
+
+        <section class="panel info-panel">
+          <div class="panel-label">Difficulty</div>
+          <p class="section-copy">Ember moves deliberately, Ash is balanced, and Inferno makes route planning much less forgiving. The win target remains fixed while execution pressure changes.</p>
+        </section>
+      </aside>
+    </main>
+
+    <div class="footer-note">Rising Phoenix Games · Snake</div>
+  </div>
+
+  <script>
+    const COLS = 18;
+    const ROWS = 18;
+    const START_LENGTH = 4;
+    const GOAL_SCORE = 12;
+    const STORAGE_KEY = 'rpg_snake_best_score';
+    const SPEEDS = { slow: 180, normal: 130, fast: 95 };
+    const THEMATIC_VICTORIES = [
+      { title: 'The Serpent Ascends', copy: 'You gathered every ember relic and mastered the coil.' },
+      { title: 'Phoenix Coil Triumphant', copy: 'The ancient serpent winds in victory through the ashes.' },
+      { title: 'The Ember Path Is Conquered', copy: 'Every turn held true, and the relic fire answered your call.' },
+      { title: 'Crowned in Flame', copy: 'The serpent reaches its destined length and the forge sings.' }
+    ];
+
+    const boardEl = document.getElementById('board');
+    const statusBar = document.getElementById('statusBar');
+    const scoreValue = document.getElementById('scoreValue');
+    const lengthValue = document.getElementById('lengthValue');
+    const goalValue = document.getElementById('goalValue');
+    const bestValue = document.getElementById('bestValue');
+    const startBtn = document.getElementById('startBtn');
+    const pauseBtn = document.getElementById('pauseBtn');
+    const restartBtn = document.getElementById('restartBtn');
+    const confettiLayer = document.getElementById('confettiLayer');
+    const victoryBanner = document.getElementById('victoryBanner');
+    const victoryTitle = document.getElementById('victoryTitle');
+    const victoryCopy = document.getElementById('victoryCopy');
+    const speedButtons = [...document.querySelectorAll('.chip[data-speed]')];
+    const padButtons = [...document.querySelectorAll('.pad-btn[data-dir]')];
+
+    let cells = [];
+    let snake = [];
+    let direction = { x: 1, y: 0 };
+    let queuedDirection = { x: 1, y: 0 };
+    let food = { x: 0, y: 0 };
+    let score = 0;
+    let best = 0;
+    let speedKey = 'slow';
+    let tickDelay = SPEEDS[speedKey];
+    let gameTimer = null;
+    let started = false;
+    let paused = true;
+    let won = false;
+
+    function buildBoard() {
+      boardEl.innerHTML = '';
+      cells = [];
+      for (let y = 0; y < ROWS; y++) {
+        for (let x = 0; x < COLS; x++) {
+          const cell = document.createElement('div');
+          cell.className = 'cell';
+          boardEl.appendChild(cell);
+          cells.push(cell);
+        }
+      }
+    }
+    function cellAt(x, y) { return cells[y * COLS + x]; }
+
+    function loadBest() {
+      best = Number(localStorage.getItem(STORAGE_KEY) || 0) || 0;
+      bestValue.textContent = String(best);
+    }
+    function storeBest() {
+      if (score > best) {
+        best = score;
+        localStorage.setItem(STORAGE_KEY, String(best));
+        bestValue.textContent = String(best);
+      }
+    }
+    function setStatus(text) { statusBar.textContent = text; }
+
+    function seedSnake() {
+      const midX = Math.floor(COLS / 2);
+      const midY = Math.floor(ROWS / 2);
+      snake = [];
+      for (let i = START_LENGTH - 1; i >= 0; i--) snake.push({ x: midX - i, y: midY });
+      direction = { x: 1, y: 0 };
+      queuedDirection = { x: 1, y: 0 };
+    }
+
+    function spawnFood() {
+      const occupied = new Set(snake.map(seg => `${seg.x},${seg.y}`));
+      const free = [];
+      for (let y = 0; y < ROWS; y++) {
+        for (let x = 0; x < COLS; x++) {
+          const key = `${x},${y}`;
+          if (!occupied.has(key)) free.push({ x, y });
+        }
+      }
+      if (!free.length) return;
+      food = free[Math.floor(Math.random() * free.length)];
+    }
+
+    function updateMetrics() {
+      scoreValue.textContent = String(score);
+      lengthValue.textContent = String(snake.length);
+      goalValue.textContent = String(GOAL_SCORE);
+      bestValue.textContent = String(best);
+    }
+
+    function render() {
+      cells.forEach(cell => cell.className = 'cell');
+      snake.forEach((segment, index) => {
+        const cell = cellAt(segment.x, segment.y);
+        if (!cell) return;
+        cell.classList.add('snake');
+        if (index % 2) cell.classList.add('alt');
+      });
+      const head = snake[snake.length - 1];
+      if (head) cellAt(head.x, head.y)?.classList.add('head');
+      if (food) cellAt(food.x, food.y)?.classList.add('food');
+    }
+
+    function clearConfetti() { confettiLayer.innerHTML = ''; }
+    function hideVictory() { victoryBanner.classList.remove('visible'); }
+
+    function resetGame() {
+      clearInterval(gameTimer);
+      started = false;
+      paused = true;
+      won = false;
+      score = 0;
+      tickDelay = SPEEDS[speedKey];
+      hideVictory();
+      clearConfetti();
+      seedSnake();
+      spawnFood();
+      updateMetrics();
+      render();
+      setStatus('Press Start or Space to wake the serpent.');
+    }
+
+    function createConfettiBurst() {
+      clearConfetti();
+      const colors = ['#f0d080', '#c8952a', '#cf5346', '#83d38a', '#8bbcff', '#ffe89c', '#cde8b6'];
+      const pieces = 84;
+      const rect = confettiLayer.getBoundingClientRect();
+      const cx = rect.width / 2;
+      const cy = rect.height / 2;
+      for (let i = 0; i < pieces; i++) {
+        const piece = document.createElement('div');
+        piece.className = 'confetti';
+        const angle = (Math.PI * 2 * i) / pieces + (Math.random() * 0.55 - 0.275);
+        const distance = 120 + Math.random() * Math.min(rect.width, rect.height) * 0.65;
+        piece.style.left = `${cx}px`;
+        piece.style.top = `${cy}px`;
+        piece.style.width = `${6 + Math.random() * 8}px`;
+        piece.style.height = `${10 + Math.random() * 12}px`;
+        piece.style.background = colors[i % colors.length];
+        piece.style.setProperty('--dx', `${Math.cos(angle) * distance}px`);
+        piece.style.setProperty('--dy', `${Math.sin(angle) * distance + 120 + Math.random() * 180}px`);
+        piece.style.setProperty('--rot', `${Math.random() * 900 - 450}deg`);
+        piece.style.animationDelay = `${Math.random() * 0.18}s`;
+        confettiLayer.appendChild(piece);
+      }
+      setTimeout(clearConfetti, 1800);
+    }
+
+    function showVictory() {
+      const choice = THEMATIC_VICTORIES[Math.floor(Math.random() * THEMATIC_VICTORIES.length)];
+      victoryTitle.textContent = choice.title;
+      victoryCopy.textContent = choice.copy;
+      victoryBanner.classList.remove('visible');
+      void victoryBanner.offsetWidth;
+      victoryBanner.classList.add('visible');
+      setTimeout(() => victoryBanner.classList.remove('visible'), 1750);
+    }
+
+    function triggerVictory() {
+      clearInterval(gameTimer);
+      started = false;
+      paused = true;
+      won = true;
+      storeBest();
+      setStatus('Victory. The serpent completes the ember rite.');
+      updateMetrics();
+      createConfettiBurst();
+      showVictory();
+    }
+
+    function endGame(message) {
+      clearInterval(gameTimer);
+      started = false;
+      paused = true;
+      storeBest();
+      setStatus(`${message} Press New Game or R to try again.`);
+      updateMetrics();
+    }
+
+    function isOpposite(next) { return next.x === -direction.x && next.y === -direction.y; }
+    function requestDirection(next) {
+      if (!started && !won) startGame();
+      if (isOpposite(next)) return;
+      queuedDirection = next;
+    }
+
+    function stepGame() {
+      direction = queuedDirection;
+      const head = snake[snake.length - 1];
+      const nextHead = { x: head.x + direction.x, y: head.y + direction.y };
+
+      if (nextHead.x < 0 || nextHead.x >= COLS || nextHead.y < 0 || nextHead.y >= ROWS) {
+        endGame('The serpent struck the outer wall.');
+        return;
+      }
+
+      const willEat = nextHead.x === food.x && nextHead.y === food.y;
+      const collisionBody = willEat ? snake : snake.slice(1);
+      if (collisionBody.some(seg => seg.x === nextHead.x && seg.y === nextHead.y)) {
+        endGame('The serpent crossed its own coil.');
+        return;
+      }
+
+      snake.push(nextHead);
+      if (willEat) {
+        score += 1;
+        storeBest();
+        if (score >= GOAL_SCORE) {
+          render();
+          triggerVictory();
+          return;
+        }
+        spawnFood();
+        setStatus('Relic claimed. The serpent grows stronger.');
+      } else {
+        snake.shift();
+        setStatus('Guide the coil and seek the next ember relic.');
+      }
+
+      updateMetrics();
+      render();
+    }
+
+    function startLoop() {
+      clearInterval(gameTimer);
+      gameTimer = setInterval(stepGame, tickDelay);
+      paused = false;
+      started = true;
+    }
+    function startGame() {
+      if (won) return;
+      startLoop();
+      setStatus('The serpent moves. Gather relics and avoid the walls.');
+    }
+    function pauseGame() {
+      if (!started && !paused) return;
+      if (!started && paused) return;
+      if (won) return;
+      if (paused) {
+        startLoop();
+        setStatus('The serpent stirs again.');
+      } else {
+        clearInterval(gameTimer);
+        paused = true;
+        started = true;
+        setStatus('Paused. The serpent waits.');
+      }
+    }
+
+    function setSpeed(next) {
+      speedKey = next;
+      tickDelay = SPEEDS[next];
+      speedButtons.forEach(btn => btn.classList.toggle('active', btn.dataset.speed === next));
+      if (started && !paused) startLoop();
+      if (!started) setStatus(`${next === 'slow' ? 'Ember' : next === 'normal' ? 'Ash' : 'Inferno'} speed selected. Press Start when ready.`);
+    }
+
+    function handleKeydown(event) {
+      const key = event.key.toLowerCase();
+      if (['arrowup','arrowdown','arrowleft','arrowright',' ','p','r','w','a','s','d'].includes(key)) event.preventDefault();
+      if (key === 'arrowup' || key === 'w') requestDirection({ x: 0, y: -1 });
+      if (key === 'arrowdown' || key === 's') requestDirection({ x: 0, y: 1 });
+      if (key === 'arrowleft' || key === 'a') requestDirection({ x: -1, y: 0 });
+      if (key === 'arrowright' || key === 'd') requestDirection({ x: 1, y: 0 });
+      if (key === ' ') {
+        if (won) resetGame();
+        else if (!started && paused) startGame();
+        else pauseGame();
+      }
+      if (key === 'p') pauseGame();
+      if (key === 'r') resetGame();
+    }
+
+    function bindEvents() {
+      startBtn.addEventListener('click', () => won ? resetGame() : startGame());
+      pauseBtn.addEventListener('click', pauseGame);
+      restartBtn.addEventListener('click', resetGame);
+      document.addEventListener('keydown', handleKeydown);
+      speedButtons.forEach(btn => btn.addEventListener('click', () => setSpeed(btn.dataset.speed)));
+      padButtons.forEach(btn => btn.addEventListener('click', () => {
+        const dir = btn.dataset.dir;
+        if (dir === 'up') requestDirection({ x: 0, y: -1 });
+        if (dir === 'down') requestDirection({ x: 0, y: 1 });
+        if (dir === 'left') requestDirection({ x: -1, y: 0 });
+        if (dir === 'right') requestDirection({ x: 1, y: 0 });
+      }));
+    }
+
+    buildBoard();
+    loadBest();
+    bindEvents();
+    resetGame();
+  </script>
+</body>
+</html>
