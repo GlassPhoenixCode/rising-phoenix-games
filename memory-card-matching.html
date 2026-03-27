@@ -1,0 +1,1178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>Memory · Rising Phoenix Games</title>
+  <link rel="stylesheet" href="shared.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700&family=Cinzel:wght@400;600;700;900&family=IM+Fell+English:ital@0;1&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; }
+    html, body { margin: 0; min-height: 100%; }
+
+    :root {
+      --message-width: 88%;
+      --board-max: 760px;
+      --tile-size: clamp(74px, 11vw, 132px);
+      --tile-gap: clamp(10px, 1.8vw, 16px);
+      --card-radius: 16px;
+      --matched-glow: rgba(122, 200, 120, 0.34);
+      --select-glow: rgba(240, 208, 128, 0.26);
+    }
+
+    body {
+      font-family: var(--font-body);
+      color: var(--text);
+      background:
+        radial-gradient(ellipse 90% 55% at 15% 8%, rgba(90,48,12,0.55) 0%, transparent 58%),
+        radial-gradient(ellipse 70% 65% at 85% 90%, rgba(50,25,6,0.60) 0%, transparent 55%),
+        radial-gradient(ellipse 60% 40% at 50% 50%, rgba(30,18,5,0.40) 0%, transparent 70%),
+        linear-gradient(160deg, #1c1106 0%, #0f0c07 45%, #13100a 100%);
+      background-attachment: fixed;
+    }
+
+    #app {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      isolation: isolate;
+    }
+
+    .site-header {
+      padding: 0;
+      background: linear-gradient(180deg, #1e1508 0%, #120e06 100%);
+      border-bottom: 2px solid var(--gold);
+      box-shadow: 0 4px 24px rgba(0,0,0,0.7), 0 1px 0 rgba(200,149,42,0.15) inset;
+      position: relative;
+      overflow: hidden;
+      flex-shrink: 0;
+    }
+    .site-header::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: repeating-linear-gradient(
+        90deg,
+        transparent 0px,
+        transparent 48px,
+        rgba(200,149,42,0.04) 48px,
+        rgba(200,149,42,0.04) 49px
+      );
+      pointer-events: none;
+    }
+    .header-inner { position: relative; padding: 14px 20px 12px; }
+    .header-row { display: flex; align-items: center; margin-bottom: 6px; }
+
+    .rpg-back {
+      display: inline-block;
+      font-family: var(--font-ui);
+      font-size: 0.78rem;
+      letter-spacing: 0.08em;
+      color: var(--gold);
+      text-decoration: none;
+      padding: 0.55rem 1.1rem 0.55rem 2rem;
+      border: 1px solid rgba(200,149,42,0.25);
+      border-radius: 3px;
+      background: linear-gradient(180deg, #2a2010 0%, #1a1508 100%);
+      position: relative;
+      transition: border-color 0.2s, box-shadow 0.2s, color 0.2s;
+      margin: 0;
+      flex: 0 0 auto;
+      z-index: 2;
+    }
+    .rpg-back::before { content: '\2190'; position: absolute; left: 0.7rem; }
+    .rpg-back:hover {
+      border-color: var(--gold-light);
+      box-shadow: 0 0 18px 2px var(--gold-glow);
+      color: var(--gold-light);
+    }
+
+    .header-center {
+      flex: 1 1 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.85rem;
+      min-width: 0;
+    }
+    .header-spacer { visibility: hidden; pointer-events: none; }
+    .phoenix-mark {
+      width: 52px;
+      height: 52px;
+      object-fit: contain;
+      flex-shrink: 0;
+      filter: drop-shadow(0 0 10px rgba(200,149,42,0.5));
+    }
+    .title-block {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      min-width: 0;
+    }
+    .game-title {
+      margin: 0;
+      font-family: var(--font-display);
+      font-size: clamp(1.05rem, 3.8vw, 2rem);
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      line-height: 1.1;
+      background: linear-gradient(135deg, var(--gold-light) 0%, var(--gold) 40%, #a07020 80%, var(--gold-light) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .game-subtitle {
+      margin: 0.2rem 0 0;
+      font-style: italic;
+      color: #c8a878;
+      font-size: 0.82rem;
+      letter-spacing: 0.05em;
+    }
+
+    .main-wrap {
+      width: 100%;
+      max-width: 1180px;
+      margin: 0 auto;
+      padding: 22px 16px 36px;
+      display: grid;
+      grid-template-columns: minmax(320px, 1.16fr) minmax(280px, 0.84fr);
+      gap: 20px;
+      flex: 1;
+    }
+
+    .panel {
+      background: linear-gradient(160deg, var(--surface) 0%, var(--bg-warm) 100%);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      box-shadow: inset 0 0 30px rgba(0,0,0,0.35), 0 10px 34px rgba(0,0,0,0.45);
+      overflow: hidden;
+      position: relative;
+    }
+    .panel-header {
+      padding: 14px 16px 10px;
+      border-bottom: 1px solid rgba(200,149,42,0.14);
+      background: linear-gradient(180deg, rgba(255,255,255,0.03) 0%, rgba(255,255,255,0) 100%);
+    }
+    .panel-label {
+      font-family: var(--font-ui);
+      font-size: 0.7rem;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: var(--gold);
+      margin: 0 0 0.25rem;
+    }
+    .status-bar {
+      margin: 0;
+      min-height: 2.4rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      padding: 8px 16px 8px 28px;
+      background: rgba(0,0,0,0.32);
+      border: 1px solid rgba(200,149,42,0.18);
+      border-radius: 8px;
+      font-family: var(--font-ui);
+      font-size: 0.8rem;
+      letter-spacing: 0.08em;
+      color: var(--gold-light);
+      position: relative;
+      text-align: center;
+    }
+    .status-bar::before {
+      content: '⚜';
+      position: absolute;
+      left: 10px;
+      font-size: 10px;
+      color: var(--gold);
+      opacity: 0.7;
+    }
+
+    .board-panel {
+      display: flex;
+      flex-direction: column;
+      min-height: 760px;
+    }
+    .board-area {
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 18px;
+      flex: 1;
+      position: relative;
+    }
+
+    .metrics {
+      width: min(100%, var(--board-max));
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 10px;
+    }
+    .metric {
+      padding: 10px 12px;
+      border-radius: 12px;
+      background: linear-gradient(180deg, rgba(255,255,255,0.04) 0%, rgba(0,0,0,0.16) 100%);
+      border: 1px solid rgba(200,149,42,0.18);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.03);
+      text-align: center;
+      min-height: 68px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      gap: 5px;
+    }
+    .metric-label {
+      font-family: var(--font-ui);
+      font-size: 0.62rem;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: var(--gold);
+    }
+    .metric-value {
+      font-family: var(--font-display);
+      color: var(--gold-light);
+      font-size: clamp(1rem, 2.4vw, 1.35rem);
+      line-height: 1;
+    }
+    .metric-sub {
+      color: var(--text-muted);
+      font-size: 0.8rem;
+      font-style: italic;
+      line-height: 1.1;
+    }
+
+    .controls-row {
+      width: min(100%, var(--board-max));
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 10px;
+    }
+    .rpg-btn {
+      font-family: var(--font-ui);
+      font-size: 0.78rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: #f0d080;
+      background: linear-gradient(180deg, rgba(40,28,8,0.9) 0%, rgba(20,14,4,0.95) 100%);
+      border: 1px solid rgba(200,149,42,0.45);
+      padding: 10px 18px;
+      border-radius: 999px;
+      cursor: pointer;
+      transition: all 0.2s;
+      box-shadow: 0 1px 0 rgba(200,149,42,0.15), inset 0 1px 0 rgba(200,149,42,0.1);
+    }
+    .rpg-btn:hover {
+      border-color: rgba(200,149,42,0.75);
+      box-shadow: 0 0 18px 2px rgba(200,149,42,0.25), 0 0 48px 8px rgba(180,120,20,0.15), inset 0 1px 0 rgba(200,149,42,0.2);
+      color: #f8e898;
+      transform: translateY(-1px);
+    }
+    .rpg-btn:active { transform: translateY(0); }
+    .rpg-btn-sage {
+      border-color: rgba(74,122,58,0.58);
+      color: #cde8b6;
+      background: linear-gradient(180deg, rgba(48,76,35,0.96), rgba(25,41,18,0.98));
+    }
+    .rpg-btn-sage:hover {
+      border-color: rgba(126,188,102,0.78);
+      box-shadow: 0 0 18px 2px rgba(122,200,120,0.22), 0 0 46px 8px rgba(74,122,58,0.16), inset 0 1px 0 rgba(255,255,255,0.08);
+      color: #e8f7d7;
+    }
+
+    .difficulty-group {
+      width: min(100%, var(--board-max));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+    .difficulty-label {
+      font-family: var(--font-ui);
+      font-size: 0.66rem;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: var(--gold);
+    }
+    .segmented {
+      display: inline-flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      justify-content: center;
+    }
+    .segmented button {
+      font-family: var(--font-ui);
+      font-size: 0.74rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: #d7be84;
+      background: rgba(0,0,0,0.18);
+      border: 1px solid rgba(200,149,42,0.22);
+      padding: 8px 14px;
+      border-radius: 999px;
+      cursor: pointer;
+      transition: all 0.18s ease;
+    }
+    .segmented button.active,
+    .segmented button:hover {
+      color: #f7e2a8;
+      border-color: rgba(240,208,128,0.55);
+      background: linear-gradient(180deg, rgba(77,55,16,0.95), rgba(34,23,7,0.98));
+      box-shadow: 0 0 12px rgba(200,149,42,0.18);
+    }
+
+    .board-frame {
+      width: min(100%, var(--board-max));
+      position: relative;
+      padding: 18px;
+      border-radius: 18px;
+      background:
+        radial-gradient(circle at 50% 45%, rgba(70,40,10,0.28) 0%, rgba(20,12,4,0.96) 70%),
+        linear-gradient(160deg, #201407 0%, #100b04 100%);
+      border: 1px solid rgba(200,149,42,0.28);
+      box-shadow:
+        inset 0 1px 0 rgba(255,255,255,0.04),
+        inset 0 0 38px rgba(0,0,0,0.35),
+        0 0 0 1px rgba(0,0,0,0.35),
+        0 18px 42px rgba(0,0,0,0.45),
+        0 0 30px rgba(200,149,42,0.14);
+    }
+    .board-frame::before,
+    .board-frame::after {
+      content: '◆';
+      position: absolute;
+      color: rgba(200,149,42,0.45);
+      font-size: 10px;
+      line-height: 1;
+    }
+    .board-frame::before { top: 6px; left: 8px; }
+    .board-frame::after { bottom: 6px; right: 8px; }
+
+    .board-shell {
+      position: relative;
+      min-height: 340px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .board {
+      display: grid;
+      gap: var(--tile-gap);
+      width: 100%;
+      justify-content: center;
+      position: relative;
+      z-index: 1;
+      perspective: 1200px;
+    }
+
+    .card {
+      position: relative;
+      width: var(--tile-size);
+      height: var(--tile-size);
+      cursor: pointer;
+      border: none;
+      background: transparent;
+      padding: 0;
+      perspective: 1200px;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .card:focus-visible .card-inner {
+      outline: 2px solid rgba(240,208,128,0.72);
+      outline-offset: 3px;
+    }
+    .card[disabled] { cursor: default; }
+
+    .card-inner {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      transition: transform 0.48s cubic-bezier(.22,.61,.36,1), box-shadow 0.2s ease;
+      transform-style: preserve-3d;
+      border-radius: var(--card-radius);
+      box-shadow: 0 8px 20px rgba(0,0,0,0.26);
+    }
+    .card:hover:not([disabled]) .card-inner {
+      box-shadow: 0 10px 22px rgba(0,0,0,0.34), 0 0 18px rgba(200,149,42,0.14);
+    }
+    .card.is-flipped .card-inner,
+    .card.is-matched .card-inner {
+      transform: rotateY(180deg);
+    }
+    .card.is-matched .card-inner {
+      box-shadow: 0 0 0 1px rgba(150,215,136,0.32), 0 0 22px var(--matched-glow), 0 10px 24px rgba(0,0,0,0.3);
+    }
+    .card.is-revealed:not(.is-matched) .card-inner {
+      box-shadow: 0 0 0 1px rgba(240,208,128,0.28), 0 0 20px var(--select-glow), 0 10px 24px rgba(0,0,0,0.28);
+    }
+
+    .card-face {
+      position: absolute;
+      inset: 0;
+      border-radius: var(--card-radius);
+      backface-visibility: hidden;
+      -webkit-backface-visibility: hidden;
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .card-front {
+      background:
+        linear-gradient(145deg, rgba(255,245,214,0.08) 0%, rgba(255,255,255,0.03) 16%, rgba(18,12,5,0.96) 100%),
+        radial-gradient(circle at 30% 22%, rgba(240,208,128,0.12) 0%, transparent 36%),
+        linear-gradient(160deg, #251707 0%, #130d05 100%);
+      border: 1px solid rgba(240,208,128,0.24);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.06), inset 0 0 20px rgba(0,0,0,0.18);
+    }
+    .card-front::before,
+    .card-front::after {
+      content: '✦';
+      position: absolute;
+      color: rgba(240,208,128,0.18);
+      font-size: 12px;
+      line-height: 1;
+    }
+    .card-front::before { top: 8px; left: 10px; }
+    .card-front::after { bottom: 8px; right: 10px; }
+    .card-sigil {
+      width: 62%;
+      aspect-ratio: 1 / 1;
+      border-radius: 18px;
+      border: 1px solid rgba(240,208,128,0.20);
+      background:
+        radial-gradient(circle at 50% 50%, rgba(200,149,42,0.18) 0%, rgba(12,8,4,0.74) 72%),
+        linear-gradient(145deg, rgba(255,255,255,0.04), rgba(0,0,0,0.20));
+      display: grid;
+      place-items: center;
+      position: relative;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.05), 0 0 22px rgba(200,149,42,0.07);
+    }
+    .card-sigil::before {
+      content: '♢';
+      font-family: var(--font-display);
+      font-size: clamp(1.4rem, 3vw, 2rem);
+      color: rgba(240,208,128,0.82);
+      text-shadow: 0 0 10px rgba(200,149,42,0.25);
+    }
+
+    .card-back {
+      transform: rotateY(180deg);
+      border: 1px solid rgba(240,208,128,0.24);
+      background: linear-gradient(180deg, rgba(255,255,255,0.04), rgba(0,0,0,0.14));
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.04);
+      padding: 8px;
+    }
+    .glyph-panel {
+      position: absolute;
+      inset: 0;
+      display: grid;
+      place-items: center;
+      color: #fff4c5;
+      text-shadow: 0 2px 14px rgba(0,0,0,0.35);
+    }
+    .glyph {
+      font-size: clamp(2rem, 5vw, 3.2rem);
+      line-height: 1;
+      transform: translateY(-2px);
+    }
+    .glyph-name {
+      position: absolute;
+      bottom: 8px;
+      left: 8px;
+      right: 8px;
+      font-family: var(--font-ui);
+      font-size: 0.48rem;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      text-align: center;
+      color: rgba(255,247,222,0.86);
+      opacity: 0.85;
+    }
+
+    .board-overlay {
+      position: absolute;
+      inset: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      pointer-events: none;
+      z-index: 6;
+      overflow: hidden;
+    }
+    .victory-message {
+      width: var(--message-width);
+      max-width: calc(100% - 28px);
+      padding: 18px 20px;
+      text-align: center;
+      border-radius: 18px;
+      border: 1px solid rgba(240,208,128,0.65);
+      background:
+        radial-gradient(circle at 50% 50%, rgba(240,208,128,0.18) 0%, rgba(30,18,5,0.94) 70%),
+        linear-gradient(160deg, rgba(45,28,8,0.95) 0%, rgba(18,12,5,0.95) 100%);
+      box-shadow:
+        0 0 18px rgba(200,149,42,0.28),
+        0 0 48px rgba(180,120,20,0.14),
+        inset 0 1px 0 rgba(255,255,255,0.08);
+      opacity: 0;
+      transform: scale(0.18);
+      visibility: hidden;
+    }
+    .victory-message.show {
+      visibility: visible;
+      animation: victoryBloom 1.75s ease forwards;
+    }
+    .victory-title {
+      font-family: var(--font-display);
+      font-size: clamp(1rem, 3.4vw, 2rem);
+      line-height: 1.05;
+      letter-spacing: 0.06em;
+      margin: 0 0 8px;
+      background: linear-gradient(135deg, #fff4bf 0%, #f0d080 38%, #c8952a 70%, #fff4bf 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .victory-sub {
+      margin: 0;
+      color: #d8c090;
+      font-size: clamp(0.86rem, 2.1vw, 1.05rem);
+      letter-spacing: 0.03em;
+      font-style: italic;
+    }
+    @keyframes victoryBloom {
+      0%   { opacity: 0; transform: scale(0.18); }
+      42.8% { opacity: 1; transform: scale(1); }
+      100% { opacity: 0; transform: scale(1); }
+    }
+
+    .info-body {
+      padding: 16px 16px 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+      flex: 1;
+    }
+    .info-copy {
+      color: #d8c090;
+      font-size: 1rem;
+      line-height: 1.55;
+    }
+    .info-copy p { margin: 0; }
+    .rules-list {
+      margin: 0;
+      padding-left: 1.25rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.7rem;
+      color: #d8c090;
+    }
+    .rules-list li::marker { color: var(--gold); }
+
+    .legend-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+    }
+    .legend-card {
+      border: 1px solid rgba(200,149,42,0.15);
+      border-radius: 14px;
+      padding: 12px;
+      background: rgba(0,0,0,0.18);
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      min-height: 94px;
+    }
+    .legend-kicker {
+      font-family: var(--font-ui);
+      font-size: 0.6rem;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: var(--gold);
+    }
+    .legend-title {
+      font-family: var(--font-display);
+      color: var(--gold-light);
+      font-size: 1rem;
+      line-height: 1.15;
+    }
+    .legend-copy {
+      color: var(--text-muted);
+      font-size: 0.88rem;
+      line-height: 1.3;
+    }
+
+    .footer-note {
+      padding: 14px 16px 18px;
+      border-top: 1px solid rgba(200,149,42,0.14);
+      color: rgba(216,192,144,0.72);
+      font-style: italic;
+      font-size: 0.84rem;
+      text-align: center;
+    }
+
+    .confetti-canvas {
+      position: fixed;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 30;
+    }
+
+    @media (max-width: 980px) {
+      .main-wrap {
+        grid-template-columns: 1fr;
+      }
+      .board-panel { min-height: auto; }
+      .info-panel { order: 2; }
+    }
+
+    @media (max-width: 720px) {
+      .metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .legend-grid { grid-template-columns: 1fr; }
+      .board-area { padding: 16px; }
+      .board-frame { padding: 14px; }
+    }
+
+    @media (max-width: 560px) {
+      :root {
+        --tile-size: clamp(62px, 19vw, 88px);
+        --tile-gap: 10px;
+        --message-width: 92%;
+      }
+      .header-inner { padding: 12px 12px 10px; }
+      .phoenix-mark { width: 44px; height: 44px; }
+      .game-subtitle { font-size: 0.75rem; }
+      .glyph-name { font-size: 0.42rem; }
+    }
+  </style>
+</head>
+<body>
+  <canvas class="confetti-canvas" id="confettiCanvas"></canvas>
+
+  <div id="app">
+    <header class="site-header">
+      <div class="header-inner">
+        <div class="header-row">
+          <a class="rpg-back" href="index.html">Hub</a>
+          <div class="header-center">
+            <img class="phoenix-mark" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAYAAACqaXHeAAAAtGVYSWZJSSoACAAAAAYAEgEDAAEAAAABAAAAGgEFAAEAAABWAAAAGwEFAAEAAABeAAAAKAEDAAEAAAACAAAAEwIDAAEAAAABAAAAaYcEAAEAAABmAAAAAAAAAGAAAAABAAAAYAAAAAEAAAAGAACQBwAEAAAAMDIxMAGRBwAEAAAAAQIDAACgBwAEAAAAMDEwMAGgAwABAAAA//8AAAKgBAABAAAAQAAAAAOgBAABAAAAQAAAAAAAAAD87sCuAAAACXBIWXMAAA7EAAAOxAGVKw4bAAAFVGlUWHRYTUw6Y29tLmFkb2JlLnhtcAAAAAAAPD94cGFja2V0IGJlZ2luPSfvu78nIGlkPSdXNU0wTXBDZWhpSHpyZVN6TlRjemtjOWQnPz4KPHg6eG1wbWV0YSB4bWxuczp4PSdhZG9iZTpuczptZXRhLyc+CjxyZGY6UkRGIHhtbG5zOnJkZj0naHR0cDovL3d3dy53My5vcmcvMTk5OS8wMi8yMi1yZGYtc3ludGF4LW5zIyc+CgogPHJkZjpEZXNjcmlwdGlvbiByZGY6YWJvdXQ9JycKICB4bWxuczpBdHRyaWI9J2h0dHA6Ly9ucy5hdHRyaWJ1dGlvbi5jb20vYWRzLzEuMC8nPgogIDxBdHRyaWI6QWRzPgogICA8cmRmOlNlcT4KICAgIDxyZGY6bGkgcmRmOnBhcnNlVHlwZT0nUmVzb3VyY2UnPgogICAgIDxBdHRyaWI6Q3JlYXRlZD4yMDI2LTAzLTI0PC9BdHRyaWI6Q3JlYXRlZD4KICAgICA8QXR0cmliOkRhdGE+eyZxdW90O2RvYyZxdW90OzomcXVvdDtEQUhFMEJmWXFRdyZxdW90OywmcXVvdDt1c2VyJnF1b3Q7OiZxdW90O1VBQ1Via3V1TzhJJnF1b3Q7LCZxdW90O2JyYW5kJnF1b3Q7OiZxdW90O05vcmEgUnlzemth4oCZcyBUZWFtJnF1b3Q7fTwvQXR0cmliOkRhdGE+CiAgICAgPEF0dHJpYjpFeHRJZD5hZjAxOTk0Zi00MGE0LTRhNTQtYjg4YS0yMDI1ZjZkYTBkNWY8L0F0dHJpYjpFeHRJZD4KICAgICA8QXR0cmliOkZiSWQ+NTI1MjY1OTE0MTc5NTgwPC9BdHRyaWI6RmJJZD4KICAgICA8QXR0cmliOlRvdWNoVHlwZT4yPC9BdHRyaWI6VG91Y2hUeXBlPgogICAgPC9yZGY6bGk+CiAgIDwvcmRmOlNlcT4KICA8L0F0dHJpYjpBZHM+CiA8L3JkZjpEZXNjcmlwdGlvbj4KCiA8cmRmOkRlc2NyaXB0aW9uIHJkZjphYm91dD0nJwogIHhtbG5zOmRjPSdodHRwOi8vcHVybC5vcmcvZGMvZWxlbWVudHMvMS4xLyc+CiAgPGRjOnRpdGxlPgogICA8cmRmOkFsdD4KICAgIDxyZGY6bGkgeG1sOmxhbmc9J3gtZGVmYXVsdCc+VW50aXRsZWQgZGVzaWduIC0gMTwvcmRmOmxpPgogICA8L3JkZjpBbHQ+CiAgPC9kYzp0aXRsZT4KIDwvcmRmOkRlc2NyaXB0aW9uPgoKIDxyZGY6RGVzY3JpcHRpb24gcmRmOmFib3V0PScnCiAgeG1sbnM6cGRmPSdodHRwOi8vbnMuYWRvYmUuY29tL3BkZi8xLjMvJz4KICA8cGRmOkF1dGhvcj5Ob3JhIFJ5c3prYTwvcGRmOkF1dGhvcj4KIDwvcmRmOkRlc2NyaXB0aW9uPgoKIDxyZGY6RGVzY3JpcHRpb24gcmRmOmFib3V0PScnCiAgeG1sbnM6eG1wPSdodHRwOi8vbnMuYWRvYmUuY29tL3hhcC8xLjAvJz4KICA8eG1wOkNyZWF0b3JUb29sPkNhbnZhIGRvYz1EQUhFMEJmWXFRdyB1c2VyPVVBQ1Via3V1TzhJIGJyYW5kPU5vcmEgUnlzemth4oCZcyBUZWFtPC94bXA6Q3JlYXRvclRvb2w+CiA8L3JkZjpEZXNjcmlwdGlvbj4KPC9yZGY6UkRGPgo8L3g6eG1wbWV0YT4KPD94cGFja2V0IGVuZD0ncic/Pi41oUsAACAASURBVHicxXsHeBTV2v+22anbUza9koRQQwgl9BIghCYQmpgEElpCEloABUIREBCkCtIRAVHBCtjBgh1BUbleUXrvve7O7/+emUXBq/e73/9675fnedll5py31zOzBsNf82cMgPYHw0RTnxrRrkZhYdGFMldzpsz1fDrIPntGpHdHRWzUsYHekOt5brc/3+FAgd0O+vQNCAq6WhEWcmSG171jkUOZN1cS8obY7RnphCMn2uGCwWD+M3r/l38PMNK3Zk25fkxobLHd3m68N3j+sOCgzyYJ1v2rjYZjH5hN5/dylus/cZa7Bziz/7DFjKMBOGI2qYcsFv/PnOXOdxbz9Q/M5gtrzaYTE2X5QJnT/WmFwzF/oFXsWN/hiB0YFib9Gf3/9p9GmCxjbJ2e7sgOsiWNigweRZb8opKznniXhD3EWXDWZMRlkwE3LQbc5QxQeQMgBEC877ug37tr1ddeNhtwzmzCQYsF71os1ys57sQAl+uzUbJjWBerLamd223Hb8L/V5Xwq9YHpqdLOQnR6eXxUbNHKdJXGzjLhe9I6DNmI26SALBqQqqwEbgMqt9jgC+IIIQglMAbgNDAtWAD/HQfzsAeiYAphHCdJkV+a7Goz1ssFyoUefcIl2t6jtNZK99gEH7P139aeM3qPWvVih1YJW7kQIf9mxd46/WD5MZXydI+q86432FQfZ6AcBEkWAxBPEEiQRWCJCP8yQRJBh0SA/fj9LW+8MBewuG3B3ByBo0G0cJLVuu1IYptd4ndXlLgckURT6b7efyPCc+s3jk5ofngyMgtSwTh/F6TLjisutV8bp1xf1RAICZcKkENgtoEaQR1CTKMAQj8v27gXu3A2qoBRcXpuDRPIdyQNa9Qr1KYfGcxqUs57uwwp3NzH4ejxUCDQbqf179c+OKMDG9+fHRZid227z3e6r9AbsmsAiUgeFjA0kzoagS1CNLpen36bETQlKAFQas/gJYEzQmaEGQG9qQHcFQL4IzRaTCv0GiSIs6T8rdbLL6hovhdoeIa9KjXG/xXK0FD1LV+7SqDk+IXzOD543tJ8NtmEpzi2+cKWPye4NUDQjcgaEyJrTUx25E+u1GCy6VrXen+QwRdfwcP6ffYGraW7UFrHQfDpSmjRiB0Yoy6RzhpDYXGLfKGvRQWs3nh2PCgkCfzEhMT/iolaAg6JccmFyVGbV6uSFcPGYkBC8Wjoic0f2Qgfu8J3lC3MjrQZy8DrvQz4kypCWcrLbg4wYw7xXQ9n6CAoN+DwO5dHG/G2YmUSMtMuEp7fb10ZTCcGu50ol/dqNOM0hMn8wY/ecMRMsxqUbxSHBOzqWe1alX/XSVoG3MTghPLokLWPicJN04ZiRivJTj4yQL+WGIkRY9bzeLEpNrZgNv5RpwsNuHToRasHyxg5RABOyZwOPeEGb4xtL6MoJxgWADK9Wvs3rnpJuwYb8XKYkHb+1mpBaeKjRpOdA6EUINAvqgayBEsWTp03k5TSKyXpFsjY2M3PfJvKEHb0L+qN2ZopGPNBsl69UxAeObyfpbVEwJWz9DjVm1PFnzEiBPlJmwZwmFIloD29QVMzhPwzXQLLk034u4kWjueYAJB5e9ggn7vzkTygmlGbc/kfAE5DUQUZ/HYOsSKk+XkQXlEKyeQTzICYcGSLasaLp3HM6SEDbJ8a2hc3MuFqamJ/1slaAvHhts8FaHipDUid57VYP894SMD2blmwOot9di9NMSID0s5lGYLSImRUD1JwrR+Ag7NNsP/JDH2BO1hMNOg/d83hz6fCgD7PitwbzoJSOCbTeWO9k4t4FG9ikg4RZQRbkbj0hCTRpN5nL9+IFEm6obRKoXAPIHCQZKujgr3zpsWFxf6rypBd3uDwVpkM+XNthgPHLrn9s6A5asECLJMTUnK34OaFLLMooetaFhVhNMpITJcwvT+PE4uNAELdAF98wmepu/PECwnWE0Jbw1dI1Dpu38ZwRKCRQTz9D1YaMAJwjG9H084RbhcEjJTJTz9MI8z5GmMtp/x0DBQPqsEDBTwhMOkhLmieGJoaPDQpb+10P9UCdrNppyhxlCj4bO91PP4KMP67IHykxgg1ChAuLsBZ4mRBeTmSWR1TpAR5JEwvKeAY0tI+KW60D4SzkdC+p6jPRvo8yUDrr5qxLlXKTm+aqbvZNEX9Xv+53Tl+NleUgbDwXAN6yHAQ7itooTkWBGL8nicY0roHuCl0X1KYIZieYpK9Pc0a5TZ5H0FYWFZ9zVLfy58XqQYMUK2rP3AZLxFpQ6qoicZFvO+GgHLZ+ll6xolp3VFVlRPYIzJkBUZWQ1F7Jpvgf9ZWrNSF9r3An3fTPAqCfQmhcsWI95ewmHfG1b88LoV7z5jxeWtRu0eW6Ot3UiwVsfBcH1FOLMoH0gK0RIoxBJErCu04jrxoHYN8JSph6aWn7w670yG961W3/CQkNcHxcTE/pkXaBfyYwxCmUscvIyznL5g1vt4rT+PCyQ8Fm/UtPhYje5vwIGxZnRuIGmC82T9yAgZi0fxuLqBcsb6gOCv0ScT7F1y+e2073MDDr1lwmhKlAd38hqMpe/sGrvn266v9W/T994NeMbV9UYsHslCQafFaHYmhRx41KzxwnjytQpUiBo6z1qZJhnOkyxLBf78SG/IyL41Q+U/UoL2nzaKNWWIyfAxub6qub5TjylfSiDjsqRDpUirzeVG7KbSVi1eBMfLUGwyspuI+GmtBXiF1hD4meAkkG8nfX5BwuyiffuohSVhe3fjcHgXj8NfCXi4mxXfv00K+But/Vpf69+pK4Mpj+ECecbf15rRrrEImWixcKtGXrC7koNaRhWmJ61jZZJ1lKytTg4kRYcWxuoPFhNKPbZv81Ij6/1eAdoXNl4OinZNWxNmvXw+lJgJMapqmI4IpFWVhL9LrnaTMvCdUnJXqtk/TrOgRbqoxWVYqIR5o6y4+jrdI+v53tWF8H9F8C0BCe77O+E9aMYn5Pad2gv46QsZP30uowt9/+wNDjhk0dZoa2mPj+39WMfFcF4h3E+Rh3m9ei5oUVfEj1QuMZbKZwnxNogU8ZBeme5m0vdaBPHkjWEm9WyMBauq2W6Up8U+TaXRfb/seqtrtVbpG8rtfLKpHRs7y/ihLYfLmWZcam/Fwd4Ua92NuETNzVeP0fUpJCTV7jNzjKjoI8BJ2Tk1ScTOlRx87xHTOwjInf3fMMGJgf2UEw4I8B1UgKMO7HxdQXYbGe+8Ysfbm23IaSvj06027R5bw9Zqe9jebwK4CCfD/dEKDlWpxDqI5piHBZydTUql3uHSZCO+GkPdZokZ53uY8H5vAW/nCtj1kITPOtmwpmOQOqtBMAZ47XuKw4NrP+AFWRQX5cG2ijkCd+7xEBmdIiW1Ry0BC3vaqLwFY0RDCft6m/HhMI5KkoCTM4xaXb+00IiZQ3SLtGkq4pfXiZlPiVHmwt8zwc26MIfs8B8Ohu9wBHA8GrveC0ZWSxvGjLChYrgNbVrZsXt7KHAimtZE0toQfc8BnnCQR3xPOL80aLh/fs2M1k0koiljZjGPSwuIlxkGHCeepubz+GAYj297WZCfyiOnlh09m4Qgp7YL3cIldamDxyobf7EyJXZi/06Ztl8TQC2ejy208x/u9VAP7jbj3SAeEyjZZMUpSA4RMLo2hx9KLBjcRkDbTAH7niK3W0U1erkZA7sKCCX379eDx6ntxMwecj8m/C9kwYMyCRJEApFQR6rAf7Q6bh+uitfWhyE1VUFUtILIaIrlVDte3xCO20dT4T9WHT62VlME7WUe8TOHuz8QbvKG09tNKCDLhhDNwd3JGCtMGi8/zDGjLSVFxuPPxRZ83MqM2Q0ENE+UMMDD41OHCaddRvWDahL6JgV90Tg6JF4Tfle6gRsU7e5eFscd+6SDgKPtOfVspgmHGvGYlulBI6+Ad3Ms2EXxXS2OCIdImFwo4NulFqybJKBqFQmeIBnjhgo4/xkx+TcaYPZzJLiNBAgliNcE9x2rC5zKxNm/18bQISEIIQumVLUhOcWmfS8bEopzP6YBpxvh7rEMTRH+owm036vh8pES8KMBF4jGYyUC3EQzlWivn8xrvEwu5BESLKI6JeU9IzhczTdhaTsRRckkfF0rbtWxYH9tUR1Xz4Me0fZTQ1Njeu8amM4ZuqSEe4qrhC+fGG67kRshIjddViu7iVhdZMPYDl7MqC/j6CNmbBzAIdxLGZ9qcDi5fM0UAbHREgRJImvImDVexKVvTFAPUCI7yFw+nAQgSx5Lg/94I/iOtwbOtcXhbzPQpLELwaTIkiFulAx2I5j2N2vixuG9GdoattZ/ojHtq63jOBym4QThvvyNEU88SsJSqAqSjFhqwGpSB8p4slJliCDP2FjE4TjNJU/X57G4nQ3P9HJjdS8XFmTb1a7BPJ5ySrcralR5rnHj2sGGNK8zpijK8/mOSBHPx4pqUTUP0iIEZEby6Jwk46O2PG4MMOFlGkbioiSYrFSHRb0MWQMQGiZjzmQBl38wQz0kw3eIrHY0iYSvQ4I0JciG70RXUHbCL980RlqaE4pDQuuWLrRq6YbdIaNuHScOfNNEW8PW+k9mkwKa6jhICb5DlCMOy7i8z4yZlTyFnc4DJyrEg6I1YmbiLZ54ZLzeKDLi+2wOoyh/NaVyWS9OQpN4GTPieXVnqozilIhd9ZOpMeoX5Wo8OFb86flOMl7Jt6nlzYOQGydiRR0BbzWVcbojCTWQmpdKM4bkCEiMlSnrk/ZlmboyhZShaB7w+KMCLu7jgSMeSmTk9sdq6wKcbA//KRLqVD/g4gAc2dcB7dp64XTLaNDApYHLo6B9dhiO7utIawZqa9keba+mhDTCmUBVIkijMWmMQB5EyifajAdR0nlKjCWvojBmvGKwEfvbm1FAnjqjhRvF6XZ0SnNj5kMh6twsL0piPIeGJ0e0MEyumzDq0SDx9DDa3DFaUDPIldrSwLG4p4i/0dBxK5dazUJKbOMMOErT2ebxPPp1EhERJmmEBdK8m4QpHSji7A9Uyo5HUhKrrrn9PeH9Z/rDd7YMuDAal44UYcJj1RETZ0PPHm4CD323o5KusXu4UKGtZXv8p3I17/Efbwwf5RGG++z3NpQUSZoCmSeKsj589essarwxHhmvGGDAkU5GDCQF9GnixUMZHtQlnlt5RXUUecmsYPHMjPTEsYapzeu89nKUdPXDJAvWV+fVWWk25Ne0oVctES+3IFfqadQ8wF9BzRCNrLdXGPHzajPGFAqaGzLXs9lldKfe4egeN3AyQUt4/hMUxye7kSBkzXMk0PnH4L8wFb6Lk/HlR7nIzo5EdKyCaKo0Oe0j8eWHufBdmEJrpulrNSUU6DgIl+8o5YcTiTiy24NuREux6wrwUsyPLRLwyxqzxptKI7VvtEHj+RJNi09lWNEsQUYBJceFcTx2RHHq5w0FvFDPfq2yVd2thuHN0358qp7zdnljDsMpa07tbcP0AgXTuovY15Uam4dJ+CEE1G35aE73LybtbjJg7zoL2jbV21LGSL0MhWp5MNQTVSmJUQI7kUMWfJgEKSaBxuqCXZwP/5VluEmK2LSxOcIibRpsfqEFXZum3fNfWqCtVc+Nhcr2niEcJzsQziZQj6di9/shyEiXtYGI0W7XTMD36y0aT342eU7TeWU83ybev+guYfZDodhOyfDrHi7sbaTg8TQHxtf13i5ulvGzoXedlPN5yR5fAyp3WfF21I7g0ZgSRqs4K77OodKTT2VtKCEkt/Ix7ZICVJrUrmyjtvQxHmGUAE0WGTFkzfXLg3HzcHVSQktiumvA+sNJoMkk/Fz4rqyEem0jbpxfjFUrsuANdyCMYM3KLLr2NN17Ab7LK7W16vlJpATae6aQcD0E9WRLDff6ZUGIocxvJppecum542j4Il4YT74lgYMV4tXPeCbeP8q2Ir+GDatbu1Bax4EVVG16JSjonxzq712n2mVDh5QEf684jzqQytKMBCe6k0AjUyk7hwnYwxTQnxRQatCPrGbrc7o2qr5nxAfrrEiIJ2Y4WYvJwgI3TnyfQvWeXPZUT7L+YLL+aBLoCfgvLyEFbABuvYZzx+ahpDid2lkFDreC0pJ0nKVruPUqKWADrX1G33N+jIbDd6oX9QetceKHFPTPd2q0GM0Eyu4frOc0XjSelumnTRqvZQaN9y/acWgYzqMbJdu0eAV9W4UjK9GBfhEu9aGEGJ8hJ8KL0WFOPOMR8WakhGdptl+d4UK/RGptO1E2pQToY4eWlYGjq+X6mAua1Pa8YkY1SjJsGmRhkJysYNtLcbjDPOB0H2K+hCw5noSZTUKtJAVsBm5vxaGfpiIrK4GSKCVSmu/btk3A4f3TgTtb4bu6mdauolCYQ54zTsPhP9MHd463xNYXYomGTRuHWfmtXlXAN6+R++8IjN7LdR7VSp1nFBpJBgtywi2o7eaQoZjRhrrCQaEC5lOn2z3UA0NflxtfCjwuSEZcCTXiQpIZ36ZJeCtDwKXORm3W9t9TADu/W2HQTm8Y0T2vWEgBosaMSGXR7iQvyAvGkb31qaHpRdm8lKw4kRQwj4R6Fv6rrwE338Cuz0eiTp0IEkQCT0pIrxuBr7+ogHp7C3zXXtXXUhj4z1dqOBiuw9/WQ/9HgjQajBbLAUz5e169TwErAkaaGOCZeL/ZjZTQxIyfappwMMaAn7wGvEdJ8JkGdnQMscFQ6HbjmMWsPanVTlFo/L1V14gbLY24Q3O/Fv8jH1SA/0V9Vn//OQ7xVD4t5AGyjXoCKovx8TYsX5CAq0faUwxTEjtXGVDAGvhJuLtk4W1v9ENClSCtq2SCJCYF4c0thbh7bbO2Rlt7iXLGhUryoKGEqwOWzk/QcOuHIQrRVIi2iO3Eg49mEMbTPQ/wMQ8YZdBC15dH13pYcLcDhXNDM85UM+HxZAH9KdzbBjlgKAgJwWHOoj2evsue3MaTEuqQhduSImi+Pj7Rgts0/von6Se1dynOVMq4l9+mSXAMrw0lzAO0hkRWtLqcUdeJLS/VxM1TvaFeeJQEmaMlN/XaJty6/Bw2ru+GiCgXhY6kKSEqxoUXN3TX7vlpDVvL9vgvjMXNk33wxou1UDfdobXdrP1ltFj3x2jPGstrvDCeGG+MR8brTeL5+CQSmGaYbeUeLC3yYEmuDTPaSGhHJbG314Gc0GAY+sfE+A9ZOfZgE2oCCVrPhKttTbjyiAmnys14qZzHgZmkIEou6hzdA/A6uT8ln5aNRC2GdcF1ECRFK08tW3iwbXMGrp+kDvDSFKr/iykENuDaucVYvLC1lv3vtdLhEQ48syhLu8fWsLVsD9u7dVMGWrQIIqtLGm7hPlqiQnQa0/CzwaLxxHhTn9L7lf3E8ybifU+RFRVpNMVGUj8QYkGDYAuauS0YHayouTGRdwxDUxIvfh/E+07WNmFvVws+oklr2SAJ8wfI+LRcwMyHBUzJpxF4phnXFhtxdY0R+9ZYMCxPRHDQvW5MfkAJDNgRWSOaJp9fk45Tv+SRUFOAG0tx6cQTmDy+HoIo/lgry1rp4FAbJk2oh4t0j61ha0/9nIfnV6cjM9OtKVSUAgqWf1MCox1E1WtYAfH3rFnj7SrxyHhlD2Se7CPgdIERp5pS7KcY8GOEEbujLNhRT8TWVMVXWC3pgmF0WsLudSnKzdK6PLJSBaTHcGhBY2arFBmreglYVMCjRhUR3VtQJ0UKmTtMRDdyI9aBMXfUhf9HBbBZgXlHSlUnKkYk4ZP3c3DhaClOHxqCEcNT4ArShedJMHcwlV66dobusTU732uv7WF7BUWfO36PXwdZa8fZgUy3NqLG28IyAd1b0lhMMqzob8XZoeTNfag9bk85IMOMw3V4jKttx/Rkz62hdap+a3i0RsTKx0OVS8MiJJqdXWoj+nw8044+qQ7MzhKxrYxHcpSouVsYze2s/b3Xhv6mgD9iTrcUW+cJVmgCDELF8GQ8v7YOevbywu6WdZcmcNAg07u3Fxvp3ihak5bmgSdI38v/qYID3xkOUaLpUueN8ch4TY4W8N4oHpv6yxjXwYMVhWF4rY8Dy3JsavMIGaO8zstj6iatN4yLUAYtUqynPqzBo7KFTc2gjR3riGifKmJdOyt+rDCjbbqkWcHK6zHLmJZkBvJvoCj3JcIHXZXNC+wQ001CRcXYyW31+BUCArD9wXQtOtaurWGVgXnHr1aWfwuBX+ncg/tyj5ZTeN1jstmB6RgOr3YWMKi6gC5JArKTRGQn29VONH1WOKTTY6tHlxlK3WKDkUHKzzOryCgK59Vx1Ab3raqgrL6MTwZb8ct4C8Z0EeFx6xZn8cgYYARZA2Sx6sC+axk6YK37FcCEFQOjM8v8vCg9kMw0XALDQ/cEXSn3C8fcXIN7a3lWenXgAgZhpVGxKVpzxZ5OjetOA9IkHl+NUrC9UMKbnazY0IDHkiRRXR0kYqTbeXBgTHhDQxOXENXLY/vgGcqKH1H//2UbHqv6yCjrIiO/iYSXKQm+PJjyAGt5eTlgTZoAHczdJMTQaMlOZSIjZbjc90Ljfuv9JsjvveSBWL7nRX+US2RZK4HMixiNSOpYY6NFoi1qPDBe7vFlJqXUpBb5pRIec2mkb1VDQW6TEBS1CkF52yAs7hCkbqnmwKDo0C8ber0xhsbRDlexQ5q3wc1fW9GQ6mMar7aI5tCZPGFofTveyRdxkFxpaq6AqrECvCEiqhKBPu0pQY4RsHWBFW8t5fDcUwJKSdOpVdmUph+VPRCr/xT+PI9owhPIdsJNYVlaJBItnmhaNdqLqBfp057xJCGMKkIKNUdPdOfxwyAzhtYkw0U70LlpBJpVd6JdtE0tI/7neuSbI5Mil3XJSPGwJ8HmIpu1w2CbcGJEqILiMFldQEjeqilgegcbRnWz462hAg6PtWBbqQXLB3H4aCqHY0upX3iOusWXqQF5y4AbH5pw+mMTtqzm0LqFGFCC/GAo/H8ogA8In9VSwhtrrESDutQPjETTiNsvGzUejhMvHxNPK4i3raUczow24WZ/Ez5vxqEsjkfDGAU1ohTMrOlSd3o4jBWsJ8vjI7ruaNbMop0M1wx1xPX2eD5/VRLwWbKgftBKwpdpNEGRIrpWc6EgTcT+3mZqLY24NkafucEajqcDT3Jf0h+DYSd1j18b8coKKxLj9QNU8Q9c/h8V8scK0Ds+apXJ415ZacWtPTSbfKLTYk+Y2RNnxgPjxU88XWdPiGgGOD/MjI9LRXzXV8E3WVY8Tp7Axv2Cqm51Y4wDhREhX9WLjo779blAs2apysiI0DGrJP7imggBk1IE9fXaAvpGCni6joLCBAG7aaoCe5dnEBEeQUAjp2+WfkDCnt76WCu6VX94cWi7CS2bin9av4V/EF7+c+WQF7VqKuDQDv3hKaPh2xx4crxYn/+13p/mFRBvV/ONWNZdRI+aEpY1d2B5Dxee6hKEJWmKOt5JlU6RLo5JiHgsl2R+4NlgV48nZbDH9c2UEDu6J0tqBXlBQZQV26kkbmynYCvF3sGBHG7nB06IRhPRyXrvzQ4ifMTQ3Zf0MfnHN8xomCFqSUmU/ti1/xVgCZGdOWbWE/DjFpOGm9HwPRugyWhPCvBSTLQLDDjc1YRuqRJG0kj/SjMZvSg3NIq3Y1Eaub/DihGi+HVPr/uBd4e0f1rHxzv6RUXMGuGyXetEZaRlMK8+mcTjyw48ZnRTkFNDwMp2Ii71M8M/UJ+2QApgj6Uwn2AluSMxd+ZlE+Y+ylN/z46s9abkXxH2j8JCUvTMHhEhYv5jFP+Em9FgtDBPf+0Gk/Rp1VdI32l6PZJlRLdoHnmZQdjSxY5V1A+0i5XUEnL9pTbh6uiwoFmt0+Mdf/iEuHVISI1eNmXXMpHH5hhBfS5bQj8aeFqw93MoFJb0sWHrQFF7AHlhghnHpphwdoYJ5+eacPIZE/YstmAazRKpydIDgt/r+IRfG6c/sbhy//rfQoPtqZYkYTqVtj2LOZwgWufnmXCOaDMezo034Q5TQCfKA80MWJdsQTvqaPMbezA624HscAFllEh7C9bPurnkan/6fkCHsDBpoNc7coFTuvAGJbHOMbzaIVTE4nQFTz9kQ2YKTVUJ1BxRj/39eCsm9KaGIlfC2D4iCqgU1avBZgSdcXY2YA00Nax5und4yhoXPSzkB6wtBDpGPtBsMWDXOEH5deBibW59iu2C9hLG9CE3zxVRSQPP1+QdN9nRXRuD9r7QxWpGbAvnMMzNY5DDos7lLZgsCmcHu51luZGR4h8p4NcLfSk7DoyO3PqU2+af4RDxRgpzfQmtq4lIIgbyqKzsfYTD7koBG6g8ZteVtIcUsl13VyYgY5id3CTESmhOk1eXlgI6NRfRKF3UGqff+oTfmhw2PbJHbZm0piOt7dxK1Payhx0Ml6a8ewoiWuxhTA7d30he8fEEGX+nfuVWEyPUWmysp2rkpXCUKSEbDdjKWe4OC3K90oc1Pn8i/K9/7E3wDpGRzQZIynfbnVasT5PVdgmsh3aiaYKCJ1pLGJ+jYCQlmL+XcXhnlBUdGpLlg4lRcjP2jCA6XERetoBXp3D42xKawJabcWiVCd+tsGD9FB45zUSto7vX5bEHKx3o2vopVlrD1tIe+vxxsVnD8Qg1XdEResfHIJRyVHsS/p0RVuwvsaC8sYzFrd24nG6GGk+JMkx/SYq9VP2jxYThovBdnsfT4n96SeqBUBgcHFxSaZdPTPDQqBoiq+WpdjSqoqB7pg2tk2RUtnJgS6mAt6cKeHOagCeoZe6VyaN3Ex6LCq04MMuM25Qc1Xn6626grK2uMODmWiO+XMihNyVUm0PSoE+2iK8WWuievoatZXvY3tsEDNeiQh69GgvoQd3qk3kiPpkiYPtkEa9Tm96LvHBYZghOE22wV2Pc+mtyh0wGPMWZD5cr/KCJYf/6m+TagrK4kND8sNA502T58js2Kx4JtqoRbgFN+J3vKwAABkhJREFUw2VMrOdAWWsHWlYVkUWtbykJsLvciuPDLDg2nObv0eSKY41aebr7WKBOTwk8WJmlH61/9CSHWskiahJ8/CQP/zKj/gLl9MBatucxvcQxuDzGhBNjzDhAHekXk6krHOnC8EzK8EkcasTwaJLqxPOUpA904XA12qietBixhrNcGC9z0+Yryv/6DXL9vaHEqIRBEWEb5yvSjUE2IiYJ6tOkgIX1bWhD8VqRasPMejbkp8h4sxWPu7nUqfUhhh8xaC8/a4/USgLH6hX0OVZXCEjAU3OMGNlLwMjeAk7PoRr/eEDgsYEDzXK9tqvUc4DA159imhS8h7xufBMRuXWc2NTajg2kgLYuDtXDZLSmWaW0lqi+ToZZa+OuDJflNcVO4X+O+3+mhOzw8KTCkJC14xXl2isCj7/ZLGoZTWFlFA4vN1ewoKsN67Jt2NeQMjGVIJaJ71I5upFnxOUSE26XkDdQh8Z6ByYMUwhIuIvkIeuG81hHccy+q+xl6ZLAfdbU0D7fEMIx1KhZ/mShGcspmQ6iAW1WAxt5ooSJTTzYX1/AkxE8smNdWBIuq8/JVky3i1fLnOLKPDv/b782r23MiYio0s/lWLuSt178mpLKGIegDmtsU+d1UdCexs1FdWVcqk1NSrpehm62NmLnwyIWDJKwrULEERqiblKXdn0gDTGF5CVFtIZCZe94Dt9P4nCDhhcUG7VX6K8XGXGyjBLmSAs+GSViTZ6M3EwBC/soWE2hlkVj+dzmHkymDq91rIJ1zV14kUp2vyBZXeWmki1YLxYq8rNd7Pa/9jcDnUNDY8vttpnTJeHYfIlH1yABTSIEtQtl5G00P9yK1X//g5rkqg1MGF1fRnZ1O/rWkfFYloiv8wVsKhDwc18rzhSY8Tey/lkScv9EDu/SSPsFVZOzA0jonlaUtxPQM1PCYAq1CfVciKcWNiNZwbC2NnSta8OgdDferiUiP4jXjvHeiaG+XxYwSpaPD3XaZvR08LF/lfAPKKHU6w0udNkH5YnCnnGicOdJmh53iJx6RTFpP5C6S7UXiUb8QOWoObllcWMX5mRJaEed4YL2bnRMEfEijcpbcihWGyp4k5qoYS1FZMZbkZPKY1k3GaubCahPe8uzPHipmw07MgSw11oaJFIZTlRQr6oDtWi0XU+9/TY3rz4uk9Xtkm+wJO4tctpLBofKIX+18A8oIddgELsqSqNBHuemeYL13B6zSb1m1ssO+0HTTa8RG6rzSHFyaFJFRsdaVLNjbJiU7kETstTUjjY83smBXmnBmN3MiQ5V7JieaMecOBHdE0UsybSjoZdiup4Toxva8HkDEU/TUNaEZovS6k50cfBqXYFTp0TasUPh1dmCcL4wNPi1rkHOpv/JH009oATWLBWEu6JG2OXSEiv3xSbOcuWA2YTrVHfPK0Z1YpSgtguW1akhCmZ6FayNlDGHYramy4qGYVbUpt68Q5wTlVXtyEt142BTBfsoztuS4E/WcKAdtd9da3rwDGX5rzsL+CqJU3s7eXVKklN9X+GwmucxXZavFSnSruEhrpH5+kvQ/7UfUf76A8VmMQahnaKkVrhsU8cIwlcvWiwXdnJmcksrnnBLOCabcUsyqaedJnVaOKe2DxKxMFhA91AB/aLsWBwmoluCDe/0UPBiFxktaOpbEWfH2BBJbZNsVwubKWoFedCbVHXWS1bMs0nqClG4ONzl+HaI1zsry+Wq3uDB3v6//gtS7a+/x2N72GZLftTlGtlPlj4abDYfWSfw13+hIeSymcqYxYA5Dg6PUcLcZTNjHFl4abwb39o5FEtm5FAOaB7Lo2+wjM8UK7YKZuTZBJQE2TDHqWCpLN4YbeVO9HLYPykNCx6T6/Wmpse7HP9XP529/+8ffjzdUHDGDJZsHUZ5QhYODQr5fJLNdnCV1XrmWUm6ss5hv/OJIqtrnDa86rFjP89hh4UmNUqmVGHUZQ7bnZ2icGsbz195ghfPlNodh/oFB39a7PUuGujxdGnmcMTe97r7P9D/v/x7gJGJzZpZyDXdad7YmAHh4ZmTopLLK2ukv1jRoPEvw+o38BUmJyMvLBzs0XyRy4W+oaFqn+jo6wPj44+MrlZjT2WNOpsmVqk6alh0fMv6FN8M168HmH9A79/5+392xVVDl7qovgAAAABJRU5ErkJggg==" alt="Rising Phoenix Games logo">
+            <div class="title-block">
+              <h1 class="game-title">Memory</h1>
+              <p class="game-subtitle">Turn the gilded cards and recover the hidden pairs</p>
+            </div>
+          </div>
+          <a class="rpg-back header-spacer" href="index.html" tabindex="-1" aria-hidden="true">Hub</a>
+        </div>
+      </div>
+    </header>
+
+    <main class="main-wrap">
+      <section class="panel board-panel">
+        <div class="panel-header">
+          <div class="panel-label">Game Board</div>
+          <div class="status-bar" id="statusBar">Choose a difficulty and reveal the first card.</div>
+        </div>
+
+        <div class="board-area">
+          <div class="metrics">
+            <div class="metric">
+              <div class="metric-label">Moves</div>
+              <div class="metric-value" id="movesValue">0</div>
+              <div class="metric-sub">Two flips make one move</div>
+            </div>
+            <div class="metric">
+              <div class="metric-label">Matches</div>
+              <div class="metric-value"><span id="matchesValue">0</span>/<span id="pairsValue">8</span></div>
+              <div class="metric-sub">Pairs restored</div>
+            </div>
+            <div class="metric">
+              <div class="metric-label">Time</div>
+              <div class="metric-value" id="timeValue">00:00</div>
+              <div class="metric-sub">Runes remembered</div>
+            </div>
+            <div class="metric">
+              <div class="metric-label">Best</div>
+              <div class="metric-value" id="bestValue">—</div>
+              <div class="metric-sub">Fewest moves</div>
+            </div>
+          </div>
+
+          <div class="difficulty-group">
+            <div class="difficulty-label">Difficulty</div>
+            <div class="segmented" id="difficultyControls">
+              <button class="active" data-size="4">Novice · 4×4</button>
+              <button data-size="5">Adept · 5×4</button>
+              <button data-size="6">Master · 6×4</button>
+            </div>
+          </div>
+
+          <div class="controls-row">
+            <button class="rpg-btn rpg-btn-sage" id="newGameBtn">New Layout</button>
+            <button class="rpg-btn" id="peekBtn">Brief Reveal</button>
+          </div>
+
+          <div class="board-frame">
+            <div class="board-shell">
+              <div class="board" id="board" aria-label="Memory game board"></div>
+              <div class="board-overlay">
+                <div class="victory-message" id="victoryMessage" aria-hidden="true">
+                  <h2 class="victory-title">Phoenix Memory Rekindled</h2>
+                  <p class="victory-sub" id="victorySub">Every sigil has returned to its twin.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <aside class="panel info-panel">
+        <div class="panel-header">
+          <div class="panel-label">Rules & Notes</div>
+          <div class="status-bar">Match all hidden pairs before the deck yields completely.</div>
+        </div>
+        <div class="info-body">
+          <div class="info-copy">
+            <p>This is a single-player concentration game. Turn over two cards at a time. If the glyphs match, the pair remains revealed. If they differ, both cards turn back over after a short pause.</p>
+          </div>
+
+          <ol class="rules-list">
+            <li>Choose a difficulty to set the board size and total number of pairs.</li>
+            <li>Click or tap any concealed card to reveal it.</li>
+            <li>Reveal a second card. Matching glyphs lock in place; nonmatching glyphs hide again.</li>
+            <li>Your score is tracked primarily by move count. Lower is better.</li>
+            <li>The brief reveal control exposes the full board for a moment, but it adds a move penalty.</li>
+          </ol>
+
+          <div class="legend-grid">
+            <div class="legend-card">
+              <div class="legend-kicker">Tempo</div>
+              <div class="legend-title">Measured Recall</div>
+              <div class="legend-copy">Quick play helps, but careless flipping raises the move count faster than it helps.</div>
+            </div>
+            <div class="legend-card">
+              <div class="legend-kicker">Memory Aid</div>
+              <div class="legend-title">Brief Reveal</div>
+              <div class="legend-copy">Use it sparingly when the board becomes tangled. It is useful, but not free.</div>
+            </div>
+            <div class="legend-card">
+              <div class="legend-kicker">Victory</div>
+              <div class="legend-title">Burst & Bloom</div>
+              <div class="legend-copy">A matched board triggers confetti bursts and a central triumph banner sized to the puzzle.</div>
+            </div>
+            <div class="legend-card">
+              <div class="legend-kicker">Persistence</div>
+              <div class="legend-title">Best Record</div>
+              <div class="legend-copy">Each difficulty keeps its own best move total in local browser storage.</div>
+            </div>
+          </div>
+        </div>
+        <div class="footer-note">Rising Phoenix Games · standalone HTML/CSS/JS · works offline and on GitHub Pages</div>
+      </aside>
+    </main>
+  </div>
+
+  <script>
+    const GLYPHS = [
+      { symbol: '☀', name: 'Sun', colors: ['#6e3b10', '#d48d2a', '#fff2b3'] },
+      { symbol: '☽', name: 'Moon', colors: ['#203049', '#5e86c8', '#edf4ff'] },
+      { symbol: '✦', name: 'Star', colors: ['#3b214d', '#9d68d4', '#ffeab8'] },
+      { symbol: '⚶', name: 'Rune', colors: ['#1e433a', '#56a57b', '#daf6d6'] },
+      { symbol: '♜', name: 'Tower', colors: ['#4a2814', '#b66a33', '#ffe2c1'] },
+      { symbol: '♞', name: 'Knight', colors: ['#392318', '#a45036', '#ffd9c4'] },
+      { symbol: '✿', name: 'Bloom', colors: ['#55233f', '#cf5c9b', '#ffd4ea'] },
+      { symbol: '❖', name: 'Gem', colors: ['#1f4651', '#41a7ba', '#defcff'] },
+      { symbol: '⚡', name: 'Bolt', colors: ['#5a420d', '#d0ab27', '#fff0a0'] },
+      { symbol: '♆', name: 'Tide', colors: ['#193c51', '#3486bb', '#d9f0ff'] },
+      { symbol: '♣', name: 'Clover', colors: ['#18371d', '#4f9a46', '#dff2c2'] },
+      { symbol: '✪', name: 'Halo', colors: ['#55310c', '#c17f25', '#fff4cb'] }
+    ];
+
+    const DIFFICULTIES = {
+      4: { cols: 4, rows: 4, pairs: 8, label: 'Novice' },
+      5: { cols: 5, rows: 4, pairs: 10, label: 'Adept' },
+      6: { cols: 6, rows: 4, pairs: 12, label: 'Master' }
+    };
+
+    const boardEl = document.getElementById('board');
+    const statusBarEl = document.getElementById('statusBar');
+    const movesValueEl = document.getElementById('movesValue');
+    const matchesValueEl = document.getElementById('matchesValue');
+    const pairsValueEl = document.getElementById('pairsValue');
+    const timeValueEl = document.getElementById('timeValue');
+    const bestValueEl = document.getElementById('bestValue');
+    const victoryMessageEl = document.getElementById('victoryMessage');
+    const victorySubEl = document.getElementById('victorySub');
+    const difficultyControlsEl = document.getElementById('difficultyControls');
+    const confettiCanvas = document.getElementById('confettiCanvas');
+    const confettiCtx = confettiCanvas.getContext('2d');
+
+    let currentDifficulty = 4;
+    let cards = [];
+    let revealedIds = [];
+    let matchedCount = 0;
+    let moves = 0;
+    let lockBoard = false;
+    let timer = null;
+    let elapsedSeconds = 0;
+    let gameStarted = false;
+    let gameWon = false;
+    let mismatchTimeout = null;
+    let revealTimeout = null;
+    let confettiParticles = [];
+    let confettiRaf = null;
+
+    function shuffle(array) {
+      for (let i = array.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [array[i], array[j]] = [array[j], array[i]];
+      }
+      return array;
+    }
+
+    function formatTime(totalSeconds) {
+      const mins = Math.floor(totalSeconds / 60).toString().padStart(2, '0');
+      const secs = (totalSeconds % 60).toString().padStart(2, '0');
+      return `${mins}:${secs}`;
+    }
+
+    function setStatus(message) {
+      statusBarEl.textContent = message;
+    }
+
+    function updateMetrics() {
+      const diff = DIFFICULTIES[currentDifficulty];
+      movesValueEl.textContent = moves;
+      matchesValueEl.textContent = matchedCount;
+      pairsValueEl.textContent = diff.pairs;
+      timeValueEl.textContent = formatTime(elapsedSeconds);
+      const best = localStorage.getItem(`rpg-memory-best-${currentDifficulty}`);
+      bestValueEl.textContent = best ? `${best}` : '—';
+    }
+
+    function startTimer() {
+      if (timer) return;
+      timer = window.setInterval(() => {
+        elapsedSeconds += 1;
+        updateMetrics();
+      }, 1000);
+    }
+
+    function stopTimer() {
+      if (timer) {
+        clearInterval(timer);
+        timer = null;
+      }
+    }
+
+    function resetTransientState() {
+      revealedIds = [];
+      lockBoard = false;
+      gameStarted = false;
+      gameWon = false;
+      moves = 0;
+      matchedCount = 0;
+      elapsedSeconds = 0;
+      stopTimer();
+      if (mismatchTimeout) {
+        clearTimeout(mismatchTimeout);
+        mismatchTimeout = null;
+      }
+      if (revealTimeout) {
+        clearTimeout(revealTimeout);
+        revealTimeout = null;
+      }
+      victoryMessageEl.classList.remove('show');
+      updateMetrics();
+    }
+
+    function buildDeck() {
+      const diff = DIFFICULTIES[currentDifficulty];
+      const glyphs = shuffle(GLYPHS.slice()).slice(0, diff.pairs);
+      let idCounter = 0;
+      cards = shuffle(glyphs.flatMap((glyph, pairIndex) => {
+        return [0, 1].map(() => ({
+          id: `card-${idCounter++}`,
+          pairId: pairIndex,
+          symbol: glyph.symbol,
+          name: glyph.name,
+          colors: glyph.colors,
+          matched: false,
+          revealed: false
+        }));
+      }));
+    }
+
+    function renderBoard() {
+      const diff = DIFFICULTIES[currentDifficulty];
+      boardEl.innerHTML = '';
+      boardEl.style.gridTemplateColumns = `repeat(${diff.cols}, var(--tile-size))`;
+      boardEl.style.gridTemplateRows = `repeat(${diff.rows}, var(--tile-size))`;
+
+      cards.forEach(card => {
+        const button = document.createElement('button');
+        button.className = 'card';
+        button.type = 'button';
+        button.setAttribute('aria-label', `Memory card`);
+        button.dataset.id = card.id;
+        if (card.revealed) button.classList.add('is-flipped', 'is-revealed');
+        if (card.matched) button.classList.add('is-flipped', 'is-matched');
+        if (card.matched) button.disabled = true;
+
+        const inner = document.createElement('div');
+        inner.className = 'card-inner';
+
+        const front = document.createElement('div');
+        front.className = 'card-face card-front';
+        front.innerHTML = '<div class="card-sigil" aria-hidden="true"></div>';
+
+        const back = document.createElement('div');
+        back.className = 'card-face card-back';
+        back.style.background = `linear-gradient(180deg, rgba(255,255,255,0.05), rgba(0,0,0,0.14)), radial-gradient(circle at 30% 20%, ${card.colors[2]}33 0%, transparent 32%), linear-gradient(145deg, ${card.colors[0]} 0%, ${card.colors[1]} 56%, ${card.colors[2]} 100%)`;
+        back.innerHTML = `
+          <div class="glyph-panel" aria-hidden="true">
+            <div class="glyph">${card.symbol}</div>
+            <div class="glyph-name">${card.name}</div>
+          </div>
+        `;
+
+        inner.appendChild(front);
+        inner.appendChild(back);
+        button.appendChild(inner);
+        button.addEventListener('click', () => onCardClick(card.id));
+        boardEl.appendChild(button);
+      });
+    }
+
+    function updateCardStates() {
+      for (const button of boardEl.querySelectorAll('.card')) {
+        const card = cards.find(entry => entry.id === button.dataset.id);
+        button.classList.toggle('is-flipped', card.revealed || card.matched);
+        button.classList.toggle('is-revealed', card.revealed && !card.matched);
+        button.classList.toggle('is-matched', card.matched);
+        button.disabled = card.matched || lockBoard;
+        button.setAttribute('aria-label', card.revealed || card.matched ? `${card.name} revealed` : 'Memory card');
+      }
+    }
+
+    function onCardClick(cardId) {
+      if (lockBoard || gameWon) return;
+      const card = cards.find(entry => entry.id === cardId);
+      if (!card || card.revealed || card.matched) return;
+
+      if (!gameStarted) {
+        gameStarted = true;
+        startTimer();
+        setStatus('The archive stirs. Seek the matching sigils.');
+      }
+
+      card.revealed = true;
+      revealedIds.push(cardId);
+      updateCardStates();
+
+      if (revealedIds.length === 1) {
+        setStatus('One sigil revealed. Find its twin.');
+        return;
+      }
+
+      if (revealedIds.length === 2) {
+        moves += 1;
+        updateMetrics();
+        const [firstId, secondId] = revealedIds;
+        const first = cards.find(entry => entry.id === firstId);
+        const second = cards.find(entry => entry.id === secondId);
+
+        if (first.pairId === second.pairId) {
+          first.matched = true;
+          second.matched = true;
+          matchedCount += 1;
+          revealedIds = [];
+          updateCardStates();
+          updateMetrics();
+          if (matchedCount === DIFFICULTIES[currentDifficulty].pairs) {
+            handleVictory();
+          } else {
+            setStatus('Pair secured. Continue the recall.');
+          }
+        } else {
+          lockBoard = true;
+          setStatus('Not a match. Hold the pattern in memory.');
+          mismatchTimeout = window.setTimeout(() => {
+            first.revealed = false;
+            second.revealed = false;
+            revealedIds = [];
+            lockBoard = false;
+            updateCardStates();
+            setStatus('Try another pairing.');
+            mismatchTimeout = null;
+          }, 850);
+        }
+      }
+    }
+
+    function handleVictory() {
+      gameWon = true;
+      lockBoard = true;
+      stopTimer();
+      const diff = DIFFICULTIES[currentDifficulty];
+      const bestKey = `rpg-memory-best-${currentDifficulty}`;
+      const priorBest = localStorage.getItem(bestKey);
+      if (!priorBest || moves < Number(priorBest)) {
+        localStorage.setItem(bestKey, String(moves));
+      }
+      updateMetrics();
+      setStatus('Victory. Every memory has found its reflection.');
+      victorySubEl.textContent = `Board cleared in ${moves} moves over ${formatTime(elapsedSeconds)} on ${diff.label} difficulty.`;
+      victoryMessageEl.classList.remove('show');
+      void victoryMessageEl.offsetWidth;
+      victoryMessageEl.classList.add('show');
+      window.setTimeout(() => victoryMessageEl.classList.remove('show'), 1760);
+      launchConfettiBursts();
+    }
+
+    function setDifficulty(size) {
+      currentDifficulty = size;
+      difficultyControlsEl.querySelectorAll('button').forEach(button => {
+        button.classList.toggle('active', Number(button.dataset.size) === size);
+      });
+      resetGame();
+    }
+
+    function resetGame() {
+      resetTransientState();
+      buildDeck();
+      renderBoard();
+      setStatus(`A new ${DIFFICULTIES[currentDifficulty].label.toLowerCase()} memory layout awaits.`);
+    }
+
+    function briefReveal() {
+      if (gameWon || lockBoard) return;
+      if (!gameStarted) {
+        gameStarted = true;
+        startTimer();
+      }
+      if (revealTimeout) return;
+
+      moves += 1;
+      cards.forEach(card => {
+        if (!card.matched) card.revealed = true;
+      });
+      updateCardStates();
+      updateMetrics();
+      lockBoard = true;
+      setStatus('The deck opens briefly. Memorize the field.');
+      revealTimeout = window.setTimeout(() => {
+        cards.forEach(card => {
+          if (!card.matched) card.revealed = false;
+        });
+        revealedIds = [];
+        lockBoard = false;
+        updateCardStates();
+        setStatus('The cards conceal themselves again.');
+        revealTimeout = null;
+      }, 1200);
+    }
+
+    function resizeConfettiCanvas() {
+      const ratio = window.devicePixelRatio || 1;
+      confettiCanvas.width = window.innerWidth * ratio;
+      confettiCanvas.height = window.innerHeight * ratio;
+      confettiCanvas.style.width = `${window.innerWidth}px`;
+      confettiCanvas.style.height = `${window.innerHeight}px`;
+      confettiCtx.setTransform(ratio, 0, 0, ratio, 0, 0);
+    }
+
+    function launchConfettiBursts() {
+      resizeConfettiCanvas();
+      confettiParticles = [];
+      const width = window.innerWidth;
+      const height = window.innerHeight;
+      const palette = ['#f0d080', '#ffffff', '#cf5346', '#8ed7ff', '#7aaa5a', '#ffcf8a'];
+      const bursts = 8;
+
+      for (let i = 0; i < bursts; i++) {
+        const x = width * (0.08 + (0.84 * i / (bursts - 1)));
+        const y = height * (0.18 + (i % 2) * 0.09);
+        for (let j = 0; j < 34; j++) {
+          const angle = Math.random() * Math.PI * 2;
+          const speed = 2.4 + Math.random() * 5.1;
+          confettiParticles.push({
+            x,
+            y,
+            vx: Math.cos(angle) * speed,
+            vy: Math.sin(angle) * speed - (1.2 + Math.random() * 2.6),
+            size: 5 + Math.random() * 6,
+            color: palette[Math.floor(Math.random() * palette.length)],
+            rotation: Math.random() * Math.PI * 2,
+            vr: (Math.random() - 0.5) * 0.34,
+            life: 70 + Math.random() * 28,
+            maxLife: 98,
+            gravity: 0.12 + Math.random() * 0.08,
+            drag: 0.992,
+            shape: Math.random() < 0.55 ? 'rect' : 'circle'
+          });
+        }
+      }
+
+      if (!confettiRaf) animateConfetti();
+    }
+
+    function animateConfetti() {
+      confettiRaf = requestAnimationFrame(animateConfetti);
+      confettiCtx.clearRect(0, 0, window.innerWidth, window.innerHeight);
+      confettiParticles = confettiParticles.filter(p => p.life > 0);
+
+      for (const p of confettiParticles) {
+        p.vx *= p.drag;
+        p.vy *= p.drag;
+        p.vy += p.gravity;
+        p.x += p.vx;
+        p.y += p.vy;
+        p.rotation += p.vr;
+        p.life -= 1;
+
+        confettiCtx.save();
+        confettiCtx.translate(p.x, p.y);
+        confettiCtx.rotate(p.rotation);
+        confettiCtx.globalAlpha = Math.max(0, p.life / p.maxLife);
+        confettiCtx.fillStyle = p.color;
+        if (p.shape === 'rect') {
+          confettiCtx.fillRect(-p.size / 2, -p.size / 3, p.size, p.size * 0.66);
+        } else {
+          confettiCtx.beginPath();
+          confettiCtx.arc(0, 0, p.size / 2, 0, Math.PI * 2);
+          confettiCtx.fill();
+        }
+        confettiCtx.restore();
+      }
+
+      if (!confettiParticles.length) {
+        cancelAnimationFrame(confettiRaf);
+        confettiRaf = null;
+        confettiCtx.clearRect(0, 0, window.innerWidth, window.innerHeight);
+      }
+    }
+
+    difficultyControlsEl.addEventListener('click', event => {
+      const button = event.target.closest('button[data-size]');
+      if (!button) return;
+      setDifficulty(Number(button.dataset.size));
+    });
+
+    document.getElementById('newGameBtn').addEventListener('click', resetGame);
+    document.getElementById('peekBtn').addEventListener('click', briefReveal);
+    window.addEventListener('resize', resizeConfettiCanvas);
+
+    resizeConfettiCanvas();
+    resetGame();
+  </script>
+</body>
+</html>
