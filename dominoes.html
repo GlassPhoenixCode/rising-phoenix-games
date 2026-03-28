@@ -1,0 +1,1499 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>Dominoes · Rising Phoenix Games</title>
+  <link rel="stylesheet" href="shared.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700&family=Cinzel:wght@400;600;700;900&family=IM+Fell+English:ital@0;1&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; }
+    html, body { margin: 0; min-height: 100%; }
+
+    :root {
+      --message-width: 88%;
+      --tile-w: 86px;
+      --tile-h: 44px;
+      --pip: #1b1207;
+      --bone: #efe2bf;
+      --bone-edge: #b6904a;
+      --bone-shadow: rgba(0,0,0,0.28);
+      --accent-blue: #7fb4ff;
+    }
+
+    body {
+      font-family: var(--font-body);
+      color: var(--text);
+      background:
+        radial-gradient(ellipse 90% 55% at 15% 8%, rgba(90,48,12,0.55) 0%, transparent 58%),
+        radial-gradient(ellipse 70% 65% at 85% 90%, rgba(50,25,6,0.60) 0%, transparent 55%),
+        radial-gradient(ellipse 60% 40% at 50% 50%, rgba(30,18,5,0.40) 0%, transparent 70%),
+        linear-gradient(160deg, #1c1106 0%, #0f0c07 45%, #13100a 100%);
+      background-attachment: fixed;
+    }
+
+    #app {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      isolation: isolate;
+    }
+
+    .site-header {
+      padding: 0;
+      background: linear-gradient(180deg, #1e1508 0%, #120e06 100%);
+      border-bottom: 2px solid var(--gold);
+      box-shadow: 0 4px 24px rgba(0,0,0,0.7), 0 1px 0 rgba(200,149,42,0.15) inset;
+      position: relative;
+      overflow: hidden;
+      flex-shrink: 0;
+    }
+    .site-header::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: repeating-linear-gradient(
+        90deg,
+        transparent 0px,
+        transparent 48px,
+        rgba(200,149,42,0.04) 48px,
+        rgba(200,149,42,0.04) 49px
+      );
+      pointer-events: none;
+    }
+    .header-inner { position: relative; padding: 14px 20px 12px; }
+    .header-row { display: flex; align-items: center; margin-bottom: 6px; }
+
+    .rpg-back {
+      display: inline-block;
+      font-family: var(--font-ui);
+      font-size: 0.78rem;
+      letter-spacing: 0.08em;
+      color: var(--gold);
+      text-decoration: none;
+      padding: 0.55rem 1.1rem 0.55rem 2rem;
+      border: 1px solid rgba(200,149,42,0.25);
+      border-radius: 3px;
+      background: linear-gradient(180deg, #2a2010 0%, #1a1508 100%);
+      position: relative;
+      transition: border-color 0.2s, box-shadow 0.2s, color 0.2s;
+      margin: 0;
+      flex: 0 0 auto;
+      z-index: 2;
+      white-space: nowrap;
+    }
+    .rpg-back::before { content: '\2190'; position: absolute; left: 0.7rem; }
+    .rpg-back:hover {
+      border-color: var(--gold-light);
+      box-shadow: 0 0 18px 2px var(--gold-glow);
+      color: var(--gold-light);
+    }
+
+    .header-center {
+      flex: 1 1 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.85rem;
+      min-width: 0;
+    }
+    .header-spacer { visibility: hidden; pointer-events: none; }
+    .phoenix-mark {
+      width: 52px;
+      height: 52px;
+      object-fit: contain;
+      flex-shrink: 0;
+      filter: drop-shadow(0 0 10px rgba(200,149,42,0.5));
+    }
+    .title-block {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      min-width: 0;
+    }
+    .game-title {
+      margin: 0;
+      font-family: var(--font-display);
+      font-size: clamp(1.05rem, 3.8vw, 2rem);
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      line-height: 1.1;
+      background: linear-gradient(135deg, var(--gold-light) 0%, var(--gold) 40%, #a07020 80%, var(--gold-light) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .game-subtitle {
+      margin: 0.2rem 0 0;
+      font-style: italic;
+      color: #c8a878;
+      font-size: 0.82rem;
+      letter-spacing: 0.05em;
+    }
+
+    .main-wrap {
+      width: 100%;
+      max-width: 1240px;
+      margin: 0 auto;
+      padding: 22px 16px 36px;
+      display: grid;
+      grid-template-columns: minmax(340px, 1.28fr) minmax(280px, 0.72fr);
+      gap: 20px;
+      flex: 1;
+    }
+
+    .panel {
+      background: linear-gradient(160deg, var(--surface) 0%, var(--bg-warm) 100%);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      box-shadow: inset 0 0 30px rgba(0,0,0,0.35), 0 10px 34px rgba(0,0,0,0.45);
+      overflow: hidden;
+      position: relative;
+    }
+    .panel-header {
+      padding: 14px 16px 10px;
+      border-bottom: 1px solid rgba(200,149,42,0.14);
+      background: linear-gradient(180deg, rgba(255,255,255,0.03) 0%, rgba(255,255,255,0) 100%);
+    }
+    .panel-label {
+      font-family: var(--font-ui);
+      font-size: 0.7rem;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: var(--gold);
+      margin: 0 0 0.25rem;
+    }
+    .status-bar {
+      margin: 0;
+      min-height: 2.4rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      padding: 8px 16px 8px 28px;
+      background: rgba(0,0,0,0.32);
+      border: 1px solid rgba(200,149,42,0.18);
+      border-radius: 8px;
+      font-family: var(--font-ui);
+      font-size: 0.8rem;
+      letter-spacing: 0.08em;
+      color: var(--gold-light);
+      position: relative;
+      text-align: center;
+    }
+    .status-bar::before {
+      content: '⚜';
+      position: absolute;
+      left: 10px;
+      font-size: 10px;
+      color: var(--gold);
+      opacity: 0.7;
+    }
+
+    .board-panel {
+      display: flex;
+      flex-direction: column;
+      min-height: 780px;
+    }
+    .board-area {
+      padding: 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      flex: 1;
+      position: relative;
+    }
+
+    .top-metrics {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 10px;
+    }
+    .metric {
+      padding: 10px 12px;
+      border-radius: 12px;
+      background: linear-gradient(180deg, rgba(255,255,255,0.04) 0%, rgba(0,0,0,0.16) 100%);
+      border: 1px solid rgba(200,149,42,0.18);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.03);
+      text-align: center;
+      min-height: 68px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      gap: 5px;
+    }
+    .metric-label {
+      font-family: var(--font-ui);
+      font-size: 0.62rem;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: var(--gold);
+    }
+    .metric-value {
+      font-family: var(--font-display);
+      color: var(--gold-light);
+      font-size: clamp(1rem, 2.5vw, 1.35rem);
+      line-height: 1;
+    }
+    .metric-sub {
+      color: var(--text-muted);
+      font-size: 0.78rem;
+      font-style: italic;
+      line-height: 1.1;
+    }
+
+    .battlefield {
+      position: relative;
+      flex: 1;
+      border-radius: 18px;
+      padding: 16px;
+      background:
+        radial-gradient(circle at 50% 45%, rgba(70,40,10,0.24) 0%, rgba(20,12,4,0.96) 72%),
+        linear-gradient(160deg, #201407 0%, #100b04 100%);
+      border: 1px solid rgba(200,149,42,0.28);
+      box-shadow:
+        inset 0 1px 0 rgba(255,255,255,0.04),
+        inset 0 0 38px rgba(0,0,0,0.35),
+        0 0 0 1px rgba(0,0,0,0.35),
+        0 18px 42px rgba(0,0,0,0.45),
+        0 0 30px rgba(200,149,42,0.14);
+      display: grid;
+      grid-template-rows: auto minmax(120px, 1fr) auto minmax(120px, 1fr);
+      gap: 14px;
+      overflow: hidden;
+    }
+    .battlefield::before,
+    .battlefield::after {
+      content: '◆';
+      position: absolute;
+      color: rgba(200,149,42,0.45);
+      font-size: 10px;
+      line-height: 1;
+      z-index: 1;
+    }
+    .battlefield::before { top: 6px; left: 8px; }
+    .battlefield::after { bottom: 6px; right: 8px; }
+
+    .zone-title {
+      font-family: var(--font-ui);
+      font-size: 0.68rem;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: var(--gold);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+    }
+    .zone-note { color: var(--text-muted); font-style: italic; letter-spacing: 0.04em; font-size: 0.8rem; text-transform: none; }
+
+    .hand-row {
+      min-height: 108px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      align-content: flex-start;
+      justify-content: center;
+      position: relative;
+      z-index: 1;
+    }
+    .enemy-hand .domino { cursor: default; }
+
+    .table-zone {
+      position: relative;
+      min-height: 170px;
+      border-radius: 16px;
+      border: 1px solid rgba(200,149,42,0.14);
+      background: rgba(0,0,0,0.2);
+      padding: 12px 14px 18px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      gap: 14px;
+      z-index: 1;
+    }
+    .end-caps {
+      display: flex;
+      justify-content: center;
+      gap: 18px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+    .end-cap {
+      min-width: 110px;
+      padding: 8px 12px;
+      border-radius: 999px;
+      border: 1px solid rgba(200,149,42,0.26);
+      background: linear-gradient(180deg, rgba(255,255,255,0.04), rgba(0,0,0,0.18));
+      text-align: center;
+      font-family: var(--font-ui);
+      font-size: 0.74rem;
+      letter-spacing: 0.1em;
+      color: var(--gold-light);
+      text-transform: uppercase;
+    }
+    .end-cap strong { font-family: var(--font-display); font-size: 1.05rem; margin-left: 6px; }
+
+    .chain {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+      min-height: 70px;
+    }
+    .chain-slot {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+    .chain-divider {
+      width: 12px;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(200,149,42,0.55), transparent);
+    }
+
+    .domino {
+      width: var(--tile-w);
+      height: var(--tile-h);
+      border-radius: 10px;
+      border: 2px solid rgba(120,80,20,0.95);
+      background:
+        linear-gradient(180deg, rgba(255,255,255,0.34), rgba(255,255,255,0.02) 42%),
+        linear-gradient(135deg, #fbf2dc 0%, var(--bone) 46%, #dfc18b 100%);
+      box-shadow:
+        0 4px 10px var(--bone-shadow),
+        inset 0 0 0 1px rgba(255,255,255,0.34),
+        inset 0 -8px 12px rgba(140,100,34,0.16);
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      overflow: hidden;
+      position: relative;
+      transform-origin: center center;
+      transition: transform 0.16s ease, box-shadow 0.16s ease, border-color 0.16s ease, opacity 0.16s ease;
+      cursor: pointer;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+    .domino::before {
+      content: '';
+      position: absolute;
+      left: calc(50% - 1px);
+      top: 6px;
+      bottom: 6px;
+      width: 2px;
+      background: rgba(70,44,8,0.72);
+      border-radius: 999px;
+      z-index: 1;
+    }
+    .domino:hover {
+      transform: translateY(-2px) scale(1.03);
+      box-shadow: 0 0 18px rgba(200,149,42,0.22), 0 10px 18px rgba(0,0,0,0.3), inset 0 0 0 1px rgba(255,255,255,0.34);
+      border-color: rgba(220,180,90,0.95);
+    }
+    .domino.disabled {
+      opacity: 0.48;
+      filter: grayscale(0.16);
+      cursor: default;
+    }
+    .domino.disabled:hover { transform: none; box-shadow: 0 4px 10px var(--bone-shadow), inset 0 0 0 1px rgba(255,255,255,0.34), inset 0 -8px 12px rgba(140,100,34,0.16); }
+    .domino.playable-left { box-shadow: 0 0 0 2px rgba(127,180,255,0.45), 0 0 18px rgba(127,180,255,0.24), 0 4px 10px var(--bone-shadow); }
+    .domino.playable-right { box-shadow: 0 0 0 2px rgba(135,220,145,0.40), 0 0 18px rgba(135,220,145,0.20), 0 4px 10px var(--bone-shadow); }
+    .domino.selected-side-left { box-shadow: 0 0 0 3px rgba(127,180,255,0.72), 0 0 18px rgba(127,180,255,0.28), 0 4px 10px var(--bone-shadow); }
+    .domino.selected-side-right { box-shadow: 0 0 0 3px rgba(135,220,145,0.65), 0 0 18px rgba(135,220,145,0.28), 0 4px 10px var(--bone-shadow); }
+    .domino.face-down {
+      background:
+        linear-gradient(180deg, rgba(255,255,255,0.06), rgba(255,255,255,0.01) 36%),
+        linear-gradient(135deg, #4a2a10 0%, #251407 50%, #120b04 100%);
+      border-color: rgba(200,149,42,0.5);
+      box-shadow: 0 4px 10px rgba(0,0,0,0.34), inset 0 0 0 1px rgba(255,255,255,0.06);
+    }
+    .domino.face-down::before {
+      background: rgba(200,149,42,0.45);
+    }
+    .domino.stack { cursor: pointer; }
+    .domino.stack:hover { transform: translateY(-2px) scale(1.02); }
+
+    .half {
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+    }
+    .pip-grid {
+      width: 88%;
+      height: 82%;
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      grid-template-rows: repeat(3, 1fr);
+      align-items: center;
+      justify-items: center;
+      position: relative;
+      z-index: 2;
+    }
+    .pip {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--pip);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.14), 0 1px 1px rgba(0,0,0,0.22);
+      opacity: 0;
+    }
+    .pip.on { opacity: 1; }
+
+    .side-choice {
+      position: absolute;
+      inset: 0;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      z-index: 4;
+      pointer-events: none;
+    }
+    .side-hit {
+      pointer-events: auto;
+      background: transparent;
+      border: 0;
+      cursor: pointer;
+    }
+    .side-hit.left:hover { background: linear-gradient(90deg, rgba(127,180,255,0.18), transparent); }
+    .side-hit.right:hover { background: linear-gradient(270deg, rgba(135,220,145,0.18), transparent); }
+
+    .stack-and-controls {
+      display: grid;
+      grid-template-columns: minmax(110px, 150px) 1fr;
+      gap: 12px;
+      align-items: center;
+      min-height: 110px;
+    }
+    .boneyard-wrap {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      align-items: center;
+      justify-content: center;
+      min-width: 0;
+    }
+    .stack-count {
+      color: var(--text-muted);
+      font-size: 0.88rem;
+      font-style: italic;
+      text-align: center;
+    }
+    .stack-count strong { color: var(--gold-light); font-family: var(--font-display); font-size: 1.15rem; margin-left: 5px; }
+
+    .action-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      justify-content: center;
+      align-items: center;
+    }
+    .rpg-btn {
+      font-family: var(--font-ui);
+      font-size: 0.78rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: #f0d080;
+      background: linear-gradient(180deg,rgba(40,28,8,0.9) 0%,rgba(20,14,4,0.95) 100%);
+      border: 1px solid rgba(200,149,42,0.45);
+      padding: 10px 18px;
+      border-radius: 999px;
+      cursor: pointer;
+      transition: all 0.2s;
+      box-shadow: 0 1px 0 rgba(200,149,42,0.15), inset 0 1px 0 rgba(200,149,42,0.1);
+    }
+    .rpg-btn:hover {
+      border-color: rgba(200,149,42,0.75);
+      box-shadow: 0 0 18px 2px rgba(200,149,42,0.25),0 0 48px 8px rgba(180,120,20,0.15),inset 0 1px 0 rgba(200,149,42,0.2);
+      color: #f8e898;
+      transform: translateY(-1px);
+    }
+    .rpg-btn:active { transform: translateY(0); }
+    .rpg-btn-sage {
+      border-color: rgba(74,122,58,0.58);
+      color: #cde8b6;
+      background: linear-gradient(180deg, rgba(48, 76, 35, 0.96), rgba(25, 41, 18, 0.98));
+    }
+    .rpg-btn-sage:hover {
+      border-color: rgba(126, 188, 103, 0.82);
+      box-shadow: 0 0 18px rgba(90,160,80,0.22), 0 0 42px rgba(50,100,40,0.16);
+      color: #ebffd9;
+    }
+
+    .sidebar {
+      display: grid;
+      gap: 20px;
+      align-content: start;
+    }
+    .sidebar-body {
+      padding: 16px;
+      display: grid;
+      gap: 14px;
+    }
+    .info-card {
+      padding: 12px 14px;
+      border-radius: 14px;
+      background: rgba(0,0,0,0.22);
+      border: 1px solid rgba(200,149,42,0.14);
+    }
+    .info-title {
+      font-family: var(--font-ui);
+      font-size: 0.66rem;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: var(--gold);
+      margin: 0 0 0.55rem;
+    }
+    .info-copy {
+      margin: 0;
+      color: #dbcaa4;
+      font-size: 0.98rem;
+      line-height: 1.5;
+    }
+    .pill-row {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    .mode-pill {
+      flex: 1 1 0;
+      min-width: 90px;
+      padding: 9px 12px;
+      border-radius: 999px;
+      border: 1px solid rgba(200,149,42,0.28);
+      background: rgba(255,255,255,0.03);
+      color: var(--gold);
+      font-family: var(--font-ui);
+      font-size: 0.72rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      cursor: pointer;
+      transition: all 0.16s ease;
+    }
+    .mode-pill.active,
+    .mode-pill:hover {
+      border-color: rgba(240,208,128,0.7);
+      color: var(--gold-light);
+      box-shadow: 0 0 14px rgba(200,149,42,0.16);
+      background: rgba(200,149,42,0.08);
+    }
+
+    .history-list {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      display: grid;
+      gap: 8px;
+      max-height: 280px;
+      overflow: auto;
+    }
+    .history-list li {
+      padding: 8px 10px;
+      border-radius: 10px;
+      background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(200,149,42,0.1);
+      color: #d8c7a0;
+      line-height: 1.4;
+    }
+
+    .victory-banner {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      transform: translate(-50%, -50%) scale(0.2);
+      width: min(var(--message-width), 720px);
+      padding: 18px 22px;
+      border-radius: 18px;
+      text-align: center;
+      pointer-events: none;
+      opacity: 0;
+      z-index: 50;
+      background:
+        linear-gradient(180deg, rgba(45,28,8,0.96) 0%, rgba(16,10,4,0.98) 100%),
+        radial-gradient(circle at center, rgba(200,149,42,0.16), transparent 70%);
+      border: 1px solid rgba(240,208,128,0.44);
+      box-shadow: 0 0 0 1px rgba(0,0,0,0.45), 0 24px 60px rgba(0,0,0,0.52), 0 0 30px rgba(200,149,42,0.22);
+    }
+    .victory-banner.show {
+      animation: bannerVictory 1.75s ease forwards;
+    }
+    .victory-title {
+      font-family: var(--font-display);
+      font-size: clamp(1.25rem, 4vw, 2.35rem);
+      line-height: 1.05;
+      letter-spacing: 0.04em;
+      background: linear-gradient(135deg, var(--gold-light) 0%, #fff2b6 20%, var(--gold) 60%, #a07020 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .victory-subtitle {
+      margin-top: 0.45rem;
+      color: #ddcda6;
+      font-size: 1rem;
+      font-style: italic;
+      line-height: 1.4;
+    }
+    @keyframes bannerVictory {
+      0% { opacity: 0; transform: translate(-50%, -50%) scale(0.2); }
+      42.85% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+      100% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+    }
+
+    .confetti-layer {
+      position: absolute;
+      inset: 0;
+      overflow: hidden;
+      pointer-events: none;
+      z-index: 45;
+    }
+    .confetti {
+      position: absolute;
+      width: 10px;
+      height: 16px;
+      border-radius: 2px;
+      opacity: 0;
+      animation: confettiBurst 1.45s ease-out forwards;
+      will-change: transform, opacity;
+    }
+    @keyframes confettiBurst {
+      0% {
+        opacity: 0;
+        transform: translate(0, 0) rotate(0deg) scale(0.2);
+      }
+      12% {
+        opacity: 1;
+      }
+      100% {
+        opacity: 0;
+        transform: translate(var(--dx), var(--dy)) rotate(var(--rot)) scale(1);
+      }
+    }
+
+    .footer {
+      padding: 14px 18px 20px;
+      text-align: center;
+      color: var(--text-dim);
+      font-style: italic;
+      font-size: 0.86rem;
+    }
+
+    @media (max-width: 980px) {
+      .main-wrap { grid-template-columns: 1fr; }
+      .board-panel { min-height: auto; }
+    }
+    @media (max-width: 760px) {
+      .top-metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .stack-and-controls { grid-template-columns: 1fr; }
+      .battlefield { grid-template-rows: auto auto auto auto; }
+    }
+    @media (max-width: 560px) {
+      :root {
+        --tile-w: 72px;
+        --tile-h: 38px;
+      }
+      .header-inner { padding-inline: 12px; }
+      .header-row { gap: 8px; }
+      .phoenix-mark { width: 42px; height: 42px; }
+      .game-subtitle { font-size: 0.74rem; }
+      .board-area { padding: 14px; }
+      .battlefield { padding: 12px; }
+      .top-metrics { grid-template-columns: 1fr 1fr; }
+      .zone-title { flex-direction: column; gap: 5px; }
+    }
+  </style>
+</head>
+<body>
+  <div id="app">
+    <header class="site-header">
+      <div class="header-inner">
+        <div class="header-row">
+          <a href="index.html" class="rpg-back">Hub</a>
+          <div class="header-center">
+            <img class="phoenix-mark" src="RPG Favicon.png" alt="Rising Phoenix Games logo">
+            <div class="title-block">
+              <h1 class="game-title">Dominoes</h1>
+              <p class="game-subtitle">Lay bone to bone and close the chain before the embers die</p>
+            </div>
+          </div>
+          <a href="index.html" class="rpg-back header-spacer" aria-hidden="true">Hub</a>
+        </div>
+      </div>
+    </header>
+
+    <main class="main-wrap">
+      <section class="panel board-panel">
+        <div class="panel-header">
+          <div class="panel-label">Game State</div>
+          <div class="status-bar" id="status-bar">Choose a mode and begin a new round.</div>
+        </div>
+
+        <div class="board-area">
+          <div class="top-metrics">
+            <div class="metric">
+              <div class="metric-label">Turn</div>
+              <div class="metric-value" id="metric-turn">—</div>
+              <div class="metric-sub" id="metric-turn-sub">Waiting</div>
+            </div>
+            <div class="metric">
+              <div class="metric-label">Boneyard</div>
+              <div class="metric-value" id="metric-boneyard">0</div>
+              <div class="metric-sub">Tiles remaining</div>
+            </div>
+            <div class="metric">
+              <div class="metric-label">Your Hand</div>
+              <div class="metric-value" id="metric-player">0</div>
+              <div class="metric-sub">Tiles left</div>
+            </div>
+            <div class="metric">
+              <div class="metric-label">Opponent</div>
+              <div class="metric-value" id="metric-opponent">0</div>
+              <div class="metric-sub">Tiles left</div>
+            </div>
+          </div>
+
+          <div class="battlefield">
+            <div class="zone-title">
+              <span id="enemy-zone-title">Ember AI Hand</span>
+              <span class="zone-note" id="enemy-zone-note">Count is visible; faces stay hidden.</span>
+            </div>
+            <div class="hand-row enemy-hand" id="enemy-hand"></div>
+
+            <div class="table-zone">
+              <div class="end-caps">
+                <div class="end-cap">Left End <strong id="left-end">—</strong></div>
+                <div class="end-cap">Right End <strong id="right-end">—</strong></div>
+              </div>
+              <div class="chain" id="chain"></div>
+            </div>
+
+            <div class="zone-title">
+              <span>Your Hand</span>
+              <span class="zone-note" id="selection-note">Select a highlighted tile half to place left or right.</span>
+            </div>
+            <div class="hand-row" id="player-hand"></div>
+          </div>
+
+          <div class="stack-and-controls">
+            <div class="boneyard-wrap">
+              <button class="domino face-down stack" id="draw-btn" aria-label="Draw from boneyard">
+                <div class="half"></div><div class="half"></div>
+              </button>
+              <div class="stack-count">Draw pile <strong id="draw-count">0</strong></div>
+            </div>
+            <div class="action-row">
+              <button class="rpg-btn rpg-btn-sage" id="new-game-btn">New Round</button>
+              <button class="rpg-btn" id="pass-btn">Pass Turn</button>
+              <button class="rpg-btn" id="hint-btn">Hint</button>
+            </div>
+          </div>
+
+          <div class="confetti-layer" id="confetti-layer"></div>
+          <div class="victory-banner" id="victory-banner" aria-live="polite">
+            <div class="victory-title" id="victory-title">Ashes to Victory</div>
+            <div class="victory-subtitle" id="victory-subtitle">A triumphant chain has been forged.</div>
+          </div>
+        </div>
+      </section>
+
+      <aside class="sidebar">
+        <section class="panel">
+          <div class="panel-header">
+            <div class="panel-label">Mode</div>
+            <div class="status-bar">Block dominoes with clean hotseat or solo play.</div>
+          </div>
+          <div class="sidebar-body">
+            <div class="pill-row">
+              <button class="mode-pill active" data-mode="ai">Vs Ember AI</button>
+              <button class="mode-pill" data-mode="hotseat">Hotseat</button>
+            </div>
+            <div class="info-card">
+              <h3 class="info-title">Round Rules</h3>
+              <p class="info-copy">A double-six set is shuffled. Each side receives seven tiles. Match one open end of the table chain. If you cannot play, draw until you can or the boneyard empties. When both sides are stuck, the lower pip total wins the block.</p>
+            </div>
+            <div class="info-card">
+              <h3 class="info-title">Controls</h3>
+              <p class="info-copy">Playable tiles glow. Click the left half of a tile to place it on the left end, or the right half to place it on the right end. In hotseat mode, both hands are visible so turns can alternate on one device.</p>
+            </div>
+          </div>
+        </section>
+
+        <section class="panel">
+          <div class="panel-header">
+            <div class="panel-label">Chronicle</div>
+            <div class="status-bar">The last moves of the chain.</div>
+          </div>
+          <div class="sidebar-body">
+            <ol class="history-list" id="history-list"></ol>
+          </div>
+        </section>
+      </aside>
+    </main>
+
+    <footer class="footer">Rising Phoenix Games · Dominoes</footer>
+  </div>
+
+  <script>
+    const state = {
+      mode: 'ai',
+      players: [],
+      boneyard: [],
+      chain: [],
+      currentPlayer: 0,
+      leftEnd: null,
+      rightEnd: null,
+      gameOver: false,
+      selection: null,
+      history: []
+    };
+
+    const PIP_LAYOUTS = {
+      0: [],
+      1: [4],
+      2: [0,8],
+      3: [0,4,8],
+      4: [0,2,6,8],
+      5: [0,2,4,6,8],
+      6: [0,2,3,5,6,8]
+    };
+
+    const statusBar = document.getElementById('status-bar');
+    const playerHandEl = document.getElementById('player-hand');
+    const enemyHandEl = document.getElementById('enemy-hand');
+    const chainEl = document.getElementById('chain');
+    const leftEndEl = document.getElementById('left-end');
+    const rightEndEl = document.getElementById('right-end');
+    const metricTurnEl = document.getElementById('metric-turn');
+    const metricTurnSubEl = document.getElementById('metric-turn-sub');
+    const metricBoneyardEl = document.getElementById('metric-boneyard');
+    const metricPlayerEl = document.getElementById('metric-player');
+    const metricOpponentEl = document.getElementById('metric-opponent');
+    const drawBtn = document.getElementById('draw-btn');
+    const drawCountEl = document.getElementById('draw-count');
+    const passBtn = document.getElementById('pass-btn');
+    const newGameBtn = document.getElementById('new-game-btn');
+    const hintBtn = document.getElementById('hint-btn');
+    const historyListEl = document.getElementById('history-list');
+    const selectionNoteEl = document.getElementById('selection-note');
+    const enemyZoneTitleEl = document.getElementById('enemy-zone-title');
+    const enemyZoneNoteEl = document.getElementById('enemy-zone-note');
+    const victoryBanner = document.getElementById('victory-banner');
+    const victoryTitle = document.getElementById('victory-title');
+    const victorySubtitle = document.getElementById('victory-subtitle');
+    const confettiLayer = document.getElementById('confetti-layer');
+
+    function createFullSet() {
+      const tiles = [];
+      for (let a = 0; a <= 6; a++) {
+        for (let b = a; b <= 6; b++) {
+          tiles.push({ id: `${a}-${b}`, a, b, sortValue: a + b, total: a + b });
+        }
+      }
+      return tiles;
+    }
+
+    function shuffle(array) {
+      for (let i = array.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [array[i], array[j]] = [array[j], array[i]];
+      }
+      return array;
+    }
+
+    function cloneTile(tile) {
+      return { id: tile.id, a: tile.a, b: tile.b, total: tile.total, sortValue: tile.sortValue };
+    }
+
+    function setupPlayers() {
+      state.players = state.mode === 'ai'
+        ? [{ name: 'You', isAI: false, hand: [] }, { name: 'Ember AI', isAI: true, hand: [] }]
+        : [{ name: 'Player One', isAI: false, hand: [] }, { name: 'Player Two', isAI: false, hand: [] }];
+    }
+
+    function startNewRound() {
+      setupPlayers();
+      state.boneyard = shuffle(createFullSet()).map(cloneTile);
+      state.chain = [];
+      state.leftEnd = null;
+      state.rightEnd = null;
+      state.currentPlayer = 0;
+      state.gameOver = false;
+      state.selection = null;
+      state.history = [];
+      historyListEl.innerHTML = '';
+      victoryBanner.classList.remove('show');
+      victoryBanner.style.opacity = '0';
+      confettiLayer.innerHTML = '';
+
+      state.players.forEach(player => { player.hand = []; });
+      for (let i = 0; i < 7; i++) {
+        state.players.forEach(player => player.hand.push(state.boneyard.pop()));
+      }
+      state.players.forEach(player => sortHand(player.hand));
+
+      const opener = determineOpeningPlayer();
+      state.currentPlayer = opener.playerIndex;
+      const openingTile = state.players[opener.playerIndex].hand.splice(opener.tileIndex, 1)[0];
+      playTile(opener.playerIndex, openingTile, 'right', false, `${state.players[opener.playerIndex].name} opens with ${tileLabel(openingTile)}.`);
+      pushHistory(`${state.players[opener.playerIndex].name} opens the round with ${tileLabel(openingTile)}.`);
+      setStatus(`${state.players[opener.playerIndex].name} ignites the chain with ${tileLabel(openingTile)}.`);
+      advanceTurn();
+      render();
+    }
+
+    function determineOpeningPlayer() {
+      let best = { playerIndex: 0, tileIndex: 0, rank: -1, total: -1 };
+      state.players.forEach((player, playerIndex) => {
+        player.hand.forEach((tile, tileIndex) => {
+          const rank = tile.a === tile.b ? 100 + tile.a : tile.total;
+          if (rank > best.rank || (rank === best.rank && tile.total > best.total)) {
+            best = { playerIndex, tileIndex, rank, total: tile.total };
+          }
+        });
+      });
+      return best;
+    }
+
+    function sortHand(hand) {
+      hand.sort((x, y) => {
+        if (x.total !== y.total) return y.total - x.total;
+        if (x.a !== y.a) return y.a - x.a;
+        return y.b - x.b;
+      });
+    }
+
+    function tileLabel(tile) {
+      return `[${tile.a}|${tile.b}]`;
+    }
+
+    function getPlayableSides(tile) {
+      if (state.chain.length === 0) return ['left', 'right'];
+      const sides = [];
+      if (tile.a === state.leftEnd || tile.b === state.leftEnd) sides.push('left');
+      if (tile.a === state.rightEnd || tile.b === state.rightEnd) sides.push('right');
+      return sides;
+    }
+
+    function orientForSide(tile, side) {
+      const oriented = { ...tile, left: tile.a, right: tile.b };
+      if (state.chain.length === 0) return oriented;
+      if (side === 'left') {
+        if (tile.b === state.leftEnd) {
+          oriented.left = tile.a;
+          oriented.right = tile.b;
+        } else {
+          oriented.left = tile.b;
+          oriented.right = tile.a;
+        }
+      } else {
+        if (tile.a === state.rightEnd) {
+          oriented.left = tile.a;
+          oriented.right = tile.b;
+        } else {
+          oriented.left = tile.b;
+          oriented.right = tile.a;
+        }
+      }
+      return oriented;
+    }
+
+    function playTile(playerIndex, tile, side, announce = true, historyText = '') {
+      const oriented = orientForSide(tile, side);
+      if (state.chain.length === 0) {
+        state.chain.push(oriented);
+        state.leftEnd = oriented.left;
+        state.rightEnd = oriented.right;
+      } else if (side === 'left') {
+        state.chain.unshift(oriented);
+        state.leftEnd = oriented.left;
+      } else {
+        state.chain.push(oriented);
+        state.rightEnd = oriented.right;
+      }
+      if (announce) {
+        setStatus(`${state.players[playerIndex].name} places ${tileLabel(tile)} on the ${side} end.`);
+      }
+      if (historyText) pushHistory(historyText);
+    }
+
+    function canCurrentPlayerPlay() {
+      return state.players[state.currentPlayer].hand.some(tile => getPlayableSides(tile).length > 0);
+    }
+
+    function drawOne(playerIndex) {
+      if (!state.boneyard.length) return null;
+      const tile = state.boneyard.pop();
+      state.players[playerIndex].hand.push(tile);
+      sortHand(state.players[playerIndex].hand);
+      return tile;
+    }
+
+    function computeHandPips(hand) {
+      return hand.reduce((sum, tile) => sum + tile.total, 0);
+    }
+
+    function advanceTurn() {
+      if (state.gameOver) return;
+      state.selection = null;
+      state.currentPlayer = (state.currentPlayer + 1) % state.players.length;
+      render();
+      if (checkForEndState()) return;
+      const player = state.players[state.currentPlayer];
+      if (player.isAI) {
+        window.setTimeout(runAI, 520);
+      } else {
+        if (!canCurrentPlayerPlay() && state.boneyard.length) {
+          setStatus(`${player.name} cannot yet play. Draw from the boneyard.`);
+        } else if (!canCurrentPlayerPlay() && !state.boneyard.length) {
+          setStatus(`${player.name} is blocked. Pass to resolve the round.`);
+        } else {
+          setStatus(`${player.name}'s turn. Select a glowing tile half to place it.`);
+        }
+      }
+    }
+
+    function runAI() {
+      if (state.gameOver || state.currentPlayer !== 1 || state.mode !== 'ai') return;
+      const ai = state.players[1];
+      const move = chooseAIMove(ai.hand);
+      if (move) {
+        ai.hand.splice(move.index, 1);
+        playTile(1, move.tile, move.side, true, `Ember AI lays ${tileLabel(move.tile)} to the ${move.side}.`);
+        sortHand(ai.hand);
+        render();
+        if (checkForEndState()) return;
+        advanceTurn();
+        return;
+      }
+
+      let drew = false;
+      while (state.boneyard.length) {
+        const tile = drawOne(1);
+        drew = true;
+        const sides = getPlayableSides(tile);
+        if (sides.length) {
+          const idx = ai.hand.findIndex(t => t.id === tile.id && t.a === tile.a && t.b === tile.b);
+          const chosenSide = choosePreferredSide(tile, sides);
+          ai.hand.splice(idx, 1);
+          playTile(1, tile, chosenSide, true, `Ember AI draws and immediately plays ${tileLabel(tile)} on the ${chosenSide}.`);
+          sortHand(ai.hand);
+          render();
+          if (checkForEndState()) return;
+          advanceTurn();
+          return;
+        }
+      }
+
+      if (drew) {
+        pushHistory('Ember AI empties the boneyard and remains blocked.');
+      } else {
+        pushHistory('Ember AI is blocked and cannot draw.');
+      }
+      setStatus('Ember AI is blocked.');
+      render();
+      if (checkForEndState()) return;
+      advanceTurn();
+    }
+
+    function chooseAIMove(hand) {
+      const options = [];
+      hand.forEach((tile, index) => {
+        const sides = getPlayableSides(tile);
+        sides.forEach(side => {
+          const score = scoreAIMove(tile, side, hand);
+          options.push({ tile, index, side, score });
+        });
+      });
+      options.sort((a, b) => b.score - a.score || b.tile.total - a.tile.total);
+      return options[0] || null;
+    }
+
+    function scoreAIMove(tile, side, hand) {
+      let score = tile.total;
+      if (tile.a === tile.b) score += 2.5;
+      const futureEnd = side === 'left'
+        ? (tile.a === state.leftEnd ? tile.b : tile.a)
+        : (tile.a === state.rightEnd ? tile.b : tile.a);
+      const support = hand.reduce((acc, other) => {
+        if (other.id === tile.id) return acc;
+        return acc + (other.a === futureEnd || other.b === futureEnd ? 1 : 0);
+      }, 0);
+      score += support * 1.25;
+      if (state.chain.length === 1 && tile.a === tile.b) score += 1;
+      return score;
+    }
+
+    function choosePreferredSide(tile, sides) {
+      if (sides.length === 1) return sides[0];
+      const leftFuture = tile.a === state.leftEnd ? tile.b : tile.a;
+      const rightFuture = tile.a === state.rightEnd ? tile.b : tile.a;
+      return leftFuture >= rightFuture ? 'left' : 'right';
+    }
+
+    function checkForEndState() {
+      const emptyHandWinner = state.players.findIndex(player => player.hand.length === 0);
+      if (emptyHandWinner !== -1) {
+        finishGame(emptyHandWinner, `${state.players[emptyHandWinner].name} sheds every tile and closes the round.`);
+        return true;
+      }
+
+      const nobodyCanPlay = state.players.every(player => player.hand.every(tile => getPlayableSides(tile).length === 0));
+      if (nobodyCanPlay && state.boneyard.length === 0) {
+        const totals = state.players.map(player => computeHandPips(player.hand));
+        if (totals[0] === totals[1]) {
+          finishGame(null, `The chain is blocked. Both sides finish with ${totals[0]} pips.`);
+        } else {
+          const winnerIndex = totals[0] < totals[1] ? 0 : 1;
+          finishGame(winnerIndex, `The chain is blocked. ${state.players[winnerIndex].name} wins on the lighter hand, ${totals[winnerIndex]} to ${totals[1 - winnerIndex]}.`);
+        }
+        return true;
+      }
+      return false;
+    }
+
+    function finishGame(winnerIndex, detail) {
+      state.gameOver = true;
+      setStatus(detail);
+      pushHistory(detail);
+      render();
+      if (winnerIndex === null) {
+        showVictory('Chain of Cinders', 'The table locks in a perfect dead heat.');
+      } else {
+        const winnerName = state.players[winnerIndex].name;
+        showVictory(`${winnerName} Triumphs`, winnerIndex === 0 ? 'A flawless chain ends in your favor.' : 'The ember-lit rival claims the round.');
+      }
+    }
+
+    function showVictory(title, subtitle) {
+      victoryTitle.textContent = title;
+      victorySubtitle.textContent = subtitle;
+      victoryBanner.classList.remove('show');
+      void victoryBanner.offsetWidth;
+      victoryBanner.classList.add('show');
+      launchConfetti();
+      window.setTimeout(() => {
+        victoryBanner.classList.remove('show');
+        victoryBanner.style.opacity = '0';
+      }, 1750);
+    }
+
+    function launchConfetti() {
+      confettiLayer.innerHTML = '';
+      const bursts = 44;
+      const colors = ['#f0d080', '#c8952a', '#c04040', '#7aaa5a', '#8bbcff', '#f4e6bc'];
+      for (let i = 0; i < bursts; i++) {
+        const piece = document.createElement('span');
+        piece.className = 'confetti';
+        const originX = 50 + (Math.random() * 36 - 18);
+        const originY = 50 + (Math.random() * 18 - 9);
+        const dx = (Math.random() * 560 - 280).toFixed(0) + 'px';
+        const dy = (Math.random() * 360 - 70).toFixed(0) + 'px';
+        const rot = (Math.random() * 720 - 360).toFixed(0) + 'deg';
+        piece.style.left = originX + '%';
+        piece.style.top = originY + '%';
+        piece.style.background = colors[i % colors.length];
+        piece.style.setProperty('--dx', dx);
+        piece.style.setProperty('--dy', dy);
+        piece.style.setProperty('--rot', rot);
+        piece.style.animationDelay = (Math.random() * 0.18).toFixed(2) + 's';
+        confettiLayer.appendChild(piece);
+      }
+      window.setTimeout(() => { confettiLayer.innerHTML = ''; }, 1600);
+    }
+
+    function pushHistory(text) {
+      state.history.unshift(text);
+      state.history = state.history.slice(0, 10);
+      renderHistory();
+    }
+
+    function renderHistory() {
+      historyListEl.innerHTML = '';
+      if (!state.history.length) {
+        const li = document.createElement('li');
+        li.textContent = 'No moves yet.';
+        historyListEl.appendChild(li);
+        return;
+      }
+      state.history.forEach(item => {
+        const li = document.createElement('li');
+        li.textContent = item;
+        historyListEl.appendChild(li);
+      });
+    }
+
+    function setStatus(text) {
+      statusBar.textContent = text;
+    }
+
+    function createPipGrid(value) {
+      const grid = document.createElement('div');
+      grid.className = 'pip-grid';
+      const onPositions = new Set(PIP_LAYOUTS[value]);
+      for (let i = 0; i < 9; i++) {
+        const pip = document.createElement('span');
+        pip.className = 'pip' + (onPositions.has(i) ? ' on' : '');
+        grid.appendChild(pip);
+      }
+      return grid;
+    }
+
+    function createDominoElement(tile, options = {}) {
+      const el = document.createElement(options.button ? 'button' : 'div');
+      el.className = 'domino';
+      if (options.faceDown) el.classList.add('face-down');
+      if (options.disabled) el.classList.add('disabled');
+      if (options.extraClass) el.classList.add(options.extraClass);
+      if (!options.faceDown) {
+        const leftHalf = document.createElement('div');
+        leftHalf.className = 'half';
+        leftHalf.appendChild(createPipGrid(options.leftValue ?? tile.a));
+        const rightHalf = document.createElement('div');
+        rightHalf.className = 'half';
+        rightHalf.appendChild(createPipGrid(options.rightValue ?? tile.b));
+        el.append(leftHalf, rightHalf);
+      } else {
+        el.append(document.createElement('div'), document.createElement('div'));
+      }
+      if (options.label) el.setAttribute('aria-label', options.label);
+      return el;
+    }
+
+    function renderHand(container, hand, viewerIndex) {
+      container.innerHTML = '';
+      if (!hand.length) {
+        const empty = document.createElement('div');
+        empty.className = 'info-copy';
+        empty.style.textAlign = 'center';
+        empty.style.width = '100%';
+        empty.textContent = 'No tiles remain.';
+        container.appendChild(empty);
+        return;
+      }
+
+      hand.forEach(tile => {
+        const playableSides = getPlayableSides(tile);
+        const isCurrentPlayersHand = viewerIndex === state.currentPlayer && !state.gameOver;
+        const showFace = state.mode === 'hotseat' || viewerIndex === 0;
+        const el = createDominoElement(tile, {
+          disabled: !isCurrentPlayersHand || playableSides.length === 0,
+          faceDown: !showFace,
+          label: `${tile.a}-${tile.b}`
+        });
+
+        if (showFace && isCurrentPlayersHand && playableSides.includes('left')) el.classList.add('playable-left');
+        if (showFace && isCurrentPlayersHand && playableSides.includes('right')) el.classList.add('playable-right');
+        if (state.selection && state.selection.tileId === tile.id && state.selection.owner === viewerIndex) {
+          el.classList.add(state.selection.side === 'left' ? 'selected-side-left' : 'selected-side-right');
+        }
+
+        if (showFace && isCurrentPlayersHand && playableSides.length) {
+          const overlay = document.createElement('div');
+          overlay.className = 'side-choice';
+          if (playableSides.includes('left')) {
+            const leftHit = document.createElement('button');
+            leftHit.className = 'side-hit left';
+            leftHit.title = 'Play to the left end';
+            leftHit.addEventListener('click', (event) => {
+              event.stopPropagation();
+              handleHumanPlay(tile.id, 'left');
+            });
+            overlay.appendChild(leftHit);
+          } else {
+            overlay.appendChild(document.createElement('span'));
+          }
+          if (playableSides.includes('right')) {
+            const rightHit = document.createElement('button');
+            rightHit.className = 'side-hit right';
+            rightHit.title = 'Play to the right end';
+            rightHit.addEventListener('click', (event) => {
+              event.stopPropagation();
+              handleHumanPlay(tile.id, 'right');
+            });
+            overlay.appendChild(rightHit);
+          } else {
+            overlay.appendChild(document.createElement('span'));
+          }
+          el.appendChild(overlay);
+        }
+
+        container.appendChild(el);
+      });
+    }
+
+    function renderChain() {
+      chainEl.innerHTML = '';
+      if (!state.chain.length) {
+        const note = document.createElement('div');
+        note.className = 'info-copy';
+        note.style.textAlign = 'center';
+        note.textContent = 'The table awaits the opening tile.';
+        chainEl.appendChild(note);
+        return;
+      }
+      state.chain.forEach((tile, index) => {
+        const slot = document.createElement('div');
+        slot.className = 'chain-slot';
+        const el = createDominoElement(tile, {
+          disabled: true,
+          leftValue: tile.left,
+          rightValue: tile.right,
+          label: `Chain tile ${tile.left}-${tile.right}`
+        });
+        slot.appendChild(el);
+        chainEl.appendChild(slot);
+        if (index !== state.chain.length - 1) {
+          const divider = document.createElement('span');
+          divider.className = 'chain-divider';
+          chainEl.appendChild(divider);
+        }
+      });
+    }
+
+    function handleHumanPlay(tileId, side) {
+      if (state.gameOver) return;
+      const player = state.players[state.currentPlayer];
+      if (player.isAI) return;
+      const tileIndex = player.hand.findIndex(tile => tile.id === tileId);
+      if (tileIndex === -1) return;
+      const tile = player.hand[tileIndex];
+      if (!getPlayableSides(tile).includes(side)) return;
+      state.selection = { tileId: tile.id, side, owner: state.currentPlayer };
+      render();
+      window.setTimeout(() => {
+        if (state.gameOver) return;
+        player.hand.splice(tileIndex, 1);
+        playTile(state.currentPlayer, tile, side, true, `${player.name} plays ${tileLabel(tile)} to the ${side}.`);
+        sortHand(player.hand);
+        render();
+        if (checkForEndState()) return;
+        advanceTurn();
+      }, 90);
+    }
+
+    function drawForCurrentPlayer() {
+      if (state.gameOver) return;
+      const player = state.players[state.currentPlayer];
+      if (player.isAI) return;
+      if (canCurrentPlayerPlay()) {
+        setStatus(`${player.name} already has a playable tile.`);
+        return;
+      }
+      const tile = drawOne(state.currentPlayer);
+      if (!tile) {
+        setStatus('The boneyard is empty. Pass if the chain is blocked.');
+        render();
+        return;
+      }
+      pushHistory(`${player.name} draws ${tileLabel(tile)} from the boneyard.`);
+      const sides = getPlayableSides(tile);
+      if (sides.length) {
+        setStatus(`${player.name} draws ${tileLabel(tile)}. It can be played immediately.`);
+      } else {
+        setStatus(`${player.name} draws ${tileLabel(tile)} but still cannot play.`);
+      }
+      render();
+    }
+
+    function passCurrentPlayer() {
+      if (state.gameOver) return;
+      const player = state.players[state.currentPlayer];
+      if (canCurrentPlayerPlay()) {
+        setStatus(`${player.name} still has a legal move.`);
+        return;
+      }
+      if (state.boneyard.length) {
+        setStatus('Tiles remain in the boneyard. Draw before passing.');
+        return;
+      }
+      pushHistory(`${player.name} passes; the chain is blocked on their turn.`);
+      if (checkForEndState()) return;
+      advanceTurn();
+    }
+
+    function showHint() {
+      if (state.gameOver) return;
+      const player = state.players[state.currentPlayer];
+      if (player.isAI) {
+        setStatus('The Ember AI does not require hints.');
+        return;
+      }
+      const suggestions = [];
+      player.hand.forEach(tile => {
+        const sides = getPlayableSides(tile);
+        sides.forEach(side => suggestions.push({ tile, side }));
+      });
+      if (!suggestions.length) {
+        setStatus(state.boneyard.length ? 'No play available. Draw from the boneyard.' : 'No play remains and the boneyard is empty.');
+        return;
+      }
+      suggestions.sort((a, b) => (b.tile.total + (b.tile.a === b.tile.b ? 2 : 0)) - (a.tile.total + (a.tile.a === a.tile.b ? 2 : 0)));
+      const pick = suggestions[0];
+      setStatus(`Hint: place ${tileLabel(pick.tile)} on the ${pick.side} end.`);
+      state.selection = { tileId: pick.tile.id, side: pick.side, owner: state.currentPlayer };
+      render();
+    }
+
+    function updateModeUI() {
+      document.querySelectorAll('.mode-pill').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.mode === state.mode);
+      });
+      if (state.mode === 'ai') {
+        enemyZoneTitleEl.textContent = 'Ember AI Hand';
+        enemyZoneNoteEl.textContent = 'Count is visible; faces stay hidden.';
+      } else {
+        enemyZoneTitleEl.textContent = 'Player Two Hand';
+        enemyZoneNoteEl.textContent = 'Both hands are visible in hotseat mode.';
+      }
+    }
+
+    function render() {
+      updateModeUI();
+      renderHand(playerHandEl, state.players[0]?.hand || [], 0);
+      renderHand(enemyHandEl, state.players[1]?.hand || [], 1);
+      renderChain();
+      metricBoneyardEl.textContent = state.boneyard.length;
+      drawCountEl.textContent = state.boneyard.length;
+      metricPlayerEl.textContent = state.players[0]?.hand.length ?? 0;
+      metricOpponentEl.textContent = state.players[1]?.hand.length ?? 0;
+      leftEndEl.textContent = state.leftEnd ?? '—';
+      rightEndEl.textContent = state.rightEnd ?? '—';
+      const current = state.players[state.currentPlayer];
+      metricTurnEl.textContent = current ? current.name : '—';
+      metricTurnSubEl.textContent = state.gameOver ? 'Round complete' : (current?.isAI ? 'Thinking' : 'Awaiting move');
+      const currentPlayerHuman = current && !current.isAI;
+      drawBtn.disabled = state.gameOver || !currentPlayerHuman || (!state.boneyard.length);
+      drawBtn.classList.toggle('disabled', drawBtn.disabled);
+      passBtn.disabled = state.gameOver || !currentPlayerHuman;
+      selectionNoteEl.textContent = state.gameOver
+        ? 'The round is complete. Start a new one to play again.'
+        : currentPlayerHuman
+          ? 'Select a highlighted tile half to place it on that end.'
+          : 'The Ember AI is considering the next placement.';
+    }
+
+    document.querySelectorAll('.mode-pill').forEach(btn => {
+      btn.addEventListener('click', () => {
+        if (state.mode !== btn.dataset.mode) {
+          state.mode = btn.dataset.mode;
+          startNewRound();
+        }
+      });
+    });
+
+    drawBtn.addEventListener('click', drawForCurrentPlayer);
+    passBtn.addEventListener('click', passCurrentPlayer);
+    hintBtn.addEventListener('click', showHint);
+    newGameBtn.addEventListener('click', startNewRound);
+
+    startNewRound();
+  </script>
+</body>
+</html>
