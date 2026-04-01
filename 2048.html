@@ -800,7 +800,7 @@
   let showGameOver = false;
   let touchStart = null;
   let pointerStart = null;
-  let wheelGesture = { dx: 0, dy: 0, lockUntil: 0 };
+  let wheelGesture = { dx: 0, dy: 0, settling: false, settleTimer: null };
   let confettiParticles = [];
   let confettiRaf = null;
   let victoryTimeout = null;
@@ -986,12 +986,14 @@
   }
 
   function handlePointerDown(event) {
-    if (event.pointerType === 'mouse' && event.button !== 0) return;
+    if (event.pointerType !== 'mouse') return;
+    if (event.button !== 0) return;
     pointerStart = { x: event.clientX, y: event.clientY, id: event.pointerId };
     boardFrame.focus({ preventScroll: true });
   }
 
   function handlePointerUp(event) {
+    if (event.pointerType !== 'mouse') return;
     if (!pointerStart || (pointerStart.id !== undefined && event.pointerId !== pointerStart.id)) return;
     const dx = event.clientX - pointerStart.x;
     const dy = event.clientY - pointerStart.y;
@@ -1004,9 +1006,18 @@
   }
 
   function handleWheelGesture(event) {
-    const now = performance.now();
-    if (now < wheelGesture.lockUntil) {
-      event.preventDefault();
+    event.preventDefault();
+
+    // After a move fires, ignore all wheel events until they stop arriving.
+    // The settle timer resets on every incoming event, so a new move can only
+    // trigger once the trackpad gesture has fully ended and events stop.
+    if (wheelGesture.settling) {
+      window.clearTimeout(wheelGesture.settleTimer);
+      wheelGesture.settleTimer = window.setTimeout(() => {
+        wheelGesture.settling = false;
+        wheelGesture.dx = 0;
+        wheelGesture.dy = 0;
+      }, 250);
       return;
     }
 
@@ -1018,23 +1029,18 @@
     const threshold = 42;
 
     if (Math.max(absX, absY) >= threshold) {
-      event.preventDefault();
       const direction = absX > absY
-        ? (wheelGesture.dx > 0 ? 'right' : 'left')
-        : (wheelGesture.dy > 0 ? 'down' : 'up');
+        ? (wheelGesture.dx > 0 ? 'left' : 'right')
+        : (wheelGesture.dy > 0 ? 'up' : 'down');
       wheelGesture.dx = 0;
       wheelGesture.dy = 0;
-      wheelGesture.lockUntil = now + 180;
+      wheelGesture.settling = true;
+      wheelGesture.settleTimer = window.setTimeout(() => {
+        wheelGesture.settling = false;
+      }, 250);
       boardFrame.focus({ preventScroll: true });
       makeMove(direction);
-      return;
     }
-
-    window.clearTimeout(handleWheelGesture.resetTimer);
-    handleWheelGesture.resetTimer = window.setTimeout(() => {
-      wheelGesture.dx = 0;
-      wheelGesture.dy = 0;
-    }, 140);
   }
 
   function resolveDirectionalGesture(dx, dy, threshold) {
