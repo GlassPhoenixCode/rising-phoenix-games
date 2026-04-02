@@ -1,0 +1,1366 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>Kakuro · Rising Phoenix Games</title>
+  <link rel="stylesheet" href="shared.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700&family=Cinzel:wght@400;600;700;900&family=IM+Fell+English:ital@0;1&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; }
+    html, body { margin: 0; min-height: 100%; }
+
+    :root {
+      --cell-size: min(9vw, 66px);
+      --board-gap: 2px;
+      --board-pad: 10px;
+      --message-width: 88%;
+      --clue-bg-a: #2c1e0d;
+      --clue-bg-b: #171006;
+      --white-cell-a: rgba(245, 236, 214, 0.98);
+      --white-cell-b: rgba(226, 213, 184, 0.98);
+      --ink: #26180a;
+      --highlight: rgba(240,208,128,0.28);
+      --related: rgba(200,149,42,0.16);
+      --invalid: rgba(139,26,26,0.26);
+      --valid: rgba(74,122,58,0.16);
+      --selected-ring: rgba(88, 168, 255, 0.95);
+    }
+
+    body {
+      font-family: var(--font-body);
+      color: var(--text);
+      background:
+        radial-gradient(ellipse 90% 55% at 15% 8%, rgba(90,48,12,0.55) 0%, transparent 58%),
+        radial-gradient(ellipse 70% 65% at 85% 90%, rgba(50,25,6,0.60) 0%, transparent 55%),
+        radial-gradient(ellipse 60% 40% at 50% 50%, rgba(30,18,5,0.40) 0%, transparent 70%),
+        linear-gradient(160deg, #1c1106 0%, #0f0c07 45%, #13100a 100%);
+      background-attachment: fixed;
+    }
+
+    #app {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      isolation: isolate;
+    }
+
+    .site-header {
+      padding: 0;
+      background: linear-gradient(180deg, #1e1508 0%, #120e06 100%);
+      border-bottom: 2px solid var(--gold);
+      box-shadow: 0 4px 24px rgba(0,0,0,0.7), 0 1px 0 rgba(200,149,42,0.15) inset;
+      position: relative;
+      overflow: hidden;
+      flex-shrink: 0;
+    }
+    .site-header::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: repeating-linear-gradient(
+        90deg,
+        transparent 0px,
+        transparent 48px,
+        rgba(200,149,42,0.04) 48px,
+        rgba(200,149,42,0.04) 49px
+      );
+      pointer-events: none;
+    }
+    .header-inner { position: relative; padding: 14px 20px 12px; }
+    .header-row { display: flex; align-items: center; margin-bottom: 6px; }
+
+    .rpg-back {
+      display: inline-block;
+      font-family: var(--font-ui);
+      font-size: 0.78rem;
+      letter-spacing: 0.08em;
+      color: var(--gold);
+      text-decoration: none;
+      padding: 0.55rem 1.1rem 0.55rem 2rem;
+      border: 1px solid rgba(200,149,42,0.25);
+      border-radius: 3px;
+      background: linear-gradient(180deg, #2a2010 0%, #1a1508 100%);
+      position: relative;
+      transition: border-color 0.2s, box-shadow 0.2s, color 0.2s;
+      margin: 0;
+      flex: 0 0 auto;
+      z-index: 2;
+    }
+    .rpg-back::before { content: '\2190'; position: absolute; left: 0.7rem; }
+    .rpg-back:hover {
+      border-color: var(--gold-light);
+      box-shadow: 0 0 18px 2px var(--gold-glow);
+      color: var(--gold-light);
+    }
+
+    .header-center {
+      flex: 1 1 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.85rem;
+      min-width: 0;
+    }
+    .header-spacer { visibility: hidden; pointer-events: none; }
+    .phoenix-mark {
+      width: 52px;
+      height: 52px;
+      object-fit: contain;
+      flex-shrink: 0;
+      filter: drop-shadow(0 0 10px rgba(200,149,42,0.5));
+    }
+    .title-block {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      min-width: 0;
+    }
+    .game-title {
+      margin: 0;
+      font-family: var(--font-display);
+      font-size: clamp(1.05rem, 3.7vw, 2rem);
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      line-height: 1.1;
+      background: linear-gradient(135deg, var(--gold-light) 0%, var(--gold) 40%, #a07020 80%, var(--gold-light) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .game-subtitle {
+      margin: 0.2rem 0 0;
+      font-style: italic;
+      color: #c8a878;
+      font-size: 0.82rem;
+      letter-spacing: 0.05em;
+    }
+
+    .main-wrap {
+      width: 100%;
+      max-width: 1180px;
+      margin: 0 auto;
+      padding: 22px 16px 36px;
+      display: grid;
+      grid-template-columns: minmax(320px, 1.16fr) minmax(280px, 0.84fr);
+      gap: 20px;
+      flex: 1;
+    }
+
+    .panel {
+      background: linear-gradient(160deg, var(--surface) 0%, var(--bg-warm) 100%);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      box-shadow: inset 0 0 30px rgba(0,0,0,0.35), 0 10px 34px rgba(0,0,0,0.45);
+      overflow: hidden;
+      position: relative;
+    }
+    .panel-header {
+      padding: 14px 16px 10px;
+      border-bottom: 1px solid rgba(200,149,42,0.14);
+      background: linear-gradient(180deg, rgba(255,255,255,0.03) 0%, rgba(255,255,255,0) 100%);
+    }
+    .panel-label {
+      font-family: var(--font-ui);
+      font-size: 0.7rem;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: var(--gold);
+      margin: 0 0 0.25rem;
+    }
+    .status-bar {
+      margin: 0;
+      min-height: 2.4rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      padding: 8px 16px 8px 28px;
+      background: rgba(0,0,0,0.32);
+      border: 1px solid rgba(200,149,42,0.18);
+      border-radius: 8px;
+      font-family: var(--font-ui);
+      font-size: 0.8rem;
+      letter-spacing: 0.08em;
+      color: var(--gold-light);
+      position: relative;
+      text-align: center;
+    }
+    .status-bar::before {
+      content: '⚜';
+      position: absolute;
+      left: 10px;
+      font-size: 10px;
+      color: var(--gold);
+      opacity: 0.7;
+    }
+
+    .board-panel {
+      display: flex;
+      flex-direction: column;
+      min-height: 760px;
+    }
+    .board-area {
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 18px;
+      flex: 1;
+      position: relative;
+    }
+
+    .top-actions {
+      width: min(100%, 720px);
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 10px;
+    }
+    .metric {
+      padding: 10px 12px;
+      border-radius: 12px;
+      background: linear-gradient(180deg, rgba(255,255,255,0.04) 0%, rgba(0,0,0,0.16) 100%);
+      border: 1px solid rgba(200,149,42,0.18);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.03);
+      text-align: center;
+      min-height: 68px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      gap: 5px;
+    }
+    .metric-label {
+      font-family: var(--font-ui);
+      font-size: 0.62rem;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: var(--gold);
+    }
+    .metric-value {
+      font-family: var(--font-display);
+      color: var(--gold-light);
+      font-size: clamp(1rem, 2.4vw, 1.35rem);
+      line-height: 1;
+    }
+    .metric-sub {
+      color: var(--text-muted);
+      font-size: 0.8rem;
+      font-style: italic;
+      line-height: 1.1;
+    }
+
+    .board-frame {
+      width: min(100%, 720px);
+      position: relative;
+      padding: 18px;
+      border-radius: 18px;
+      background:
+        radial-gradient(circle at 50% 45%, rgba(70,40,10,0.28) 0%, rgba(20,12,4,0.96) 70%),
+        linear-gradient(160deg, #201407 0%, #100b04 100%);
+      border: 1px solid rgba(200,149,42,0.28);
+      box-shadow:
+        inset 0 1px 0 rgba(255,255,255,0.04),
+        inset 0 0 38px rgba(0,0,0,0.35),
+        0 0 0 1px rgba(0,0,0,0.35),
+        0 18px 42px rgba(0,0,0,0.45),
+        0 0 30px rgba(200,149,42,0.14);
+    }
+    .board-frame::before,
+    .board-frame::after {
+      content: '◆';
+      position: absolute;
+      color: rgba(200,149,42,0.45);
+      font-size: 10px;
+      line-height: 1;
+    }
+    .board-frame::before { top: 6px; left: 8px; }
+    .board-frame::after { bottom: 6px; right: 8px; }
+
+    .board {
+      display: grid;
+      gap: var(--board-gap);
+      padding: var(--board-pad);
+      border-radius: 16px;
+      background: rgba(0,0,0,0.42);
+      box-shadow: inset 0 0 30px rgba(0,0,0,0.32);
+      position: relative;
+      z-index: 1;
+      justify-content: center;
+      width: fit-content;
+      margin: 0 auto;
+    }
+    .cell {
+      width: var(--cell-size);
+      height: var(--cell-size);
+      border-radius: 10px;
+      overflow: hidden;
+      position: relative;
+      transition: transform 0.14s ease, box-shadow 0.2s ease, border-color 0.2s ease, background 0.2s ease;
+    }
+    .cell.black {
+      background: linear-gradient(145deg, var(--clue-bg-a) 0%, var(--clue-bg-b) 100%);
+      border: 1px solid rgba(200,149,42,0.20);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.03), inset 0 0 20px rgba(0,0,0,0.38);
+    }
+    .cell.black::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(135deg, transparent 49.15%, rgba(240,208,128,0.68) 49.5%, rgba(240,208,128,0.68) 50.5%, transparent 50.85%);
+      pointer-events: none;
+    }
+    .clue-down, .clue-across {
+      position: absolute;
+      font-family: var(--font-ui);
+      color: #f0d080;
+      line-height: 1;
+      text-shadow: 0 1px 6px rgba(0,0,0,0.45);
+      z-index: 1;
+      letter-spacing: 0.04em;
+    }
+    .clue-down {
+      top: 6px;
+      right: 7px;
+      font-size: clamp(0.82rem, 2vw, 1.12rem);
+    }
+    .clue-across {
+      bottom: 6px;
+      left: 7px;
+      font-size: clamp(0.82rem, 2vw, 1.12rem);
+    }
+
+    .cell.white {
+      border: 1px solid rgba(70,45,15,0.30);
+      background: linear-gradient(180deg, var(--white-cell-a) 0%, var(--white-cell-b) 100%);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.55), 0 1px 4px rgba(0,0,0,0.18);
+      cursor: pointer;
+      display: grid;
+      place-items: center;
+      color: var(--ink);
+      user-select: none;
+      -webkit-user-select: none;
+    }
+    .cell.white:hover {
+      transform: translateY(-1px);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.6), 0 0 18px rgba(200,149,42,0.16);
+      border-color: rgba(200,149,42,0.46);
+    }
+    .cell.white.related { background: linear-gradient(180deg, rgba(255,242,210,1) 0%, rgba(236,216,176,1) 100%); }
+    .cell.white.run-complete { box-shadow: inset 0 1px 0 rgba(255,255,255,0.58), 0 0 0 2px rgba(74,122,58,0.28); }
+    .cell.white.selected {
+      outline: 3px solid var(--selected-ring);
+      outline-offset: -3px;
+      transform: scale(1.03);
+      z-index: 2;
+    }
+    .cell.white.invalid {
+      background: linear-gradient(180deg, rgba(255,225,225,0.98) 0%, rgba(240,185,185,0.98) 100%);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.58), 0 0 0 2px rgba(139,26,26,0.25);
+    }
+    .cell.white.given-hint {
+      background: linear-gradient(180deg, rgba(234,248,218,0.98) 0%, rgba(196,225,165,0.98) 100%);
+    }
+    .cell-value {
+      font-family: var(--font-display);
+      font-size: clamp(1.2rem, 3.3vw, 1.95rem);
+      line-height: 1;
+      color: var(--ink);
+      text-shadow: 0 1px 0 rgba(255,255,255,0.35);
+      transform: translateY(1px);
+    }
+    .cell.empty .cell-value { opacity: 0.24; }
+
+    .legend {
+      width: min(100%, 720px);
+      display: flex;
+      justify-content: center;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    .legend-chip {
+      padding: 7px 10px;
+      border-radius: 999px;
+      border: 1px solid rgba(200,149,42,0.18);
+      background: rgba(0,0,0,0.20);
+      color: #d7c5a0;
+      font-size: 0.8rem;
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+    }
+    .legend-swatch {
+      width: 14px;
+      height: 14px;
+      border-radius: 4px;
+      border: 1px solid rgba(200,149,42,0.25);
+    }
+
+    .victory-banner {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      transform: translate(-50%, -50%) scale(0.18);
+      width: calc(100% - 20px);
+      max-width: calc(100% - 20px);
+      padding: 18px 16px;
+      text-align: center;
+      pointer-events: none;
+      opacity: 0;
+      z-index: 8;
+      border-radius: 18px;
+      border: 1px solid rgba(240,208,128,0.55);
+      background: linear-gradient(180deg, rgba(35,20,6,0.94) 0%, rgba(18,11,4,0.97) 100%);
+      box-shadow: 0 0 40px rgba(200,149,42,0.22), inset 0 1px 0 rgba(255,255,255,0.05);
+    }
+    .victory-banner.show {
+      animation: bannerRise 2.1s ease forwards;
+    }
+    @keyframes bannerRise {
+      0%    { opacity: 0; transform: translate(-50%, -50%) scale(0.18); }
+      35.7% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+      83.3% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+      100%  { opacity: 0; transform: translate(-50%, -50%) scale(1); }
+    }
+    .victory-title {
+      font-family: var(--font-display);
+      font-size: clamp(1.05rem, 3.6vw, 2rem);
+      line-height: 1.1;
+      background: linear-gradient(135deg, #f6e6ad 0%, var(--gold) 45%, #f6e6ad 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    .victory-sub {
+      margin-top: 0.42rem;
+      color: #d3bc90;
+      font-size: 0.98rem;
+      font-style: italic;
+    }
+
+    .confetti-layer {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      overflow: hidden;
+      z-index: 60;
+    }
+    .confetti {
+      position: absolute;
+      width: 10px;
+      height: 18px;
+      border-radius: 3px;
+      opacity: 0;
+      transform: translateY(0) rotate(0deg) scale(0.9);
+      animation: confettiBurst 1250ms ease-out forwards;
+    }
+    @keyframes confettiBurst {
+      0%   { opacity: 0; transform: translateY(0) rotate(0deg) scale(0.7); }
+      8%   { opacity: 1; }
+      100% { opacity: 0; transform: translate(var(--dx), var(--dy)) rotate(var(--rot)) scale(1); }
+    }
+
+    .info-panel {
+      display: flex;
+      flex-direction: column;
+    }
+    .controls-stack {
+      display: grid;
+      gap: 14px;
+      padding: 18px;
+    }
+    .section {
+      padding: 14px;
+      border-radius: 14px;
+      border: 1px solid rgba(200,149,42,0.16);
+      background: rgba(0,0,0,0.18);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.02);
+    }
+    .section-title {
+      font-family: var(--font-ui);
+      font-size: 0.72rem;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: var(--gold);
+      margin: 0 0 0.75rem;
+    }
+    .toggle-row,
+    .btn-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    .seg-btn,
+    .rpg-btn {
+      font-family: var(--font-ui);
+      font-size: 0.76rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: #f0d080;
+      background: linear-gradient(180deg, rgba(40,28,8,0.9) 0%, rgba(20,14,4,0.95) 100%);
+      border: 1px solid rgba(200,149,42,0.42);
+      padding: 10px 14px;
+      border-radius: 999px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      box-shadow: 0 1px 0 rgba(200,149,42,0.15), inset 0 1px 0 rgba(200,149,42,0.1);
+    }
+    .seg-btn:hover,
+    .rpg-btn:hover {
+      border-color: rgba(200,149,42,0.75);
+      box-shadow: 0 0 18px 2px rgba(200,149,42,0.25), 0 0 48px 8px rgba(180,120,20,0.15), inset 0 1px 0 rgba(200,149,42,0.2);
+      color: #f8e898;
+      transform: translateY(-1px);
+    }
+    .seg-btn.active {
+      background: linear-gradient(180deg, rgba(88,62,16,0.96) 0%, rgba(48,33,7,0.98) 100%);
+      border-color: rgba(240,208,128,0.72);
+      color: #fff0be;
+      box-shadow: 0 0 18px rgba(200,149,42,0.22), inset 0 1px 0 rgba(255,255,255,0.06);
+    }
+    .rpg-btn-sage {
+      border-color: rgba(74,122,58,0.58);
+      color: #cde8b6;
+      background: linear-gradient(180deg, rgba(48, 76, 35, 0.96), rgba(25, 41, 18, 0.98));
+    }
+    .rpg-btn-sage:hover {
+      border-color: rgba(126, 188, 99, 0.74);
+      box-shadow: 0 0 18px rgba(74,122,58,0.28), 0 0 40px rgba(60,130,70,0.16);
+      color: #ebffd9;
+    }
+    .rpg-btn-crimson {
+      border-color: rgba(139,26,26,0.58);
+      color: #f2b0aa;
+      background: linear-gradient(180deg, rgba(92, 20, 20, 0.96), rgba(46, 10, 10, 0.98));
+    }
+
+    .number-pad {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 8px;
+    }
+    .num-btn {
+      min-height: 56px;
+      border-radius: 14px;
+      border: 1px solid rgba(200,149,42,0.22);
+      background: linear-gradient(180deg, rgba(245,236,214,0.10) 0%, rgba(255,255,255,0.03) 100%);
+      color: #f5e5b2;
+      font-family: var(--font-display);
+      font-size: 1.2rem;
+      cursor: pointer;
+      transition: all 0.18s ease;
+    }
+    .num-btn:hover {
+      border-color: rgba(240,208,128,0.56);
+      box-shadow: 0 0 18px rgba(200,149,42,0.18);
+      transform: translateY(-1px);
+    }
+    .num-btn.wide {
+      grid-column: span 3;
+      font-family: var(--font-ui);
+      font-size: 0.8rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+    }
+
+    .run-readout {
+      display: grid;
+      gap: 8px;
+    }
+    .run-card {
+      padding: 10px 12px;
+      border-radius: 12px;
+      border: 1px solid rgba(200,149,42,0.14);
+      background: rgba(255,255,255,0.02);
+    }
+    .run-card-label {
+      font-family: var(--font-ui);
+      font-size: 0.62rem;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--gold);
+      margin-bottom: 5px;
+    }
+    .run-card-value {
+      color: #f0d080;
+      line-height: 1.4;
+    }
+    .run-card-sub {
+      color: #c9b48a;
+      font-size: 0.82rem;
+      font-style: italic;
+      margin-top: 4px;
+    }
+
+    .rules {
+      color: #d7c5a0;
+      line-height: 1.55;
+      font-size: 0.96rem;
+    }
+    .rules strong { color: #f0d080; font-family: var(--font-ui); font-size: 0.82rem; letter-spacing: 0.08em; text-transform: uppercase; }
+    .rules p { margin: 0.45rem 0; }
+
+    .footer-note {
+      padding: 0 18px 18px;
+      color: var(--text-muted);
+      font-style: italic;
+      text-align: center;
+    }
+
+    @media (max-width: 980px) {
+      .main-wrap { grid-template-columns: 1fr; }
+      .board-panel { min-height: auto; }
+    }
+    @media (max-width: 640px) {
+      :root { --cell-size: min(11vw, 58px); }
+      .header-inner { padding: 12px 14px 10px; }
+      .header-row { gap: 10px; }
+      .phoenix-mark { width: 42px; height: 42px; }
+      .main-wrap { padding: 16px 12px 26px; gap: 16px; }
+      .board-area { padding: 16px; }
+      .top-actions { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .board-frame { padding: 12px; }
+      .cell.black::before { background: linear-gradient(135deg, transparent 48.9%, rgba(240,208,128,0.65) 49.5%, rgba(240,208,128,0.65) 50.5%, transparent 51.1%); }
+      .clue-down, .clue-across { font-size: 0.78rem; }
+      .cell-value { font-size: 1.18rem; }
+      .victory-sub { font-size: 0.84rem; }
+    }
+  </style>
+</head>
+<body>
+<div id="app">
+  <header class="site-header">
+    <div class="header-inner">
+      <div class="header-row">
+        <a href="index.html" class="rpg-back">Hub</a>
+        <div class="header-center">
+          <img class="phoenix-mark" src="RPG Favicon.png" alt="Rising Phoenix Games logo">
+          <div class="title-block">
+            <h1 class="game-title">Kakuro</h1>
+            <p class="game-subtitle">Balance every run through sum, sequence, and silence</p>
+          </div>
+        </div>
+        <a href="index.html" class="rpg-back header-spacer" aria-hidden="true">Hub</a>
+      </div>
+    </div>
+  </header>
+
+  <main class="main-wrap">
+    <section class="panel board-panel">
+      <div class="panel-header">
+        <div class="panel-label">Puzzle Table</div>
+        <div class="status-bar" id="status-bar">Choose a difficulty and begin balancing the ledger.</div>
+      </div>
+      <div class="board-area">
+        <div class="top-actions">
+          <div class="metric">
+            <div class="metric-label">Difficulty</div>
+            <div class="metric-value" id="metric-difficulty">Easy</div>
+            <div class="metric-sub" id="metric-size">6 × 6 grid</div>
+          </div>
+          <div class="metric">
+            <div class="metric-label">Filled</div>
+            <div class="metric-value" id="metric-filled">0 / 13</div>
+            <div class="metric-sub">White cells entered</div>
+          </div>
+          <div class="metric">
+            <div class="metric-label">Valid Runs</div>
+            <div class="metric-value" id="metric-runs">0 / 9</div>
+            <div class="metric-sub">Complete and correct</div>
+          </div>
+          <div class="metric">
+            <div class="metric-label">Hints</div>
+            <div class="metric-value" id="metric-hints">0</div>
+            <div class="metric-sub">Cells revealed</div>
+          </div>
+        </div>
+
+        <div class="board-frame" id="board-frame">
+          <div class="confetti-layer" id="confetti-layer"></div>
+          <div class="victory-banner" id="victory-banner">
+            <div class="victory-title">The Sum Is Whole</div>
+            <div class="victory-sub" id="victory-sub">Every corridor balances.</div>
+          </div>
+          <div class="board" id="board" aria-label="Kakuro board"></div>
+        </div>
+
+        <div class="legend">
+          <div class="legend-chip"><span class="legend-swatch" style="background:linear-gradient(180deg, rgba(245,236,214,1), rgba(226,213,184,1));"></span>White cells hold digits 1–9</div>
+          <div class="legend-chip"><span class="legend-swatch" style="background:linear-gradient(180deg, rgba(255,225,225,1), rgba(240,185,185,1));"></span>Red means a broken rule or sum</div>
+          <div class="legend-chip"><span class="legend-swatch" style="background:linear-gradient(180deg, rgba(234,248,218,1), rgba(196,225,165,1));"></span>Green marks a hint-revealed cell</div>
+        </div>
+
+        <div class="legend" style="margin-top:-4px;">
+          <div class="legend-chip" style="max-width:min(100%,720px); border-radius:14px; padding:10px 14px; text-align:center; justify-content:center;">In each split clue square, the <strong style="color:#f0d080;">bottom-left value</strong> is the row total going right, and the <strong style="color:#f0d080;">top-right value</strong> is the column total going down.</div>
+        </div>
+      </div>
+      <div class="footer-note">Each run must use unique digits. Match every clue exactly — no more, no less.</div>
+    </section>
+
+    <aside class="panel info-panel">
+      <div class="panel-header">
+        <div class="panel-label">Ledger & Tools</div>
+        <div class="status-bar" id="selection-bar">No cell selected</div>
+      </div>
+      <div class="controls-stack">
+        <section class="section">
+          <h2 class="section-title">Difficulty</h2>
+          <div class="toggle-row" id="difficulty-buttons"></div>
+        </section>
+
+        <section class="section">
+          <h2 class="section-title">Actions</h2>
+          <div class="btn-row">
+            <button class="rpg-btn" id="btn-new">New Puzzle</button>
+            <button class="rpg-btn rpg-btn-sage" id="btn-check">Check Progress</button>
+            <button class="rpg-btn" id="btn-hint">Reveal Hint</button>
+            <button class="rpg-btn rpg-btn-crimson" id="btn-clear-errors">Clear Errors</button>
+            <button class="rpg-btn" id="btn-reset">Reset Grid</button>
+          </div>
+        </section>
+
+        <section class="section">
+          <h2 class="section-title">Number Pad</h2>
+          <div class="number-pad" id="number-pad"></div>
+        </section>
+
+        <section class="section">
+          <h2 class="section-title">Selected Runs</h2>
+          <div class="run-readout">
+            <div class="run-card">
+              <div class="run-card-label">Across</div>
+              <div class="run-card-value" id="across-readout">—</div>
+              <div class="run-card-sub" id="across-sub">Select a white cell to inspect its horizontal run.</div>
+            </div>
+            <div class="run-card">
+              <div class="run-card-label">Down</div>
+              <div class="run-card-value" id="down-readout">—</div>
+              <div class="run-card-sub" id="down-sub">Select a white cell to inspect its vertical run.</div>
+            </div>
+          </div>
+        </section>
+
+        <section class="section">
+          <h2 class="section-title">Rules of Play</h2>
+          <div class="rules">
+            <p><strong>Reading clue cells</strong> the <strong>bottom-left number</strong> gives the total for the horizontal row run extending to the right, while the <strong>top-right number</strong> gives the total for the vertical column run extending downward.</p>
+            <p><strong>Across and down</strong> clues define the exact sum for the run touching that black clue cell.</p>
+            <p><strong>No repeated digit</strong> is allowed within a single run, even when the sum would still match.</p>
+            <p><strong>Victory</strong> comes only when every white cell is filled and every run balances perfectly.</p>
+            <p>Keyboard support: digits <strong>1–9</strong> enter values, <strong>Backspace/Delete</strong> clears, and <strong>arrow keys</strong> move selection.</p>
+          </div>
+        </section>
+      </div>
+    </aside>
+  </main>
+</div>
+
+<script>
+const PUZZLES = {
+  easy: {
+    label: 'Easy',
+    flavor: 'A compact ledger with short balancing corridors.',
+    grid: [
+      '######',
+      '##..##',
+      '#....#',
+      '#..#..',
+      '##...#',
+      '######'
+    ],
+    solution: {
+      '1,2': 1, '1,3': 2,
+      '2,1': 1, '2,2': 2, '2,3': 3, '2,4': 4,
+      '3,1': 2, '3,2': 3, '3,4': 1, '3,5': 2,
+      '4,2': 4, '4,3': 1, '4,4': 2
+    }
+  },
+  medium: {
+    label: 'Medium',
+    flavor: 'Longer runs demand cleaner bookkeeping and fewer mistakes.',
+    grid: [
+      '#######',
+      '##..###',
+      '#....##',
+      '#..#..#',
+      '##....#',
+      '###..##',
+      '#######'
+    ],
+    solution: {
+      '1,2': 1, '1,3': 7,
+      '2,1': 7, '2,2': 9, '2,3': 5, '2,4': 2,
+      '3,1': 5, '3,2': 4, '3,4': 1, '3,5': 5,
+      '4,2': 5, '4,3': 1, '4,4': 8, '4,5': 3,
+      '5,3': 9, '5,4': 3
+    }
+  },
+  hard: {
+    label: 'Hard',
+    flavor: 'A deeper account book with more intersections and tighter sums.',
+    grid: [
+      '########',
+      '##..####',
+      '#....###',
+      '#..#..##',
+      '##....##',
+      '###..#.#',
+      '###....#',
+      '########'
+    ],
+    solution: {
+      '1,2': 2, '1,3': 9,
+      '2,1': 8, '2,2': 7, '2,3': 4, '2,4': 2,
+      '3,1': 9, '3,2': 5, '3,4': 4, '3,5': 9,
+      '4,2': 6, '4,3': 7, '4,4': 1, '4,5': 2,
+      '5,3': 9, '5,4': 3, '5,6': 3,
+      '6,3': 8, '6,4': 5, '6,5': 6, '6,6': 1
+    }
+  }
+};
+
+const boardEl = document.getElementById('board');
+const boardFrameEl = document.getElementById('board-frame');
+const statusBarEl = document.getElementById('status-bar');
+const selectionBarEl = document.getElementById('selection-bar');
+const diffButtonsEl = document.getElementById('difficulty-buttons');
+const numberPadEl = document.getElementById('number-pad');
+const confettiLayerEl = document.getElementById('confetti-layer');
+const victoryBannerEl = document.getElementById('victory-banner');
+const victorySubEl = document.getElementById('victory-sub');
+const metricDifficultyEl = document.getElementById('metric-difficulty');
+const metricSizeEl = document.getElementById('metric-size');
+const metricFilledEl = document.getElementById('metric-filled');
+const metricRunsEl = document.getElementById('metric-runs');
+const metricHintsEl = document.getElementById('metric-hints');
+const acrossReadoutEl = document.getElementById('across-readout');
+const acrossSubEl = document.getElementById('across-sub');
+const downReadoutEl = document.getElementById('down-readout');
+const downSubEl = document.getElementById('down-sub');
+
+let state = {
+  difficulty: 'easy',
+  puzzle: null,
+  clues: {},
+  runs: { across: [], down: [] },
+  runMap: {},
+  values: {},
+  selected: null,
+  hinted: new Set(),
+  won: false
+};
+
+function keyFor(r, c) { return `${r},${c}`; }
+function parseKey(key) { return key.split(',').map(Number); }
+
+function computePuzzleMeta(puzzle) {
+  const rows = puzzle.grid.length;
+  const cols = puzzle.grid[0].length;
+  const clues = {};
+  const runs = { across: [], down: [] };
+  const runMap = {};
+
+  function solutionAt(r, c) {
+    return puzzle.solution[keyFor(r, c)] || null;
+  }
+
+  for (let r = 0; r < rows; r++) {
+    for (let c = 0; c < cols; c++) {
+      if (puzzle.grid[r][c] !== '#') continue;
+
+      let acrossCells = [];
+      let cc = c + 1;
+      while (cc < cols && puzzle.grid[r][cc] === '.') {
+        acrossCells.push(keyFor(r, cc));
+        cc++;
+      }
+      if (acrossCells.length >= 2) {
+        const sum = acrossCells.reduce((acc, cellKey) => {
+          const [rr, rc] = parseKey(cellKey);
+          return acc + solutionAt(rr, rc);
+        }, 0);
+        clues[keyFor(r, c)] = clues[keyFor(r, c)] || {};
+        clues[keyFor(r, c)].across = sum;
+        const run = { id: `A-${r}-${c}`, type: 'across', clueKey: keyFor(r, c), target: sum, cells: acrossCells };
+        runs.across.push(run);
+        acrossCells.forEach(cellKey => {
+          runMap[cellKey] = runMap[cellKey] || {};
+          runMap[cellKey].across = run;
+        });
+      }
+
+      let downCells = [];
+      let rr = r + 1;
+      while (rr < rows && puzzle.grid[rr][c] === '.') {
+        downCells.push(keyFor(rr, c));
+        rr++;
+      }
+      if (downCells.length >= 2) {
+        const sum = downCells.reduce((acc, cellKey) => {
+          const [dr, dc] = parseKey(cellKey);
+          return acc + solutionAt(dr, dc);
+        }, 0);
+        clues[keyFor(r, c)] = clues[keyFor(r, c)] || {};
+        clues[keyFor(r, c)].down = sum;
+        const run = { id: `D-${r}-${c}`, type: 'down', clueKey: keyFor(r, c), target: sum, cells: downCells };
+        runs.down.push(run);
+        downCells.forEach(cellKey => {
+          runMap[cellKey] = runMap[cellKey] || {};
+          runMap[cellKey].down = run;
+        });
+      }
+    }
+  }
+
+  return { clues, runs, runMap };
+}
+
+function resetStateForPuzzle(difficulty) {
+  const puzzle = PUZZLES[difficulty];
+  const meta = computePuzzleMeta(puzzle);
+  state.difficulty = difficulty;
+  state.puzzle = puzzle;
+  state.clues = meta.clues;
+  state.runs = meta.runs;
+  state.runMap = meta.runMap;
+  state.values = {};
+  state.selected = null;
+  state.hinted = new Set();
+  state.won = false;
+  hideVictory();
+}
+
+function buildDifficultyButtons() {
+  diffButtonsEl.innerHTML = '';
+  Object.keys(PUZZLES).forEach(key => {
+    const btn = document.createElement('button');
+    btn.className = 'seg-btn' + (key === state.difficulty ? ' active' : '');
+    btn.textContent = PUZZLES[key].label;
+    btn.addEventListener('click', () => {
+      if (state.difficulty === key) return;
+      loadPuzzle(key);
+    });
+    diffButtonsEl.appendChild(btn);
+  });
+}
+
+function buildNumberPad() {
+  numberPadEl.innerHTML = '';
+  for (let n = 1; n <= 9; n++) {
+    const btn = document.createElement('button');
+    btn.className = 'num-btn';
+    btn.textContent = String(n);
+    btn.addEventListener('click', () => placeDigit(n));
+    numberPadEl.appendChild(btn);
+  }
+  const clearBtn = document.createElement('button');
+  clearBtn.className = 'num-btn wide';
+  clearBtn.textContent = 'Clear Selected Cell';
+  clearBtn.addEventListener('click', () => clearSelectedCell());
+  numberPadEl.appendChild(clearBtn);
+}
+
+function renderBoard() {
+  const rows = state.puzzle.grid.length;
+  const cols = state.puzzle.grid[0].length;
+  boardEl.innerHTML = '';
+  boardEl.style.gridTemplateColumns = `repeat(${cols}, var(--cell-size))`;
+
+  for (let r = 0; r < rows; r++) {
+    for (let c = 0; c < cols; c++) {
+      const cellKey = keyFor(r, c);
+      const cellType = state.puzzle.grid[r][c];
+      const cell = document.createElement('div');
+      cell.className = 'cell ' + (cellType === '#' ? 'black' : 'white');
+      cell.dataset.key = cellKey;
+
+      if (cellType === '#') {
+        const clue = state.clues[cellKey] || {};
+        if (clue.down) {
+          const down = document.createElement('div');
+          down.className = 'clue-down';
+          down.textContent = clue.down;
+          cell.appendChild(down);
+        }
+        if (clue.across) {
+          const across = document.createElement('div');
+          across.className = 'clue-across';
+          across.textContent = clue.across;
+          cell.appendChild(across);
+        }
+      } else {
+        const valueEl = document.createElement('div');
+        valueEl.className = 'cell-value';
+        valueEl.textContent = state.values[cellKey] ? state.values[cellKey] : '';
+        cell.appendChild(valueEl);
+        if (!state.values[cellKey]) cell.classList.add('empty');
+        if (state.selected === cellKey) cell.classList.add('selected');
+        if (state.hinted.has(cellKey)) cell.classList.add('given-hint');
+        cell.addEventListener('click', () => selectCell(cellKey));
+      }
+
+      boardEl.appendChild(cell);
+    }
+  }
+
+  applyCellStates();
+}
+
+function runStats(run) {
+  const values = run.cells.map(cellKey => state.values[cellKey] || 0);
+  const filled = values.filter(Boolean);
+  const sum = filled.reduce((a, b) => a + b, 0);
+  const counts = new Map();
+  const duplicates = new Set();
+  filled.forEach(v => {
+    counts.set(v, (counts.get(v) || 0) + 1);
+    if (counts.get(v) > 1) duplicates.add(v);
+  });
+  const duplicateCells = run.cells.filter(cellKey => duplicates.has(state.values[cellKey]));
+  const overflow = sum > run.target;
+  const complete = filled.length === run.cells.length;
+  const correct = complete && !duplicates.size && sum === run.target;
+  const underfilled = !complete;
+  const mismatch = complete && sum !== run.target;
+  return { values, filled, sum, duplicates, duplicateCells, overflow, complete, correct, underfilled, mismatch };
+}
+
+function relatedCellsForSelection() {
+  if (!state.selected || !state.runMap[state.selected]) return new Set();
+  const set = new Set();
+  const maps = state.runMap[state.selected];
+  ['across', 'down'].forEach(type => {
+    if (maps[type]) maps[type].cells.forEach(cellKey => set.add(cellKey));
+  });
+  return set;
+}
+
+function invalidCells() {
+  const invalid = new Set();
+  [...state.runs.across, ...state.runs.down].forEach(run => {
+    const stats = runStats(run);
+    if (stats.duplicates.size || stats.overflow || stats.mismatch) {
+      run.cells.forEach(cellKey => {
+        if (stats.duplicates.size && stats.duplicateCells.includes(cellKey)) invalid.add(cellKey);
+        else if (stats.overflow || stats.mismatch) invalid.add(cellKey);
+      });
+    }
+  });
+  Object.keys(state.values).forEach(cellKey => {
+    const val = state.values[cellKey];
+    const solution = state.puzzle.solution[cellKey];
+    if (val && solution && val !== solution) {
+      const maps = state.runMap[cellKey];
+      if (maps) {
+        const acrossBroken = maps.across && (runStats(maps.across).overflow || runStats(maps.across).mismatch || runStats(maps.across).duplicates.size);
+        const downBroken = maps.down && (runStats(maps.down).overflow || runStats(maps.down).mismatch || runStats(maps.down).duplicates.size);
+        if (acrossBroken || downBroken) invalid.add(cellKey);
+      }
+    }
+  });
+  return invalid;
+}
+
+function applyCellStates() {
+  const selectedRelated = relatedCellsForSelection();
+  const invalid = invalidCells();
+  const completeCells = new Set();
+  [...state.runs.across, ...state.runs.down].forEach(run => {
+    if (runStats(run).correct) run.cells.forEach(cellKey => completeCells.add(cellKey));
+  });
+
+  document.querySelectorAll('.cell.white').forEach(cell => {
+    const cellKey = cell.dataset.key;
+    cell.classList.toggle('selected', state.selected === cellKey);
+    cell.classList.toggle('related', selectedRelated.has(cellKey) && state.selected !== cellKey);
+    cell.classList.toggle('invalid', invalid.has(cellKey));
+    cell.classList.toggle('run-complete', completeCells.has(cellKey));
+    cell.classList.toggle('given-hint', state.hinted.has(cellKey));
+    cell.classList.toggle('empty', !state.values[cellKey]);
+    const valueEl = cell.querySelector('.cell-value');
+    valueEl.textContent = state.values[cellKey] ? state.values[cellKey] : '';
+  });
+}
+
+function selectCell(cellKey) {
+  state.selected = cellKey;
+  applyCellStates();
+  updateSelectionReadout();
+}
+
+function placeDigit(num) {
+  if (!state.selected || state.won) return;
+  state.values[state.selected] = num;
+  applyCellStates();
+  updateMetrics();
+  updateSelectionReadout();
+  evaluateStatus();
+  checkForWin();
+}
+
+function clearSelectedCell() {
+  if (!state.selected || state.won) return;
+  delete state.values[state.selected];
+  state.hinted.delete(state.selected);
+  applyCellStates();
+  updateMetrics();
+  updateSelectionReadout();
+  evaluateStatus();
+}
+
+function describeRun(run) {
+  const stats = runStats(run);
+  const shown = run.cells.map(cellKey => state.values[cellKey] || '·').join(' + ');
+  return { stats, text: `${shown} = ${stats.sum} / ${run.target}` };
+}
+
+function updateSelectionReadout() {
+  if (!state.selected) {
+    selectionBarEl.textContent = 'No cell selected';
+    acrossReadoutEl.textContent = '—';
+    acrossSubEl.textContent = 'Select a white cell to inspect its horizontal run.';
+    downReadoutEl.textContent = '—';
+    downSubEl.textContent = 'Select a white cell to inspect its vertical run.';
+    return;
+  }
+
+  const [r, c] = parseKey(state.selected);
+  selectionBarEl.textContent = `Cell ${r + 1}, ${c + 1} selected`;
+  const maps = state.runMap[state.selected];
+
+  if (maps.across) {
+    const data = describeRun(maps.across);
+    acrossReadoutEl.textContent = data.text;
+    if (data.stats.correct) acrossSubEl.textContent = 'Across run is complete and correct.';
+    else if (data.stats.duplicates.size) acrossSubEl.textContent = 'Across run repeats a digit.';
+    else if (data.stats.overflow) acrossSubEl.textContent = 'Across run exceeds its clue.';
+    else acrossSubEl.textContent = `${data.stats.filled.length} of ${maps.across.cells.length} cells filled.`;
+  } else {
+    acrossReadoutEl.textContent = '—';
+    acrossSubEl.textContent = 'No across run for this cell.';
+  }
+
+  if (maps.down) {
+    const data = describeRun(maps.down);
+    downReadoutEl.textContent = data.text;
+    if (data.stats.correct) downSubEl.textContent = 'Down run is complete and correct.';
+    else if (data.stats.duplicates.size) downSubEl.textContent = 'Down run repeats a digit.';
+    else if (data.stats.overflow) downSubEl.textContent = 'Down run exceeds its clue.';
+    else downSubEl.textContent = `${data.stats.filled.length} of ${maps.down.cells.length} cells filled.`;
+  } else {
+    downReadoutEl.textContent = '—';
+    downSubEl.textContent = 'No down run for this cell.';
+  }
+}
+
+function updateMetrics() {
+  const totalCells = Object.keys(state.puzzle.solution).length;
+  const filledCount = Object.keys(state.values).filter(cellKey => state.values[cellKey]).length;
+  const totalRuns = state.runs.across.length + state.runs.down.length;
+  let correctRuns = 0;
+  [...state.runs.across, ...state.runs.down].forEach(run => {
+    if (runStats(run).correct) correctRuns++;
+  });
+
+  metricDifficultyEl.textContent = state.puzzle.label;
+  metricSizeEl.textContent = `${state.puzzle.grid.length} × ${state.puzzle.grid[0].length} grid`;
+  metricFilledEl.textContent = `${filledCount} / ${totalCells}`;
+  metricRunsEl.textContent = `${correctRuns} / ${totalRuns}`;
+  metricHintsEl.textContent = String(state.hinted.size);
+}
+
+function evaluateStatus() {
+  const invalid = invalidCells();
+  const totalCells = Object.keys(state.puzzle.solution).length;
+  const filledCount = Object.keys(state.values).filter(cellKey => state.values[cellKey]).length;
+  const totalRuns = state.runs.across.length + state.runs.down.length;
+  const completeRuns = [...state.runs.across, ...state.runs.down].filter(run => runStats(run).correct).length;
+
+  if (state.won) {
+    statusBarEl.textContent = 'Every corridor balances perfectly.';
+    return;
+  }
+
+  if (invalid.size) {
+    statusBarEl.textContent = 'A run is broken: check repeated digits or an overfilled clue.';
+  } else if (filledCount === 0) {
+    statusBarEl.textContent = state.puzzle.flavor;
+  } else if (completeRuns === totalRuns && filledCount === totalCells) {
+    statusBarEl.textContent = 'The ledger is complete. Verifying balance...';
+  } else {
+    statusBarEl.textContent = `${filledCount} cells filled. ${completeRuns} of ${totalRuns} runs currently balance.`;
+  }
+}
+
+function checkForWin() {
+  const solutionKeys = Object.keys(state.puzzle.solution);
+  const solved = solutionKeys.every(cellKey => state.values[cellKey] === state.puzzle.solution[cellKey]);
+  if (!solved || state.won) return;
+  state.won = true;
+  statusBarEl.textContent = 'Victory. Every sum resolves without error.';
+  showVictory();
+}
+
+function showVictory() {
+  const totalHints = state.hinted.size;
+  victorySubEl.textContent = totalHints ? `Balanced with ${totalHints} hint${totalHints === 1 ? '' : 's'} used.` : 'Balanced without a single revealed value.';
+  victoryBannerEl.classList.remove('show');
+  void victoryBannerEl.offsetWidth;
+  victoryBannerEl.classList.add('show');
+  burstConfetti();
+  setTimeout(() => { hideVictory(); }, 2150);
+}
+
+function hideVictory() {
+  victoryBannerEl.classList.remove('show');
+}
+
+function burstConfetti() {
+  confettiLayerEl.innerHTML = '';
+  const colors = ['#f0d080', '#c8952a', '#c04040', '#7aaa5a', '#8bbcff', '#d7c2ff'];
+  const bursts = 120;
+  const width = window.innerWidth;
+  const height = window.innerHeight;
+  const lanes = [0.08, 0.18, 0.28, 0.38, 0.5, 0.62, 0.72, 0.82, 0.92];
+
+  for (let i = 0; i < bursts; i++) {
+    const piece = document.createElement('span');
+    piece.className = 'confetti';
+    const startX = width * lanes[i % lanes.length] + (Math.random() - 0.5) * width * 0.06;
+    const startY = height * (0.08 + Math.random() * 0.24);
+    const dx = (Math.random() - 0.5) * width * 0.28;
+    const dy = height * (0.38 + Math.random() * 0.48);
+    const rot = `${(Math.random() * 720 - 360).toFixed(1)}deg`;
+    piece.style.left = `${startX}px`;
+    piece.style.top = `${startY}px`;
+    piece.style.background = colors[i % colors.length];
+    piece.style.setProperty('--dx', `${dx.toFixed(1)}px`);
+    piece.style.setProperty('--dy', `${dy.toFixed(1)}px`);
+    piece.style.setProperty('--rot', rot);
+    piece.style.animationDelay = `${(Math.random() * 220).toFixed(0)}ms`;
+    confettiLayerEl.appendChild(piece);
+  }
+
+  setTimeout(() => { confettiLayerEl.innerHTML = ''; }, 1550);
+}
+
+function loadPuzzle(difficulty) {
+  resetStateForPuzzle(difficulty);
+  buildDifficultyButtons();
+  renderBoard();
+  updateMetrics();
+  updateSelectionReadout();
+  evaluateStatus();
+}
+
+function revealHint() {
+  if (state.won) return;
+  const candidates = Object.keys(state.puzzle.solution).filter(cellKey => state.values[cellKey] !== state.puzzle.solution[cellKey]);
+  if (!candidates.length) return;
+
+  let target = state.selected && candidates.includes(state.selected) ? state.selected : candidates[Math.floor(Math.random() * candidates.length)];
+  state.values[target] = state.puzzle.solution[target];
+  state.hinted.add(target);
+  state.selected = target;
+  renderBoard();
+  updateMetrics();
+  updateSelectionReadout();
+  evaluateStatus();
+  checkForWin();
+}
+
+function checkProgress() {
+  const invalid = invalidCells();
+  const totalRuns = state.runs.across.length + state.runs.down.length;
+  const completeRuns = [...state.runs.across, ...state.runs.down].filter(run => runStats(run).correct).length;
+  if (!Object.keys(state.values).length) {
+    statusBarEl.textContent = 'No entries yet. Begin with any white cell.';
+  } else if (invalid.size) {
+    statusBarEl.textContent = `${invalid.size} cell${invalid.size === 1 ? '' : 's'} are breaking a clue or repeating within a run.`;
+  } else {
+    statusBarEl.textContent = `Clean so far: ${completeRuns} of ${totalRuns} runs balance exactly.`;
+  }
+  applyCellStates();
+}
+
+function clearErrors() {
+  if (state.won) return;
+  const invalid = invalidCells();
+  invalid.forEach(cellKey => {
+    delete state.values[cellKey];
+    state.hinted.delete(cellKey);
+  });
+  renderBoard();
+  updateMetrics();
+  updateSelectionReadout();
+  evaluateStatus();
+}
+
+function resetGrid() {
+  if (!confirm('Clear every entry in the current Kakuro grid?')) return;
+  state.values = {};
+  state.hinted = new Set();
+  state.won = false;
+  hideVictory();
+  renderBoard();
+  updateMetrics();
+  updateSelectionReadout();
+  evaluateStatus();
+}
+
+function moveSelection(dr, dc) {
+  if (!state.selected) {
+    const first = Object.keys(state.puzzle.solution)[0];
+    if (first) selectCell(first);
+    return;
+  }
+  let [r, c] = parseKey(state.selected);
+  const rows = state.puzzle.grid.length;
+  const cols = state.puzzle.grid[0].length;
+
+  for (let step = 0; step < Math.max(rows, cols); step++) {
+    r += dr;
+    c += dc;
+    if (r < 0 || c < 0 || r >= rows || c >= cols) break;
+    if (state.puzzle.grid[r][c] === '.') {
+      selectCell(keyFor(r, c));
+      return;
+    }
+  }
+}
+
+function handleKeydown(event) {
+  if (event.target && ['INPUT', 'TEXTAREA', 'SELECT'].includes(event.target.tagName)) return;
+  if (/^[1-9]$/.test(event.key)) {
+    event.preventDefault();
+    placeDigit(Number(event.key));
+    return;
+  }
+  if (event.key === 'Backspace' || event.key === 'Delete' || event.key === '0') {
+    event.preventDefault();
+    clearSelectedCell();
+    return;
+  }
+  if (event.key === 'ArrowUp') { event.preventDefault(); moveSelection(-1, 0); return; }
+  if (event.key === 'ArrowDown') { event.preventDefault(); moveSelection(1, 0); return; }
+  if (event.key === 'ArrowLeft') { event.preventDefault(); moveSelection(0, -1); return; }
+  if (event.key === 'ArrowRight') { event.preventDefault(); moveSelection(0, 1); return; }
+}
+
+document.getElementById('btn-new').addEventListener('click', () => loadPuzzle(state.difficulty));
+document.getElementById('btn-check').addEventListener('click', checkProgress);
+document.getElementById('btn-hint').addEventListener('click', revealHint);
+document.getElementById('btn-clear-errors').addEventListener('click', clearErrors);
+document.getElementById('btn-reset').addEventListener('click', resetGrid);
+document.addEventListener('keydown', handleKeydown);
+
+buildNumberPad();
+loadPuzzle('easy');
+</script>
+</body>
+</html>
