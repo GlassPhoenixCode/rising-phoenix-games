@@ -6,29 +6,19 @@
   <title>Rising Phoenix Games</title>
   <link rel="stylesheet" href="shared.css" />
   <style>
-    /* ── PAGE SHELL ───────────────────────────────────────────── */
     html, body { height: 100%; }
     body {
+      margin: 0;
       display: flex;
       flex-direction: column;
-      /* Background lives here directly — no flash of white, no dependency on shared.css load order */
       background:
-        radial-gradient(ellipse 90% 55% at 15% 8%,  rgba(90,48,12,0.55) 0%, transparent 58%),
-        radial-gradient(ellipse 70% 65% at 85% 90%, rgba(50,25,6,0.6)   0%, transparent 55%),
-        radial-gradient(ellipse 60% 40% at 50% 50%, rgba(30,18,5,0.4)   0%, transparent 70%),
+        radial-gradient(ellipse 90% 55% at 15% 8%, rgba(90,48,12,0.55) 0%, transparent 58%),
+        radial-gradient(ellipse 70% 65% at 85% 90%, rgba(50,25,6,0.6) 0%, transparent 55%),
+        radial-gradient(ellipse 60% 40% at 50% 50%, rgba(30,18,5,0.4) 0%, transparent 70%),
         linear-gradient(160deg, #1c1106 0%, #0f0c07 45%, #13100a 100%);
       background-attachment: fixed;
     }
-
-    #app {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      position: relative;
-      z-index: 1;
-    }
-
-    /* ── HEADER ───────────────────────────────────────────────── */
+    #app { flex: 1; display: flex; flex-direction: column; position: relative; z-index: 1; }
     .hub-header {
       padding: 0;
       background: linear-gradient(180deg, #1e1508 0%, #120e06 100%);
@@ -38,40 +28,17 @@
       overflow: hidden;
       flex-shrink: 0;
     }
-    /* Subtle column rule pattern */
     .hub-header::before {
       content: '';
       position: absolute;
       inset: 0;
-      background: repeating-linear-gradient(
-        90deg,
-        transparent 0px, transparent 56px,
-        rgba(200,149,42,0.035) 56px, rgba(200,149,42,0.035) 57px
-      );
+      background: repeating-linear-gradient(90deg, transparent 0px, transparent 56px, rgba(200,149,42,0.035) 56px, rgba(200,149,42,0.035) 57px);
       pointer-events: none;
     }
-
-    .hub-header-inner {
-      padding: 18px 24px 16px;
-      position: relative;
-    }
-
-    .hub-branding {
-      display: flex;
-      align-items: center;
-      gap: 16px;
-      margin-bottom: 6px;
-    }
-
-    .phoenix-mark {
-      flex-shrink: 0;
-      width: 48px;
-      height: 48px;
-      filter: drop-shadow(0 0 8px rgba(200,149,42,0.4));
-    }
-
+    .hub-header-inner { padding: 18px 24px 16px; position: relative; }
+    .hub-branding { display: flex; align-items: center; gap: 16px; margin-bottom: 6px; }
+    .phoenix-mark { flex-shrink: 0; width: 48px; height: 48px; filter: drop-shadow(0 0 8px rgba(200,149,42,0.4)); }
     .hub-title-block { flex: 1; min-width: 0; }
-
     h1.hub-title {
       font-family: var(--font-display);
       font-size: clamp(20px, 4vw, 32px);
@@ -80,887 +47,697 @@
       text-transform: uppercase;
       margin: 0 0 2px 0;
       background: linear-gradient(135deg, var(--gold-light) 0%, var(--gold) 45%, #a07020 80%, var(--gold-light) 100%);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
       line-height: 1.1;
     }
-
-    .hub-tagline {
-      font-family: var(--font-body);
-      font-style: italic;
-      font-size: 13px;
-      color: #c4a46a;           /* warm gold-tan — clearly readable */
-      letter-spacing: 1.5px;
-      margin: 0;
-      opacity: 0.85;
-    }
-
-    .hub-meta {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      flex-wrap: wrap;
-      margin-top: 10px;
-    }
-    .hub-badge {
-      font-family: var(--font-ui);
-      font-size: 10px;
-      letter-spacing: 1.5px;
-      text-transform: uppercase;
-      padding: 4px 10px;
-      border-radius: 999px;
-      background: rgba(200,149,42,0.1);
-      border: 1px solid rgba(200,149,42,0.28);
-      color: #c0a060;           /* warm gold — clearly readable against dark bg */
-    }
-    .hub-badge.live {
-      background: rgba(60,160,60,0.12);
-      border-color: rgba(100,200,80,0.3);
-      color: #8adc6a;
-    }
-
-    /* ── MAIN CONTENT ─────────────────────────────────────────── */
-    .hub-main {
-      flex: 1;
-      padding: 24px;
-      max-width: 1200px;
-      width: 100%;
-      margin: 0 auto;
-    }
-
-    /* Section label */
-    .section-label {
-      font-family: var(--font-ui);
-      font-size: 11px;
-      letter-spacing: 3px;
-      text-transform: uppercase;
-      color: var(--gold-light);  /* brighter for section clarity */
-      margin: 0 0 16px 0;
-      display: flex;
-      align-items: center;
-      gap: 12px;
-    }
-    .section-label::after {
-      content: '';
-      flex: 1;
-      height: 1px;
-      background: linear-gradient(90deg, var(--border), transparent);
-    }
-
-    /* ── GAME GRID ────────────────────────────────────────────── */
-    .game-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-      gap: 18px;
-      margin-bottom: 32px;
-    }
-
-    /* ── GAME CARD ────────────────────────────────────────────── */
-    .game-card {
-      background: linear-gradient(160deg, var(--surface) 0%, var(--bg-warm) 100%);
-      border: 1px solid var(--border);
-      border-radius: var(--radius-xl);
-      overflow: hidden;
-      display: flex;
-      flex-direction: column;
-      transition: border-color 0.2s, box-shadow 0.2s, transform 0.2s;
-      animation: rpg-fadein 0.4s ease both;
-      text-decoration: none;
-      color: inherit;
-      position: relative;
-    }
-    .game-card:hover {
-      border-color: rgba(240,208,128,0.7);
-      box-shadow:
-        0 8px 32px rgba(0,0,0,0.6),
-        0 0 0 1px rgba(200,149,42,0.3),
-        0 0 18px 2px rgba(200,149,42,0.25),
-        0 0 48px 8px rgba(180,120,20,0.15);
-      transform: translateY(-3px);
-    }
-    .game-card.placeholder {
-      cursor: default;
-    }
-    .game-card.placeholder:hover {
-      transform: none;
-      border-color: rgba(200,149,42,0.32);
-      box-shadow:
-        0 4px 18px rgba(0,0,0,0.45),
-        0 0 0 1px rgba(200,149,42,0.14);
-    }
-    .game-card.placeholder .play-pill {
-      color: #b8986a;
-      border-color: rgba(200,149,42,0.18);
-      background: rgba(255,255,255,0.02);
-    }
-    .game-card:nth-child(1) { animation-delay: 0.05s; }
-    .game-card:nth-child(2) { animation-delay: 0.10s; }
-    .game-card:nth-child(3) { animation-delay: 0.15s; }
-    .game-card:nth-child(4) { animation-delay: 0.20s; }
-    .game-card:nth-child(5) { animation-delay: 0.25s; }
-    .game-card:nth-child(6) { animation-delay: 0.30s; }
-    .game-card:nth-child(7) { animation-delay: 0.35s; }
-
-    /* Card thumbnail */
-    .card-thumb {
-      aspect-ratio: 16 / 8;
-      position: relative;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      overflow: hidden;
-      border-bottom: 1px solid var(--border);
-    }
-
-    /* Each game gets its own thumb color scheme */
-    .thumb-fox    { background: radial-gradient(ellipse at 60% 40%, rgba(180,100,20,0.5), rgba(10,8,3,0.9)), linear-gradient(135deg, #2a1a08, #0f0c07); }
-    .thumb-ttt    { background: radial-gradient(ellipse at 40% 60%, rgba(180,30,30,0.4), rgba(5,5,15,0.9)),  linear-gradient(135deg, #1a0808, #050510); }
-    .thumb-slide  { background: radial-gradient(ellipse at 55% 45%, rgba(20,80,120,0.5), rgba(5,8,15,0.9)),  linear-gradient(135deg, #081018, #050810); }
-    .thumb-c4     { background: radial-gradient(ellipse at 45% 55%, rgba(20,120,40,0.4), rgba(5,10,5,0.9)),  linear-gradient(135deg, #081208, #050805); }
-    .thumb-color  { background: radial-gradient(ellipse at 50% 50%, rgba(120,20,120,0.4), rgba(8,5,12,0.9)), linear-gradient(135deg, #100818, #080510); }
-    .thumb-hues   { background: radial-gradient(ellipse at 50% 50%, rgba(180,140,20,0.4), rgba(10,8,3,0.9)), linear-gradient(135deg, #1a1808, #0c0a05); }
-    .thumb-box    { background: radial-gradient(ellipse at 50% 45%, rgba(190,120,35,0.48), rgba(14,9,3,0.92)), linear-gradient(135deg, #241608, #0f0c07); }
+    .hub-tagline { font-family: var(--font-body); font-style: italic; font-size: 13px; color: #c4a46a; letter-spacing: 1.5px; margin: 0; opacity: 0.85; }
+    .hub-meta { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-top: 10px; }
+    .hub-badge { font-family: var(--font-ui); font-size: 10px; letter-spacing: 1.5px; text-transform: uppercase; padding: 4px 10px; border-radius: 999px; background: rgba(200,149,42,0.1); border: 1px solid rgba(200,149,42,0.28); color: #c0a060; }
+    .hub-badge.live { background: rgba(60,160,60,0.12); border-color: rgba(100,200,80,0.3); color: #8adc6a; }
+    .hub-main { flex: 1; padding: 24px; max-width: 1200px; width: 100%; margin: 0 auto; }
+    .section-label { font-family: var(--font-ui); font-size: 11px; letter-spacing: 3px; text-transform: uppercase; color: var(--gold-light); margin: 0 0 16px 0; display: flex; align-items: center; gap: 12px; }
+    .section-label::after { content: ''; flex: 1; height: 1px; background: linear-gradient(90deg, var(--border), transparent); }
+    .game-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 18px; margin-bottom: 32px; }
+    .game-card { background: linear-gradient(160deg, var(--surface) 0%, var(--bg-warm) 100%); border: 1px solid var(--border); border-radius: var(--radius-xl); overflow: hidden; display: flex; flex-direction: column; transition: border-color 0.2s, box-shadow 0.2s, transform 0.2s; text-decoration: none; color: inherit; position: relative; }
+    .game-card:hover { border-color: rgba(240,208,128,0.7); box-shadow: 0 8px 32px rgba(0,0,0,0.6), 0 0 0 1px rgba(200,149,42,0.3), 0 0 18px 2px rgba(200,149,42,0.25), 0 0 48px 8px rgba(180,120,20,0.15); transform: translateY(-3px); }
+    .card-thumb { aspect-ratio: 16 / 8; position: relative; display: flex; align-items: center; justify-content: center; overflow: hidden; border-bottom: 1px solid var(--border); }
     .thumb-upcoming { background: radial-gradient(ellipse at 50% 45%, rgba(200,149,42,0.25), rgba(10,8,3,0.92)), linear-gradient(135deg, #171108, #0d0a06); }
-
-    /* Thumb illustration — CSS-only iconic art */
-    .thumb-art {
-      position: relative;
-      z-index: 1;
-      pointer-events: none;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 6px;
-    }
-    .thumb-emoji {
-      font-size: 42px;
-      filter: drop-shadow(0 2px 8px rgba(0,0,0,0.7));
-      line-height: 1;
-    }
-    .thumb-label {
-      font-family: var(--font-ui);
-      font-size: 10px;
-      letter-spacing: 2px;
-      text-transform: uppercase;
-      color: rgba(200,149,42,0.5);
-      position: absolute;
-      bottom: 8px;
-      right: 10px;
-    }
-
-    /* Card body */
-    .card-body {
-      padding: 16px 18px;
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      gap: 6px;
-    }
-
-    .card-title {
-      font-family: var(--font-ui);
-      font-size: 15px;
-      font-weight: 700;
-      letter-spacing: 1px;
-      color: #f2e0a0;            /* near-white gold — maximum legibility */
-      margin: 0;
-      line-height: 1.3;
-    }
-
-    .card-desc {
-      font-family: var(--font-body);
-      font-style: italic;
-      font-size: 13px;
-      color: #b8986a;           /* warm readable — not invisible */
-      margin: 0;
-      line-height: 1.5;
-      flex: 1;
-    }
-
-    .card-tags {
-      display: flex;
-      gap: 5px;
-      flex-wrap: wrap;
-      margin-top: 2px;
-    }
-    /* Base tag — warm parchment text, always readable on dark card */
-    .tag {
-      font-family: var(--font-ui);
-      font-size: 9px;
-      letter-spacing: 1.5px;
-      text-transform: uppercase;
-      padding: 2px 8px;
-      border-radius: 999px;
-      background: rgba(200,149,42,0.08);
-      border: 1px solid rgba(200,149,42,0.22);
-      color: #c8a878;           /* warm readable tan — the fallback for all plain tags */
-    }
+    .thumb-art { position: relative; z-index: 1; pointer-events: none; display: flex; align-items: center; justify-content: center; gap: 6px; }
+    .thumb-emoji { font-size: 42px; filter: drop-shadow(0 2px 8px rgba(0,0,0,0.7)); line-height: 1; }
+    .thumb-label { font-family: var(--font-ui); font-size: 10px; letter-spacing: 1.5px; text-transform: none; color: rgba(240,208,128,0.82); position: absolute; bottom: 8px; right: 10px; }
+    .card-body { padding: 16px 18px; flex: 1; display: flex; flex-direction: column; gap: 6px; }
+    .card-title { font-family: var(--font-ui); font-size: 15px; font-weight: 700; letter-spacing: 1px; color: #f2e0a0; margin: 0; line-height: 1.3; }
+    .card-desc { font-family: var(--font-body); font-style: italic; font-size: 13px; color: #b8986a; margin: 0; line-height: 1.5; flex: 1; }
+    .card-tags { display: flex; gap: 5px; flex-wrap: wrap; margin-top: 2px; }
+    .tag { font-family: var(--font-ui); font-size: 9px; letter-spacing: 1.5px; text-transform: uppercase; padding: 2px 8px; border-radius: 999px; background: rgba(200,149,42,0.08); border: 1px solid rgba(200,149,42,0.22); color: #c8a878; }
     .tag.strategy { background: rgba(180,120,20,0.12); border-color: rgba(180,120,20,0.35); color: #d4a84a; }
-    .tag.puzzle   { background: rgba(60,140,200,0.1);  border-color: rgba(60,140,200,0.35); color: #7ec0f0; }
-    .tag.party    { background: rgba(160,80,160,0.1);  border-color: rgba(160,80,160,0.35); color: #d080d8; }
-    .tag.utility  { background: rgba(80,160,80,0.1);   border-color: rgba(80,160,80,0.35);  color: #88d870; }
-    .tag.classic  { background: rgba(200,149,42,0.12); border-color: rgba(200,149,42,0.38); color: #f0c850; }
-    .tag.ai       { background: rgba(200,60,60,0.1);   border-color: rgba(200,60,60,0.35);  color: #f09090; }
-
-    /* Card footer / play button */
-    .card-foot {
-      padding: 10px 18px 16px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 10px;
-    }
-
-    .card-status {
-      font-family: var(--font-ui);
-      font-size: 9px;
-      letter-spacing: 1.5px;
-      text-transform: uppercase;
-      color: rgba(180,150,90,0.6);
-    }
+    .tag.puzzle { background: rgba(60,140,200,0.1); border-color: rgba(60,140,200,0.35); color: #7ec0f0; }
+    .tag.party { background: rgba(160,80,160,0.1); border-color: rgba(160,80,160,0.35); color: #d080d8; }
+    .tag.utility { background: rgba(80,160,80,0.1); border-color: rgba(80,160,80,0.35); color: #88d870; }
+    .tag.classic { background: rgba(200,149,42,0.12); border-color: rgba(200,149,42,0.38); color: #f0c850; }
+    .card-foot { padding: 10px 18px 16px; display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+    .card-status { font-family: var(--font-ui); font-size: 9px; letter-spacing: 1.5px; text-transform: uppercase; }
     .card-status.ready { color: #7aaa5a; }
-    .card-status.soon  { color: var(--text-dim); }
-
-    /* "Play" pill on card */
-    .play-pill {
-      font-family: var(--font-ui);
-      font-size: 10px;
-      font-weight: 700;
-      letter-spacing: 1.5px;
-      text-transform: uppercase;
-      color: #f0d080;            /* explicit bright gold — always readable */
-      background: linear-gradient(180deg, #382a14 0%, #221808 100%);
-      border: 1px solid #c8952a;
-      border-bottom-color: #7a5510;
-      padding: 6px 14px;
-      border-radius: var(--radius-sm);
-      transition: all 0.15s;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.5), inset 0 1px 0 rgba(240,208,128,0.12);
-      display: inline-block;
-    }
-    .game-card:hover .play-pill {
-      background: linear-gradient(180deg, #3a2c14, #241a09);
-      border-color: var(--gold-light);
-      box-shadow: 0 2px 12px var(--gold-glow);
-    }
-
-    /* Disabled / coming soon card */
-    .game-card.soon {
-      opacity: 0.55;
-      pointer-events: none;
-    }
-    .game-card.soon .play-pill {
-      background: rgba(255,255,255,0.04);
-      border-color: rgba(255,255,255,0.1);
-      color: var(--text-dim);
-    }
-
-    /* ── ABOUT PANEL ──────────────────────────────────────────── */
-    .about-panel {
-      background: linear-gradient(160deg, var(--surface) 0%, var(--bg-warm) 100%);
-      border: 1px solid var(--border);
-      border-radius: var(--radius-lg);
-      padding: 20px 24px;
-      margin-bottom: 24px;
-    }
-    .about-panel p {
-      font-family: var(--font-body);
-      font-style: italic;
-      font-size: 14px;
-      color: #c8a878;          /* warm readable tan — no longer invisible */
-      line-height: 1.8;
-      margin: 0;
-    }
-    .about-panel strong {
-      color: var(--gold-light);
-      font-style: normal;
-    }
-
-    /* ── FOOTER ───────────────────────────────────────────────── */
-    .hub-footer {
-      padding: 10px 24px 16px;
-      border-top: 1px solid rgba(200,149,42,0.15);
-      font-family: var(--font-body);
-      font-style: italic;
-      font-size: 11px;
-      color: rgba(180,150,90,0.65);   /* readable, not invisible */
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      flex-wrap: wrap;
-      gap: 8px;
-      flex-shrink: 0;
-    }
-
-    /* ── RESPONSIVE ───────────────────────────────────────────── */
-    @media (max-width: 600px) {
-      .hub-main { padding: 16px; }
-      .game-grid { grid-template-columns: 1fr; gap: 14px; }
-      .hub-branding { gap: 12px; }
-      h1.hub-title { font-size: 20px; }
-    }
+    .play-pill { font-family: var(--font-ui); font-size: 10px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; color: #f0d080; background: linear-gradient(180deg, #382a14 0%, #221808 100%); border: 1px solid #c8952a; border-bottom-color: #7a5510; padding: 6px 14px; border-radius: var(--radius-sm); box-shadow: 0 2px 8px rgba(0,0,0,0.5), inset 0 1px 0 rgba(240,208,128,0.12); display: inline-block; }
+    .about-panel { background: linear-gradient(160deg, var(--surface) 0%, var(--bg-warm) 100%); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 20px 24px; margin-bottom: 24px; }
+    .about-panel p { font-family: var(--font-body); font-style: italic; font-size: 14px; color: #c8a878; line-height: 1.8; margin: 0; }
+    .about-panel strong { color: var(--gold-light); font-style: normal; }
+    .hub-footer { padding: 10px 24px 16px; border-top: 1px solid rgba(200,149,42,0.15); font-family: var(--font-body); font-style: italic; font-size: 11px; color: rgba(180,150,90,0.65); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; flex-shrink: 0; }
+    .hub-footer a { color: var(--gold); text-decoration: none; }
+    @media (max-width: 600px) { .hub-main { padding: 16px; } .game-grid { grid-template-columns: 1fr; gap: 14px; } .hub-branding { gap: 12px; } h1.hub-title { font-size: 20px; } }
   </style>
 </head>
 <body class="rpg-bg">
 <div id="app">
-
-  <!-- ── HEADER ─────────────────────────────────────────────── -->
   <header class="hub-header">
     <div class="hub-header-inner">
       <div class="hub-branding">
-
-        <!-- Rising Phoenix Gallery logo -->
-        <img class="phoenix-mark" src="data:image/png;base64,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" alt="Rising Phoenix Gallery logo">
-
+        <img class="phoenix-mark" src="data:image/png;base64,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" alt="Rising Phoenix Games logo" />
         <div class="hub-title-block">
           <h1 class="hub-title">Rising Phoenix Games</h1>
-          <p class="hub-tagline">A curated cabinet of games, puzzles &amp; curiosities</p>
+          <p class="hub-tagline">Every HTML game file in the project, linked and ready for the repository.</p>
+          <div class="hub-meta">
+            <span class="hub-badge live">Live Hub</span>
+            <span class="hub-badge">41 Linked HTML Files</span>
+          </div>
         </div>
-      </div>
-
-      <div class="hub-meta">
-        <span class="hub-badge live">● Live</span>
-        <span class="hub-badge">Free to Play</span>
-        <span class="hub-badge">No Sign-in</span>
-        <span class="hub-badge">Works Offline</span>
-        <span class="hub-badge">Crafted by John Ryszka II</span>
       </div>
     </div>
   </header>
 
-  <!-- ── MAIN ───────────────────────────────────────────────── -->
   <main class="hub-main">
-
-    <!-- About -->
     <div class="about-panel">
       <p>
-        A personal collection of <strong>hand-crafted games and tools</strong> — built with care, no frameworks, no trackers, no ads.
-        Each title runs entirely in your browser. Bookmark this page, share it freely, or save any game file for offline play.
-        New titles are added when they're ready.
+        A personal collection of <strong>hand-crafted games and tools</strong> built as standalone HTML files.
+        This index now includes every HTML title shown in the provided project screenshots, excluding non-HTML assets such as RTF, PNG, and CSS files.
       </p>
     </div>
 
-    <!-- Games section -->
-    <h2 class="section-label">Games</h2>
+    <h2 class="section-label">Project Files</h2>
     <div class="game-grid">
-
-      <!-- Fox & Geese -->
-      <a class="game-card" href="fox-geese.html">
-        <div class="card-thumb thumb-fox">
-          <div class="thumb-art">
-            <span class="thumb-emoji">🦊</span>
-            <span class="thumb-emoji">🪿</span>
-          </div>
-          <span class="thumb-label">Strategy</span>
-        </div>
-        <div class="card-body">
-          <h3 class="card-title">Fox &amp; Geese</h3>
-          <p class="card-desc">An ancient Norse hunt played on a 33-point cross. One fox. Thirteen geese. An asymmetric battle of wits across a candlelit board.</p>
-          <div class="card-tags">
-            <span class="tag strategy">Strategy</span>
-            <span class="tag classic">Historical</span>
-            <span class="tag">2 Players</span>
-          </div>
-        </div>
-        <div class="card-foot">
-          <span class="card-status ready">● Ready to Play</span>
-          <span class="play-pill">Play →</span>
-        </div>
-      </a>
-
-      <!-- Tic Tac Toe -->
-      <a class="game-card" href="tictactoe.html">
-        <div class="card-thumb thumb-ttt">
-          <div class="thumb-art">
-            <span class="thumb-emoji" style="color:#f43f5e;filter:drop-shadow(0 0 8px rgba(244,63,94,0.6))">✕</span>
-            <span class="thumb-emoji" style="font-size:28px;color:rgba(200,149,42,0.4)">✦</span>
-            <span class="thumb-emoji" style="color:#fde047;filter:drop-shadow(0 0 8px rgba(253,224,71,0.6))">○</span>
-          </div>
-          <span class="thumb-label">Classic</span>
-        </div>
-        <div class="card-body">
-          <h3 class="card-title">Tic-Tac-Toe</h3>
-          <p class="card-desc">The eternal duel of marks. Three in a row wins — but a perfect opponent never loses. Challenge the AI or pass the board to a friend.</p>
-          <div class="card-tags">
-            <span class="tag classic">Classic</span>
-            <span class="tag ai">vs AI</span>
-            <span class="tag">2 Players</span>
-          </div>
-        </div>
-        <div class="card-foot">
-          <span class="card-status ready">● Ready to Play</span>
-          <span class="play-pill">Play →</span>
-        </div>
-      </a>
-
-      <!-- Sliding Puzzle -->
-      <a class="game-card" href="sliding-puzzle.html">
-        <div class="card-thumb thumb-slide">
-          <div class="thumb-art">
-            <!-- 4×4 tile grid with one empty slot, bottom-right -->
-            <div style="display:grid;grid-template-columns:repeat(4,28px);grid-template-rows:repeat(4,28px);gap:3px;">
-              <div style="background:linear-gradient(135deg,#3a6080,#1a3050);border-radius:3px;box-shadow:inset 0 1px 0 rgba(255,255,255,0.15)"></div>
-              <div style="background:linear-gradient(135deg,#3a6080,#1a3050);border-radius:3px;box-shadow:inset 0 1px 0 rgba(255,255,255,0.15)"></div>
-              <div style="background:linear-gradient(135deg,#3a6080,#1a3050);border-radius:3px;box-shadow:inset 0 1px 0 rgba(255,255,255,0.15)"></div>
-              <div style="background:linear-gradient(135deg,#2a5070,#0a2040);border-radius:3px;box-shadow:inset 0 1px 0 rgba(255,255,255,0.15)"></div>
-              <div style="background:linear-gradient(135deg,#2a5070,#0a2040);border-radius:3px;box-shadow:inset 0 1px 0 rgba(255,255,255,0.15)"></div>
-              <div style="background:linear-gradient(135deg,#4a78a0,#2a5070);border-radius:3px;box-shadow:inset 0 1px 0 rgba(255,255,255,0.2)"></div>
-              <div style="background:linear-gradient(135deg,#3a6080,#1a3050);border-radius:3px;box-shadow:inset 0 1px 0 rgba(255,255,255,0.15)"></div>
-              <div style="background:linear-gradient(135deg,#2a5070,#0a2040);border-radius:3px;box-shadow:inset 0 1px 0 rgba(255,255,255,0.15)"></div>
-              <div style="background:linear-gradient(135deg,#2a5070,#0a2040);border-radius:3px;box-shadow:inset 0 1px 0 rgba(255,255,255,0.15)"></div>
-              <div style="background:linear-gradient(135deg,#3a6080,#1a3050);border-radius:3px;box-shadow:inset 0 1px 0 rgba(255,255,255,0.15)"></div>
-              <div style="background:linear-gradient(135deg,#4a78a0,#2a5070);border-radius:3px;box-shadow:inset 0 1px 0 rgba(255,255,255,0.2)"></div>
-              <div style="background:linear-gradient(135deg,#3a6080,#1a3050);border-radius:3px;box-shadow:inset 0 1px 0 rgba(255,255,255,0.15)"></div>
-              <div style="background:linear-gradient(135deg,#3a6080,#1a3050);border-radius:3px;box-shadow:inset 0 1px 0 rgba(255,255,255,0.15)"></div>
-              <div style="background:linear-gradient(135deg,#2a5070,#0a2040);border-radius:3px;box-shadow:inset 0 1px 0 rgba(255,255,255,0.15)"></div>
-              <div style="background:linear-gradient(135deg,#3a6080,#1a3050);border-radius:3px;box-shadow:inset 0 1px 0 rgba(255,255,255,0.15)"></div>
-              <!-- Empty slot — bottom right -->
-              <div style="background:rgba(10,30,50,0.4);border-radius:3px;border:1px dashed rgba(100,160,200,0.25)"></div>
-            </div>
-          </div>
-          <span class="thumb-label">Puzzle</span>
-        </div>
-        <div class="card-body">
-          <h3 class="card-title">Glass Puzzle</h3>
-          <p class="card-desc">Reassemble a shattered masterpiece. Fifteen tiles, one empty space, and the patience of a master glassworker. Restore what was broken.</p>
-          <div class="card-tags">
-            <span class="tag puzzle">Puzzle</span>
-            <span class="tag">Solo</span>
-          </div>
-        </div>
-        <div class="card-foot">
-          <span class="card-status ready">● Ready to Play</span>
-          <span class="play-pill">Play →</span>
-        </div>
-      </a>
-
-      <!-- Connect Four -->
-      <a class="game-card" href="connect-four.html">
-        <div class="card-thumb thumb-c4">
-          <div class="thumb-art" style="flex-direction:column;gap:5px;">
-            <!-- Two rows hinting at the grid, bottom row has 4 in a row -->
-            <div style="display:flex;gap:8px;opacity:0.5;">
-              <div style="width:22px;height:22px;border-radius:50%;background:linear-gradient(135deg,#ff6060,#cc2020);box-shadow:0 0 8px rgba(220,40,40,0.5)"></div>
-              <div style="width:22px;height:22px;border-radius:50%;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.12)"></div>
-              <div style="width:22px;height:22px;border-radius:50%;background:linear-gradient(135deg,#ffee50,#ccaa10);box-shadow:0 0 8px rgba(220,180,20,0.5)"></div>
-              <div style="width:22px;height:22px;border-radius:50%;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.12)"></div>
-            </div>
-            <!-- The winning 4 in a row -->
-            <div style="display:flex;gap:8px;">
-              <div style="width:26px;height:26px;border-radius:50%;background:linear-gradient(135deg,#ffee50,#ccaa10);box-shadow:0 0 12px rgba(220,180,20,0.7)"></div>
-              <div style="width:26px;height:26px;border-radius:50%;background:linear-gradient(135deg,#ffee50,#ccaa10);box-shadow:0 0 12px rgba(220,180,20,0.7)"></div>
-              <div style="width:26px;height:26px;border-radius:50%;background:linear-gradient(135deg,#ffee50,#ccaa10);box-shadow:0 0 12px rgba(220,180,20,0.7)"></div>
-              <div style="width:26px;height:26px;border-radius:50%;background:linear-gradient(135deg,#ffee50,#ccaa10);box-shadow:0 0 12px rgba(220,180,20,0.7)"></div>
-            </div>
-          </div>
-          <span class="thumb-label">Strategy</span>
-        </div>
-        <div class="card-body">
-          <h3 class="card-title">Connect Four</h3>
-          <p class="card-desc">Drop your disc. Build your line. Block your opponent before they build theirs. Four in a row — vertical, horizontal, or diagonal — wins the round.</p>
-          <div class="card-tags">
-            <span class="tag strategy">Strategy</span>
-            <span class="tag classic">Classic</span>
-            <span class="tag">2 Players</span>
-          </div>
-        </div>
-        <div class="card-foot">
-          <span class="card-status ready">● Ready to Play</span>
-          <span class="play-pill">Play →</span>
-        </div>
-      </a>
-
-      <!-- Shut the Box -->
-      <a class="game-card" href="shut-the-box.html">
-        <div class="card-thumb thumb-box">
-          <div class="thumb-art" style="gap:10px;">
-            <span class="thumb-emoji">🎲</span>
-            <span class="thumb-emoji">📦</span>
-            <span class="thumb-emoji">9️⃣</span>
-          </div>
-          <span class="thumb-label">Classic</span>
-        </div>
-        <div class="card-body">
-          <h3 class="card-title">Shut the Box</h3>
-          <p class="card-desc">Roll the dice, choose the matching tiles, and close the box before luck turns. A tavern classic of risk, arithmetic, and nerve.</p>
-          <div class="card-tags">
-            <span class="tag classic">Classic</span>
-            <span class="tag puzzle">Dice</span>
-            <span class="tag">1–4 Players</span>
-          </div>
-        </div>
-        <div class="card-foot">
-          <span class="card-status ready">● Ready to Play</span>
-          <span class="play-pill">Play →</span>
-        </div>
-      </a>
-
-      <!-- Hues & Cues -->
-      <a class="game-card" href="hues-cues.html">
-        <div class="card-thumb thumb-hues">
-          <div class="thumb-art">
-            <span class="thumb-emoji">🎨</span>
-            <span class="thumb-emoji">🗣️</span>
-            <span class="thumb-emoji">📍</span>
-          </div>
-          <span class="thumb-label">Party</span>
-        </div>
-        <div class="card-body">
-          <h3 class="card-title">Hues &amp; Cues</h3>
-          <p class="card-desc">Name a colour with a single word. Other players place their tokens where they think you mean. Score by proximity across a luminous spectrum board.</p>
-          <div class="card-tags">
-            <span class="tag party">Party</span>
-            <span class="tag">2–8 Players</span>
-            <span class="tag">Pass &amp; Play</span>
-          </div>
-        </div>
-        <div class="card-foot">
-          <span class="card-status ready">● Ready to Play</span>
-          <span class="play-pill">Play →</span>
-        </div>
-      </a>
-
-      <!-- Lights Out -->
-      <a class="game-card" href="lights-out.html">
-        <div class="card-thumb thumb-upcoming">
-          <div class="thumb-art"><span class="thumb-emoji">💡</span><span class="thumb-emoji">⬛</span></div>
-          <span class="thumb-label">Puzzle</span>
-        </div>
-        <div class="card-body">
-          <h3 class="card-title">Lights Out</h3>
-          <p class="card-desc">Toggle one tile, affect its neighbors, and extinguish the whole grid. Minimal rules, clean logic, and a satisfying puzzle cadence.</p>
-          <div class="card-tags"><span class="tag puzzle">Puzzle</span><span class="tag">Solo</span><span class="tag classic">Arcade</span></div>
-        </div>
-        <div class="card-foot"><span class="card-status ready">● Ready to Play</span><span class="play-pill">Play →</span></div>
-      </a>
-
-      <!-- Mastermind -->
-      <a class="game-card" href="mastermind.html">
-        <div class="card-thumb thumb-upcoming">
-          <div class="thumb-art"><span class="thumb-emoji">🔴</span><span class="thumb-emoji">🔵</span><span class="thumb-emoji">🧠</span></div>
-          <span class="thumb-label">Logic</span>
-        </div>
-        <div class="card-body">
-          <h3 class="card-title">Mastermind</h3>
-          <p class="card-desc">Crack the hidden code through deduction, partial information, and disciplined testing of possibilities.</p>
-          <div class="card-tags"><span class="tag puzzle">Logic</span><span class="tag">Solo / 2P</span><span class="tag classic">Codebreaking</span></div>
-        </div>
-        <div class="card-foot"><span class="card-status ready">● Ready to Play</span><span class="play-pill">Play →</span></div>
-      </a>
-
-      <!-- 2048 -->
       <a class="game-card" href="2048.html">
         <div class="card-thumb thumb-upcoming">
-          <div class="thumb-art"><span class="thumb-emoji">2️⃣</span><span class="thumb-emoji">0️⃣</span><span class="thumb-emoji">4️⃣</span><span class="thumb-emoji">8️⃣</span></div>
-          <span class="thumb-label">Puzzle</span>
+          <div class="thumb-art"><span class="thumb-emoji">🔢</span></div>
+          <span class="thumb-label">2048.html</span>
         </div>
         <div class="card-body">
           <h3 class="card-title">2048</h3>
-          <p class="card-desc">Slide, merge, and chase larger powers of two across a tight grid where one poor move can collapse the run.</p>
-          <div class="card-tags"><span class="tag puzzle">Puzzle</span><span class="tag">Solo</span><span class="tag classic">Numbers</span></div>
-        </div>
-        <div class="card-foot"><span class="card-status ready">● Ready to Play</span><span class="play-pill">Play →</span></div>
-      </a>
-
-      <!-- Simon Says -->
-      <a class="game-card" href="simon-says.html">
-        <div class="card-thumb thumb-upcoming">
-          <div class="thumb-art"><span class="thumb-emoji">🟢</span><span class="thumb-emoji">🔴</span><span class="thumb-emoji">🟡</span><span class="thumb-emoji">🔵</span></div>
-          <span class="thumb-label">Memory</span>
-        </div>
-        <div class="card-body">
-          <h3 class="card-title">Simon Says</h3>
-          <p class="card-desc">Watch the sequence, remember the rhythm, and answer with perfect repetition as the chain grows longer.</p>
-          <div class="card-tags"><span class="tag classic">Memory</span><span class="tag">Solo</span><span class="tag party">Arcade</span></div>
-        </div>
-        <div class="card-foot"><span class="card-status ready">● Ready to Play</span><span class="play-pill">Play →</span></div>
-      </a>
-
-      <!-- Mancala -->
-      <a class="game-card" href="mancala.html">
-        <div class="card-thumb thumb-upcoming">
-          <div class="thumb-art"><span class="thumb-emoji">🪨</span><span class="thumb-emoji">🕳️</span></div>
-          <span class="thumb-label">Strategy</span>
-        </div>
-        <div class="card-body">
-          <h3 class="card-title">Mancala</h3>
-          <p class="card-desc">Sow stones around the board, plan extra turns, and time captures with elegant, looping resource play.</p>
-          <div class="card-tags"><span class="tag strategy">Strategy</span><span class="tag">2 Players</span><span class="tag classic">Classic</span></div>
-        </div>
-        <div class="card-foot"><span class="card-status ready">● Ready to Play</span><span class="play-pill">Play →</span></div>
-      </a>
-
-      <!-- Reversi / Othello -->
-      <a class="game-card" href="reversi-othello.html">
-        <div class="card-thumb thumb-upcoming">
-          <div class="thumb-art"><span class="thumb-emoji">⚪</span><span class="thumb-emoji">⚫</span></div>
-          <span class="thumb-label">Abstract</span>
-        </div>
-        <div class="card-body">
-          <h3 class="card-title">Reversi / Othello</h3>
-          <p class="card-desc">Claim lines, flip discs, and seize the late board with positional control and calculated restraint.</p>
-          <div class="card-tags"><span class="tag strategy">Strategy</span><span class="tag classic">Classic</span><span class="tag">2 Players</span></div>
-        </div>
-        <div class="card-foot"><span class="card-status ready">● Ready to Play</span><span class="play-pill">Play →</span></div>
-      </a>
-
-      <!-- Wordle -->
-      <a class="game-card" href="wordle.html">
-        <div class="card-thumb thumb-upcoming">
-          <div class="thumb-art"><span class="thumb-emoji">🔤</span><span class="thumb-emoji">🟩</span></div>
-          <span class="thumb-label">Word</span>
-        </div>
-        <div class="card-body">
-          <h3 class="card-title">Wordle</h3>
-          <p class="card-desc">Guess the hidden word, refine the search with color feedback, and narrow the solution under strict turn pressure.</p>
-          <div class="card-tags"><span class="tag puzzle">Word</span><span class="tag">Solo</span><span class="tag classic">Daily</span></div>
-        </div>
-        <div class="card-foot"><span class="card-status ready">● Ready to Play</span><span class="play-pill">Play →</span></div>
-      </a>
-
-      <!-- Boggle -->
-      <a class="game-card" href="boggle-style.html">
-        <div class="card-thumb thumb-upcoming">
-          <div class="thumb-art"><span class="thumb-emoji">🔠</span><span class="thumb-emoji">🧭</span></div>
-          <span class="thumb-label">Word</span>
-        </div>
-        <div class="card-body">
-          <h3 class="card-title">Boggle-Style</h3>
-          <p class="card-desc">Trace words through a shifting letter field as speed, vocabulary, and path-finding all compete at once.</p>
-          <div class="card-tags"><span class="tag puzzle">Word</span><span class="tag">Solo / Party</span><span class="tag classic">Timed</span></div>
-        </div>
-        <div class="card-foot"><span class="card-status ready">● Ready to Play</span><span class="play-pill">Play →</span></div>
-      </a>
-
-      <!-- Sudoku -->
-      <a class="game-card" href="sudoku.html">
-        <div class="card-thumb thumb-upcoming">
-          <div class="thumb-art"><span class="thumb-emoji">🔢</span><span class="thumb-emoji">🧩</span></div>
-          <span class="thumb-label">Logic</span>
-        </div>
-        <div class="card-body">
-          <h3 class="card-title">Sudoku</h3>
-          <p class="card-desc">A lattice of constraint, deduction, and patience — with difficulty driven by puzzle generation rather than ornament.</p>
-          <div class="card-tags"><span class="tag puzzle">Logic</span><span class="tag">Solo</span><span class="tag classic">Numbers</span></div>
-        </div>
-        <div class="card-foot"><span class="card-status ready">● Ready to Play</span><span class="play-pill">Play →</span></div>
-      </a>
-
-      <!-- Nine Men's Morris -->
-      <a class="game-card" href="nine-mens-morris.html">
-        <div class="card-thumb thumb-upcoming">
-          <div class="thumb-art"><span class="thumb-emoji">⚪</span><span class="thumb-emoji">⚫</span><span class="thumb-emoji">🧱</span></div>
-          <span class="thumb-label">Historical</span>
-        </div>
-        <div class="card-body">
-          <h3 class="card-title">Nine Men’s Morris</h3>
-          <p class="card-desc">Place, move, and capture through shifting phases of play in one of the great alignment games of the medieval world.</p>
-          <div class="card-tags"><span class="tag strategy">Strategy</span><span class="tag classic">Historical</span><span class="tag">2 Players</span></div>
-        </div>
-        <div class="card-foot"><span class="card-status ready">● Ready to Play</span><span class="play-pill">Play →</span></div>
-      </a>
-
-      <!-- Yahtzee -->
-      <a class="game-card" href="yahtzee.html">
-        <div class="card-thumb thumb-upcoming">
-          <div class="thumb-art"><span class="thumb-emoji">🎲</span><span class="thumb-emoji">📋</span></div>
-          <span class="thumb-label">Dice</span>
-        </div>
-        <div class="card-body">
-          <h3 class="card-title">Yahtzee</h3>
-          <p class="card-desc">Push your luck across a score sheet full of straights, full houses, and hard decisions about when to settle.</p>
-          <div class="card-tags"><span class="tag classic">Dice</span><span class="tag">1–4 Players</span><span class="tag party">Score Attack</span></div>
-        </div>
-        <div class="card-foot"><span class="card-status ready">● Ready to Play</span><span class="play-pill">Play →</span></div>
-      </a>
-
-      <!-- Tetris -->
-      <a class="game-card" href="tetris.html">
-        <div class="card-thumb thumb-upcoming">
-          <div class="thumb-art"><span class="thumb-emoji">🧱</span><span class="thumb-emoji">⬛</span></div>
-          <span class="thumb-label">Arcade</span>
-        </div>
-        <div class="card-body">
-          <h3 class="card-title">Tetris</h3>
-          <p class="card-desc">Rotate, stack, and clear falling shapes before the well fills. Clean lines, fast decisions, and relentless momentum.</p>
-          <div class="card-tags"><span class="tag classic">Arcade</span><span class="tag puzzle">Puzzle</span><span class="tag">Solo</span></div>
-        </div>
-        <div class="card-foot"><span class="card-status ready">● Ready to Play</span><span class="play-pill">Play →</span></div>
-      </a>
-
-      <!-- Bust-a-Move -->
-      <a class="game-card" href="bust-a-move.html">
-        <div class="card-thumb thumb-upcoming">
-          <div class="thumb-art"><span class="thumb-emoji">🫧</span><span class="thumb-emoji">🎯</span></div>
-          <span class="thumb-label">Arcade</span>
-        </div>
-        <div class="card-body">
-          <h3 class="card-title">Bust-a-Move</h3>
-          <p class="card-desc">Aim, bank, and match colored bubbles before the ceiling descends. Precision and planning matter every shot.</p>
-          <div class="card-tags"><span class="tag classic">Arcade</span><span class="tag puzzle">Puzzle</span><span class="tag">Solo</span></div>
-        </div>
-        <div class="card-foot"><span class="card-status ready">● Ready to Play</span><span class="play-pill">Play →</span></div>
-      </a>
-
-
-
-      <!-- Candy Crush -->
-      <a class="game-card" href="candy-crush.html">
-        <div class="card-thumb thumb-upcoming">
-          <div class="thumb-art"><span class="thumb-emoji">🍬</span><span class="thumb-emoji">💎</span><span class="thumb-emoji">✨</span></div>
-          <span class="thumb-label">Match 3</span>
-        </div>
-        <div class="card-body">
-          <h3 class="card-title">Candy Crush</h3>
-          <p class="card-desc">Swap adjacent sweets, build matching chains, and trigger cascading combos across a bright, fast-paced match-three board.</p>
-          <div class="card-tags"><span class="tag classic">Arcade</span><span class="tag puzzle">Match 3</span><span class="tag">Solo</span></div>
-        </div>
-        <div class="card-foot"><span class="card-status ready">● Ready to Play</span><span class="play-pill">Play →</span></div>
-      </a>
-
-      <!-- Checkers -->
-      <a class="game-card" href="checkers.html">
-        <div class="card-thumb thumb-upcoming">
-          <div class="thumb-art"><span class="thumb-emoji">🔴</span><span class="thumb-emoji">⚫</span></div>
-          <span class="thumb-label">Classic</span>
-        </div>
-        <div class="card-body">
-          <h3 class="card-title">Checkers</h3>
-          <p class="card-desc">Advance, capture, crown kings, and force tactical trades on the familiar red-and-black battlefield.</p>
-          <div class="card-tags"><span class="tag classic">Classic</span><span class="tag strategy">Strategy</span><span class="tag">2 Players</span></div>
-        </div>
-        <div class="card-foot"><span class="card-status ready">● Ready to Play</span><span class="play-pill">Play →</span></div>
-      </a>
-
-      <!-- Kakuro -->
-      <a class="game-card" href="kakuro.html">
-        <div class="card-thumb thumb-upcoming">
-          <div class="thumb-art"><span class="thumb-emoji">➕</span><span class="thumb-emoji">🔢</span><span class="thumb-emoji">🧩</span></div>
-          <span class="thumb-label">Logic</span>
-        </div>
-        <div class="card-body">
-          <h3 class="card-title">Kakuro</h3>
-          <p class="card-desc">Crossword structure meets arithmetic deduction: every run must balance its clue with unique digits and exact sums.</p>
-          <div class="card-tags"><span class="tag puzzle">Logic</span><span class="tag classic">Numbers</span><span class="tag">Solo</span></div>
-        </div>
-        <div class="card-foot"><span class="card-status ready">● Ready to Play</span><span class="play-pill">Play →</span></div>
-      </a>
-
-
-      <!-- Solitaire -->
-      <article class="game-card placeholder" aria-label="Solitaire Klondike coming soon">
-        <div class="card-thumb thumb-upcoming">
-          <div class="thumb-art"><span class="thumb-emoji">🂡</span><span class="thumb-emoji">🂮</span></div>
-          <span class="thumb-label">Tier 3</span>
-        </div>
-        <div class="card-body">
-          <h3 class="card-title">Solitaire / Klondike</h3>
-          <p class="card-desc">Layered card movement, careful uncovering, and patient sequencing across the definitive single-player tableau.</p>
-          <div class="card-tags"><span class="tag classic">Cards</span><span class="tag">Solo</span><span class="tag">Tier 3</span></div>
-        </div>
-        <div class="card-foot"><span class="card-status soon">◌ Planned</span><span class="play-pill">Soon</span></div>
-      </article>
-
-      <!-- Hex -->
-      <article class="game-card placeholder" aria-label="Hex coming soon">
-        <div class="card-thumb thumb-upcoming">
-          <div class="thumb-art"><span class="thumb-emoji">⬡</span><span class="thumb-emoji">🔷</span></div>
-          <span class="thumb-label">Tier 3</span>
-        </div>
-        <div class="card-body">
-          <h3 class="card-title">Hex</h3>
-          <p class="card-desc">Connect opposite sides across a rhombus grid where every move hardens territory and narrows future lines.</p>
-          <div class="card-tags"><span class="tag strategy">Abstract</span><span class="tag">2 Players</span><span class="tag">Tier 3</span></div>
-        </div>
-        <div class="card-foot"><span class="card-status soon">◌ Planned</span><span class="play-pill">Soon</span></div>
-      </article>
-
-      <!-- Alquerque -->
-      <article class="game-card placeholder" aria-label="Alquerque Draughts variants coming soon">
-        <div class="card-thumb thumb-upcoming">
-          <div class="thumb-art"><span class="thumb-emoji">🦊</span><span class="thumb-emoji">⚔️</span></div>
-          <span class="thumb-label">Tier 3</span>
-        </div>
-        <div class="card-body">
-          <h3 class="card-title">Alquerque / Draughts Variants</h3>
-          <p class="card-desc">A natural next branch from Fox &amp; Geese: capture chains, positional traps, and formalized movement on historical boards.</p>
-          <div class="card-tags"><span class="tag strategy">Strategy</span><span class="tag classic">Historical</span><span class="tag">Tier 3</span></div>
-        </div>
-        <div class="card-foot"><span class="card-status soon">◌ Planned</span><span class="play-pill">Soon</span></div>
-      </article>
-
-      <!-- Cribbage -->
-      <article class="game-card placeholder" aria-label="Cribbage coming soon">
-        <div class="card-thumb thumb-upcoming">
-          <div class="thumb-art"><span class="thumb-emoji">🃏</span><span class="thumb-emoji">📍</span></div>
-          <span class="thumb-label">Tier 3</span>
-        </div>
-        <div class="card-body">
-          <h3 class="card-title">Cribbage</h3>
-          <p class="card-desc">Pegging, hand evaluation, and a famously intricate scoring grammar packed into a compact card duel.</p>
-          <div class="card-tags"><span class="tag classic">Cards</span><span class="tag">2 Players</span><span class="tag">Tier 3</span></div>
-        </div>
-        <div class="card-foot"><span class="card-status soon">◌ Planned</span><span class="play-pill">Soon</span></div>
-      </article>
-
-      <!-- Nonogram -->
-      <article class="game-card placeholder" aria-label="Nonogram Picross coming soon">
-        <div class="card-thumb thumb-upcoming">
-          <div class="thumb-art"><span class="thumb-emoji">🔲</span><span class="thumb-emoji">🖼️</span></div>
-          <span class="thumb-label">Tier 3</span>
-        </div>
-        <div class="card-body">
-          <h3 class="card-title">Nonogram / Picross</h3>
-          <p class="card-desc">Reveal hidden images through numeric clues, line logic, and the slow emergence of structure from apparent emptiness.</p>
-          <div class="card-tags"><span class="tag puzzle">Logic</span><span class="tag">Solo</span><span class="tag">Tier 3</span></div>
-        </div>
-        <div class="card-foot"><span class="card-status soon">◌ Planned</span><span class="play-pill">Soon</span></div>
-      </article>
-    </div>
-
-    <!-- Tools section -->
-    <h2 class="section-label">Tools</h2>
-    <div class="game-grid">
-
-      <!-- Color Picker -->
-      <a class="game-card" href="color-picker.html">
-        <div class="card-thumb thumb-color">
-          <div class="thumb-art">
-            <!-- Mini hue spectrum bar -->
-            <div style="width:160px;height:24px;border-radius:12px;background:linear-gradient(90deg,hsl(0,80%,55%),hsl(60,80%,55%),hsl(120,80%,55%),hsl(180,80%,55%),hsl(240,80%,55%),hsl(300,80%,55%),hsl(360,80%,55%));box-shadow:0 0 16px rgba(200,100,200,0.4);border:1px solid rgba(255,255,255,0.15)"></div>
-          </div>
-          <span class="thumb-label">Utility</span>
-        </div>
-        <div class="card-body">
-          <h3 class="card-title">The Alchemist's Palette</h3>
-          <p class="card-desc">Pick any colour from the full spectrum. Get instant HEX, RGB, and HSL values. Save favourites, explore complements. Ripples follow your cursor.</p>
-          <div class="card-tags">
-            <span class="tag utility">Utility</span>
-            <span class="tag">Hex · RGB · HSL</span>
-            <span class="tag">Favourites</span>
-          </div>
+          <p class="card-desc">Merge matching tiles and chase exponential growth across a board that punishes every careless move.</p>
+          <div class="card-tags"><span class="tag puzzle">Puzzle</span><span class="tag puzzle">Solo</span><span class="tag classic">2048.html</span></div>
         </div>
         <div class="card-foot">
-          <span class="card-status ready">● Ready to Use</span>
+          <span class="card-status ready">● Linked File</span>
           <span class="play-pill">Open →</span>
         </div>
       </a>
-
+      <a class="game-card" href="blackjack.html">
+        <div class="card-thumb thumb-upcoming">
+          <div class="thumb-art"><span class="thumb-emoji">🂡</span></div>
+          <span class="thumb-label">blackjack.html</span>
+        </div>
+        <div class="card-body">
+          <h3 class="card-title">Blackjack</h3>
+          <p class="card-desc">Play the dealer, manage risk, and aim for twenty-one without going bust.</p>
+          <div class="card-tags"><span class="tag classic">Cards</span><span class="tag classic">Casino</span><span class="tag classic">blackjack.html</span></div>
+        </div>
+        <div class="card-foot">
+          <span class="card-status ready">● Linked File</span>
+          <span class="play-pill">Open →</span>
+        </div>
+      </a>
+      <a class="game-card" href="boggle-style.html">
+        <div class="card-thumb thumb-upcoming">
+          <div class="thumb-art"><span class="thumb-emoji">🔤</span></div>
+          <span class="thumb-label">boggle-style.html</span>
+        </div>
+        <div class="card-body">
+          <h3 class="card-title">Boggle-Style</h3>
+          <p class="card-desc">Trace words through a letter grid where vocabulary and path-finding matter equally.</p>
+          <div class="card-tags"><span class="tag puzzle">Word</span><span class="tag puzzle">Solo</span><span class="tag classic">boggle-style.html</span></div>
+        </div>
+        <div class="card-foot">
+          <span class="card-status ready">● Linked File</span>
+          <span class="play-pill">Open →</span>
+        </div>
+      </a>
+      <a class="game-card" href="bust-a-move.html">
+        <div class="card-thumb thumb-upcoming">
+          <div class="thumb-art"><span class="thumb-emoji">🫧</span></div>
+          <span class="thumb-label">bust-a-move.html</span>
+        </div>
+        <div class="card-body">
+          <h3 class="card-title">Bust-a-Move</h3>
+          <p class="card-desc">Bank shots, chain color matches, and clear the ceiling before it closes in.</p>
+          <div class="card-tags"><span class="tag classic">Arcade</span><span class="tag puzzle">Puzzle</span><span class="tag classic">bust-a-move.html</span></div>
+        </div>
+        <div class="card-foot">
+          <span class="card-status ready">● Linked File</span>
+          <span class="play-pill">Open →</span>
+        </div>
+      </a>
+      <a class="game-card" href="candy-crush.html">
+        <div class="card-thumb thumb-upcoming">
+          <div class="thumb-art"><span class="thumb-emoji">🍬</span></div>
+          <span class="thumb-label">candy-crush.html</span>
+        </div>
+        <div class="card-body">
+          <h3 class="card-title">Candy Crush</h3>
+          <p class="card-desc">Swap, match, and trigger cascading combinations across a bright tile field.</p>
+          <div class="card-tags"><span class="tag party">Match-3</span><span class="tag puzzle">Puzzle</span><span class="tag classic">candy-crush.html</span></div>
+        </div>
+        <div class="card-foot">
+          <span class="card-status ready">● Linked File</span>
+          <span class="play-pill">Open →</span>
+        </div>
+      </a>
+      <a class="game-card" href="checkers.html">
+        <div class="card-thumb thumb-upcoming">
+          <div class="thumb-art"><span class="thumb-emoji">⚫</span></div>
+          <span class="thumb-label">checkers.html</span>
+        </div>
+        <div class="card-body">
+          <h3 class="card-title">Checkers</h3>
+          <p class="card-desc">Advance, jump, and crown kings in a traditional duel of tempo and forced trades.</p>
+          <div class="card-tags"><span class="tag classic">Classic</span><span class="tag strategy">2 Players</span><span class="tag classic">checkers.html</span></div>
+        </div>
+        <div class="card-foot">
+          <span class="card-status ready">● Linked File</span>
+          <span class="play-pill">Open →</span>
+        </div>
+      </a>
+      <a class="game-card" href="connect-four.html">
+        <div class="card-thumb thumb-upcoming">
+          <div class="thumb-art"><span class="thumb-emoji">🟡</span></div>
+          <span class="thumb-label">connect-four.html</span>
+        </div>
+        <div class="card-body">
+          <h3 class="card-title">Connect Four</h3>
+          <p class="card-desc">Build a winning line while blocking the threats forming above and around you.</p>
+          <div class="card-tags"><span class="tag strategy">Strategy</span><span class="tag strategy">2 Players</span><span class="tag classic">connect-four.html</span></div>
+        </div>
+        <div class="card-foot">
+          <span class="card-status ready">● Linked File</span>
+          <span class="play-pill">Open →</span>
+        </div>
+      </a>
+      <a class="game-card" href="color-picker.html">
+        <div class="card-thumb thumb-upcoming">
+          <div class="thumb-art"><span class="thumb-emoji">🌈</span></div>
+          <span class="thumb-label">color-picker.html</span>
+        </div>
+        <div class="card-body">
+          <h3 class="card-title">The Alchemist’s Palette</h3>
+          <p class="card-desc">A full-spectrum color utility for exploring hues and reading exact color values.</p>
+          <div class="card-tags"><span class="tag utility">Utility</span><span class="tag party">Color</span><span class="tag classic">color-picker.html</span></div>
+        </div>
+        <div class="card-foot">
+          <span class="card-status ready">● Linked File</span>
+          <span class="play-pill">Open →</span>
+        </div>
+      </a>
+      <a class="game-card" href="dominoes.html">
+        <div class="card-thumb thumb-upcoming">
+          <div class="thumb-art"><span class="thumb-emoji">🁣</span></div>
+          <span class="thumb-label">dominoes.html</span>
+        </div>
+        <div class="card-body">
+          <h3 class="card-title">Dominoes</h3>
+          <p class="card-desc">Match ends, manage the chain, and control the pace of the table.</p>
+          <div class="card-tags"><span class="tag classic">Classic</span><span class="tag classic">Tiles</span><span class="tag classic">dominoes.html</span></div>
+        </div>
+        <div class="card-foot">
+          <span class="card-status ready">● Linked File</span>
+          <span class="play-pill">Open →</span>
+        </div>
+      </a>
+      <a class="game-card" href="dots-and-boxes.html">
+        <div class="card-thumb thumb-upcoming">
+          <div class="thumb-art"><span class="thumb-emoji">🔲</span></div>
+          <span class="thumb-label">dots-and-boxes.html</span>
+        </div>
+        <div class="card-body">
+          <h3 class="card-title">Dots and Boxes</h3>
+          <p class="card-desc">Draw with restraint, avoid traps, and claim more boxes than your opponent.</p>
+          <div class="card-tags"><span class="tag strategy">Strategy</span><span class="tag strategy">2 Players</span><span class="tag classic">dots-and-boxes.html</span></div>
+        </div>
+        <div class="card-foot">
+          <span class="card-status ready">● Linked File</span>
+          <span class="play-pill">Open →</span>
+        </div>
+      </a>
+      <a class="game-card" href="fox-geese.html">
+        <div class="card-thumb thumb-upcoming">
+          <div class="thumb-art"><span class="thumb-emoji">🦊</span></div>
+          <span class="thumb-label">fox-geese.html</span>
+        </div>
+        <div class="card-body">
+          <h3 class="card-title">Fox &amp; Geese</h3>
+          <p class="card-desc">An asymmetrical historical hunt between one fox and a tightening ring of geese.</p>
+          <div class="card-tags"><span class="tag strategy">Historical</span><span class="tag strategy">2 Players</span><span class="tag classic">fox-geese.html</span></div>
+        </div>
+        <div class="card-foot">
+          <span class="card-status ready">● Linked File</span>
+          <span class="play-pill">Open →</span>
+        </div>
+      </a>
+      <a class="game-card" href="sliding-puzzle.html">
+        <div class="card-thumb thumb-upcoming">
+          <div class="thumb-art"><span class="thumb-emoji">🧩</span></div>
+          <span class="thumb-label">sliding-puzzle.html</span>
+        </div>
+        <div class="card-body">
+          <h3 class="card-title">Glass Puzzle</h3>
+          <p class="card-desc">Restore the image tile by tile in a polished sliding puzzle.</p>
+          <div class="card-tags"><span class="tag puzzle">Puzzle</span><span class="tag puzzle">Solo</span><span class="tag classic">sliding-puzzle.html</span></div>
+        </div>
+        <div class="card-foot">
+          <span class="card-status ready">● Linked File</span>
+          <span class="play-pill">Open →</span>
+        </div>
+      </a>
+      <a class="game-card" href="hangman.html">
+        <div class="card-thumb thumb-upcoming">
+          <div class="thumb-art"><span class="thumb-emoji">🪢</span></div>
+          <span class="thumb-label">hangman.html</span>
+        </div>
+        <div class="card-body">
+          <h3 class="card-title">Hangman</h3>
+          <p class="card-desc">Deduce the hidden word before the final stroke lands.</p>
+          <div class="card-tags"><span class="tag puzzle">Word</span><span class="tag puzzle">Solo</span><span class="tag classic">hangman.html</span></div>
+        </div>
+        <div class="card-foot">
+          <span class="card-status ready">● Linked File</span>
+          <span class="play-pill">Open →</span>
+        </div>
+      </a>
+      <a class="game-card" href="hex.html">
+        <div class="card-thumb thumb-upcoming">
+          <div class="thumb-art"><span class="thumb-emoji">⬡</span></div>
+          <span class="thumb-label">hex.html</span>
+        </div>
+        <div class="card-body">
+          <h3 class="card-title">Hex</h3>
+          <p class="card-desc">Connect opposite sides in a sharp abstract game with no draws and no wasted turns.</p>
+          <div class="card-tags"><span class="tag strategy">Abstract</span><span class="tag strategy">2 Players</span><span class="tag classic">hex.html</span></div>
+        </div>
+        <div class="card-foot">
+          <span class="card-status ready">● Linked File</span>
+          <span class="play-pill">Open →</span>
+        </div>
+      </a>
+      <a class="game-card" href="hues-cues.html">
+        <div class="card-thumb thumb-upcoming">
+          <div class="thumb-art"><span class="thumb-emoji">🎨</span></div>
+          <span class="thumb-label">hues-cues.html</span>
+        </div>
+        <div class="card-body">
+          <h3 class="card-title">Hues &amp; Cues</h3>
+          <p class="card-desc">Use precise color language to guide guesses across a full spectrum.</p>
+          <div class="card-tags"><span class="tag party">Party</span><span class="tag party">Color</span><span class="tag classic">hues-cues.html</span></div>
+        </div>
+        <div class="card-foot">
+          <span class="card-status ready">● Linked File</span>
+          <span class="play-pill">Open →</span>
+        </div>
+      </a>
+      <a class="game-card" href="kakuro.html">
+        <div class="card-thumb thumb-upcoming">
+          <div class="thumb-art"><span class="thumb-emoji">➗</span></div>
+          <span class="thumb-label">kakuro.html</span>
+        </div>
+        <div class="card-body">
+          <h3 class="card-title">Kakuro</h3>
+          <p class="card-desc">Crossword-style number logic where every run must satisfy its clue without repeating digits.</p>
+          <div class="card-tags"><span class="tag puzzle">Logic</span><span class="tag puzzle">Solo</span><span class="tag classic">kakuro.html</span></div>
+        </div>
+        <div class="card-foot">
+          <span class="card-status ready">● Linked File</span>
+          <span class="play-pill">Open →</span>
+        </div>
+      </a>
+      <a class="game-card" href="lights-out.html">
+        <div class="card-thumb thumb-upcoming">
+          <div class="thumb-art"><span class="thumb-emoji">💡</span></div>
+          <span class="thumb-label">lights-out.html</span>
+        </div>
+        <div class="card-body">
+          <h3 class="card-title">Lights Out</h3>
+          <p class="card-desc">Toggle the grid and extinguish every light through elegant logic.</p>
+          <div class="card-tags"><span class="tag puzzle">Logic</span><span class="tag puzzle">Solo</span><span class="tag classic">lights-out.html</span></div>
+        </div>
+        <div class="card-foot">
+          <span class="card-status ready">● Linked File</span>
+          <span class="play-pill">Open →</span>
+        </div>
+      </a>
+      <a class="game-card" href="ludo.html">
+        <div class="card-thumb thumb-upcoming">
+          <div class="thumb-art"><span class="thumb-emoji">🎲</span></div>
+          <span class="thumb-label">ludo.html</span>
+        </div>
+        <div class="card-body">
+          <h3 class="card-title">Ludo</h3>
+          <p class="card-desc">Race tokens home, time your entries, and punish exposed rivals.</p>
+          <div class="card-tags"><span class="tag classic">Classic</span><span class="tag classic">Race</span><span class="tag classic">ludo.html</span></div>
+        </div>
+        <div class="card-foot">
+          <span class="card-status ready">● Linked File</span>
+          <span class="play-pill">Open →</span>
+        </div>
+      </a>
+      <a class="game-card" href="mahjong.html">
+        <div class="card-thumb thumb-upcoming">
+          <div class="thumb-art"><span class="thumb-emoji">🀄</span></div>
+          <span class="thumb-label">mahjong.html</span>
+        </div>
+        <div class="card-body">
+          <h3 class="card-title">Mahjong</h3>
+          <p class="card-desc">Clear matching tiles from layered layouts through visibility and memory.</p>
+          <div class="card-tags"><span class="tag classic">Tiles</span><span class="tag puzzle">Solo</span><span class="tag classic">mahjong.html</span></div>
+        </div>
+        <div class="card-foot">
+          <span class="card-status ready">● Linked File</span>
+          <span class="play-pill">Open →</span>
+        </div>
+      </a>
+      <a class="game-card" href="mancala.html">
+        <div class="card-thumb thumb-upcoming">
+          <div class="thumb-art"><span class="thumb-emoji">🪨</span></div>
+          <span class="thumb-label">mancala.html</span>
+        </div>
+        <div class="card-body">
+          <h3 class="card-title">Mancala</h3>
+          <p class="card-desc">Sow stones, engineer extra turns, and convert position into captures.</p>
+          <div class="card-tags"><span class="tag classic">Classic</span><span class="tag strategy">Strategy</span><span class="tag classic">mancala.html</span></div>
+        </div>
+        <div class="card-foot">
+          <span class="card-status ready">● Linked File</span>
+          <span class="play-pill">Open →</span>
+        </div>
+      </a>
+      <a class="game-card" href="mancala (1).html">
+        <div class="card-thumb thumb-upcoming">
+          <div class="thumb-art"><span class="thumb-emoji">🪨</span></div>
+          <span class="thumb-label">mancala (1).html</span>
+        </div>
+        <div class="card-body">
+          <h3 class="card-title">Mancala (1)</h3>
+          <p class="card-desc">Alternate Mancala file retained as a separate linked page in the repository.</p>
+          <div class="card-tags"><span class="tag classic">Variant</span><span class="tag classic">Classic</span><span class="tag classic">mancala (1).html</span></div>
+        </div>
+        <div class="card-foot">
+          <span class="card-status ready">● Linked File</span>
+          <span class="play-pill">Open →</span>
+        </div>
+      </a>
+      <a class="game-card" href="mastermind.html">
+        <div class="card-thumb thumb-upcoming">
+          <div class="thumb-art"><span class="thumb-emoji">🧠</span></div>
+          <span class="thumb-label">mastermind.html</span>
+        </div>
+        <div class="card-body">
+          <h3 class="card-title">Mastermind</h3>
+          <p class="card-desc">Break the hidden code with disciplined deduction and feedback-driven guesses.</p>
+          <div class="card-tags"><span class="tag puzzle">Logic</span><span class="tag puzzle">Solo</span><span class="tag classic">mastermind.html</span></div>
+        </div>
+        <div class="card-foot">
+          <span class="card-status ready">● Linked File</span>
+          <span class="play-pill">Open →</span>
+        </div>
+      </a>
+      <a class="game-card" href="memory-card-matching.html">
+        <div class="card-thumb thumb-upcoming">
+          <div class="thumb-art"><span class="thumb-emoji">🃏</span></div>
+          <span class="thumb-label">memory-card-matching.html</span>
+        </div>
+        <div class="card-body">
+          <h3 class="card-title">Memory Card Matching</h3>
+          <p class="card-desc">Flip, remember, and pair matching cards with minimal wasted turns.</p>
+          <div class="card-tags"><span class="tag puzzle">Memory</span><span class="tag puzzle">Solo</span><span class="tag classic">memory-card-matching.html</span></div>
+        </div>
+        <div class="card-foot">
+          <span class="card-status ready">● Linked File</span>
+          <span class="play-pill">Open →</span>
+        </div>
+      </a>
+      <a class="game-card" href="minesweeper.html">
+        <div class="card-thumb thumb-upcoming">
+          <div class="thumb-art"><span class="thumb-emoji">💣</span></div>
+          <span class="thumb-label">minesweeper.html</span>
+        </div>
+        <div class="card-body">
+          <h3 class="card-title">Minesweeper</h3>
+          <p class="card-desc">Read the clues, flag the danger, and uncover the field without a fatal click.</p>
+          <div class="card-tags"><span class="tag puzzle">Logic</span><span class="tag puzzle">Solo</span><span class="tag classic">minesweeper.html</span></div>
+        </div>
+        <div class="card-foot">
+          <span class="card-status ready">● Linked File</span>
+          <span class="play-pill">Open →</span>
+        </div>
+      </a>
+      <a class="game-card" href="nine-mens-morris.html">
+        <div class="card-thumb thumb-upcoming">
+          <div class="thumb-art"><span class="thumb-emoji">⚪</span></div>
+          <span class="thumb-label">nine-mens-morris.html</span>
+        </div>
+        <div class="card-body">
+          <h3 class="card-title">Nine Men’s Morris</h3>
+          <p class="card-desc">Place, move, and capture through three classic phases of strategic play.</p>
+          <div class="card-tags"><span class="tag strategy">Historical</span><span class="tag strategy">2 Players</span><span class="tag classic">nine-mens-morris.html</span></div>
+        </div>
+        <div class="card-foot">
+          <span class="card-status ready">● Linked File</span>
+          <span class="play-pill">Open →</span>
+        </div>
+      </a>
+      <a class="game-card" href="nim.html">
+        <div class="card-thumb thumb-upcoming">
+          <div class="thumb-art"><span class="thumb-emoji">🔥</span></div>
+          <span class="thumb-label">nim.html</span>
+        </div>
+        <div class="card-body">
+          <h3 class="card-title">Nim</h3>
+          <p class="card-desc">A mathematically pure subtraction duel hidden inside a simple ruleset.</p>
+          <div class="card-tags"><span class="tag strategy">Math</span><span class="tag strategy">2 Players</span><span class="tag classic">nim.html</span></div>
+        </div>
+        <div class="card-foot">
+          <span class="card-status ready">● Linked File</span>
+          <span class="play-pill">Open →</span>
+        </div>
+      </a>
+      <a class="game-card" href="nimble-lines.html">
+        <div class="card-thumb thumb-upcoming">
+          <div class="thumb-art"><span class="thumb-emoji">➖</span></div>
+          <span class="thumb-label">nimble-lines.html</span>
+        </div>
+        <div class="card-body">
+          <h3 class="card-title">Nimble Lines</h3>
+          <p class="card-desc">Solve line-based arrangements through clean spatial reasoning and efficient paths.</p>
+          <div class="card-tags"><span class="tag puzzle">Puzzle</span><span class="tag puzzle">Solo</span><span class="tag classic">nimble-lines.html</span></div>
+        </div>
+        <div class="card-foot">
+          <span class="card-status ready">● Linked File</span>
+          <span class="play-pill">Open →</span>
+        </div>
+      </a>
+      <a class="game-card" href="peg-solitaire.html">
+        <div class="card-thumb thumb-upcoming">
+          <div class="thumb-art"><span class="thumb-emoji">📍</span></div>
+          <span class="thumb-label">peg-solitaire.html</span>
+        </div>
+        <div class="card-body">
+          <h3 class="card-title">Peg Solitaire</h3>
+          <p class="card-desc">Leap pegs, remove them cleanly, and chase the single-peg finish.</p>
+          <div class="card-tags"><span class="tag classic">Classic</span><span class="tag puzzle">Solo</span><span class="tag classic">peg-solitaire.html</span></div>
+        </div>
+        <div class="card-foot">
+          <span class="card-status ready">● Linked File</span>
+          <span class="play-pill">Open →</span>
+        </div>
+      </a>
+      <a class="game-card" href="pong.html">
+        <div class="card-thumb thumb-upcoming">
+          <div class="thumb-art"><span class="thumb-emoji">🏓</span></div>
+          <span class="thumb-label">pong.html</span>
+        </div>
+        <div class="card-body">
+          <h3 class="card-title">Pong</h3>
+          <p class="card-desc">Return the ball, control the angle, and outlast your rival in an arcade original.</p>
+          <div class="card-tags"><span class="tag classic">Arcade</span><span class="tag strategy">2 Players</span><span class="tag classic">pong.html</span></div>
+        </div>
+        <div class="card-foot">
+          <span class="card-status ready">● Linked File</span>
+          <span class="play-pill">Open →</span>
+        </div>
+      </a>
+      <a class="game-card" href="reversi-othello.html">
+        <div class="card-thumb thumb-upcoming">
+          <div class="thumb-art"><span class="thumb-emoji">⚪</span></div>
+          <span class="thumb-label">reversi-othello.html</span>
+        </div>
+        <div class="card-body">
+          <h3 class="card-title">Reversi / Othello</h3>
+          <p class="card-desc">Flip discs in every direction and dominate the late board.</p>
+          <div class="card-tags"><span class="tag strategy">Strategy</span><span class="tag strategy">2 Players</span><span class="tag classic">reversi-othello.html</span></div>
+        </div>
+        <div class="card-foot">
+          <span class="card-status ready">● Linked File</span>
+          <span class="play-pill">Open →</span>
+        </div>
+      </a>
+      <a class="game-card" href="shut-the-box.html">
+        <div class="card-thumb thumb-upcoming">
+          <div class="thumb-art"><span class="thumb-emoji">📦</span></div>
+          <span class="thumb-label">shut-the-box.html</span>
+        </div>
+        <div class="card-body">
+          <h3 class="card-title">Shut the Box</h3>
+          <p class="card-desc">Roll the dice, combine totals, and close every tile before luck runs dry.</p>
+          <div class="card-tags"><span class="tag classic">Dice</span><span class="tag classic">1–4 Players</span><span class="tag classic">shut-the-box.html</span></div>
+        </div>
+        <div class="card-foot">
+          <span class="card-status ready">● Linked File</span>
+          <span class="play-pill">Open →</span>
+        </div>
+      </a>
+      <a class="game-card" href="simon-says.html">
+        <div class="card-thumb thumb-upcoming">
+          <div class="thumb-art"><span class="thumb-emoji">🟢</span></div>
+          <span class="thumb-label">simon-says.html</span>
+        </div>
+        <div class="card-body">
+          <h3 class="card-title">Simon Says</h3>
+          <p class="card-desc">Repeat ever-longer audiovisual sequences with precision and calm.</p>
+          <div class="card-tags"><span class="tag puzzle">Memory</span><span class="tag puzzle">Solo</span><span class="tag classic">simon-says.html</span></div>
+        </div>
+        <div class="card-foot">
+          <span class="card-status ready">● Linked File</span>
+          <span class="play-pill">Open →</span>
+        </div>
+      </a>
+      <a class="game-card" href="snake.html">
+        <div class="card-thumb thumb-upcoming">
+          <div class="thumb-art"><span class="thumb-emoji">🐍</span></div>
+          <span class="thumb-label">snake.html</span>
+        </div>
+        <div class="card-body">
+          <h3 class="card-title">Snake</h3>
+          <p class="card-desc">Grow longer with every pickup while preserving enough room to survive yourself.</p>
+          <div class="card-tags"><span class="tag classic">Arcade</span><span class="tag puzzle">Solo</span><span class="tag classic">snake.html</span></div>
+        </div>
+        <div class="card-foot">
+          <span class="card-status ready">● Linked File</span>
+          <span class="play-pill">Open →</span>
+        </div>
+      </a>
+      <a class="game-card" href="solitaire-klondike (1).html">
+        <div class="card-thumb thumb-upcoming">
+          <div class="thumb-art"><span class="thumb-emoji">🂮</span></div>
+          <span class="thumb-label">solitaire-klondike (1).html</span>
+        </div>
+        <div class="card-body">
+          <h3 class="card-title">Solitaire / Klondike (1)</h3>
+          <p class="card-desc">Sort the tableau into ordered suits through careful uncovering and sequencing.</p>
+          <div class="card-tags"><span class="tag classic">Cards</span><span class="tag puzzle">Solo</span><span class="tag classic">solitaire-klondike (1).html</span></div>
+        </div>
+        <div class="card-foot">
+          <span class="card-status ready">● Linked File</span>
+          <span class="play-pill">Open →</span>
+        </div>
+      </a>
+      <a class="game-card" href="sorry.html">
+        <div class="card-thumb thumb-upcoming">
+          <div class="thumb-art"><span class="thumb-emoji">😈</span></div>
+          <span class="thumb-label">sorry.html</span>
+        </div>
+        <div class="card-body">
+          <h3 class="card-title">Sorry!</h3>
+          <p class="card-desc">Race, collide, and send opponents backward in a deceptively ruthless family classic.</p>
+          <div class="card-tags"><span class="tag classic">Classic</span><span class="tag classic">Race</span><span class="tag classic">sorry.html</span></div>
+        </div>
+        <div class="card-foot">
+          <span class="card-status ready">● Linked File</span>
+          <span class="play-pill">Open →</span>
+        </div>
+      </a>
+      <a class="game-card" href="sudoku.html">
+        <div class="card-thumb thumb-upcoming">
+          <div class="thumb-art"><span class="thumb-emoji">🔢</span></div>
+          <span class="thumb-label">sudoku.html</span>
+        </div>
+        <div class="card-body">
+          <h3 class="card-title">Sudoku</h3>
+          <p class="card-desc">Fill the grid through pure deduction and balanced constraint.</p>
+          <div class="card-tags"><span class="tag puzzle">Logic</span><span class="tag puzzle">Solo</span><span class="tag classic">sudoku.html</span></div>
+        </div>
+        <div class="card-foot">
+          <span class="card-status ready">● Linked File</span>
+          <span class="play-pill">Open →</span>
+        </div>
+      </a>
+      <a class="game-card" href="tetris.html">
+        <div class="card-thumb thumb-upcoming">
+          <div class="thumb-art"><span class="thumb-emoji">🧱</span></div>
+          <span class="thumb-label">tetris.html</span>
+        </div>
+        <div class="card-body">
+          <h3 class="card-title">Tetris</h3>
+          <p class="card-desc">Rotate, stack, and clear lines under relentless pressure from falling pieces.</p>
+          <div class="card-tags"><span class="tag classic">Arcade</span><span class="tag puzzle">Solo</span><span class="tag classic">tetris.html</span></div>
+        </div>
+        <div class="card-foot">
+          <span class="card-status ready">● Linked File</span>
+          <span class="play-pill">Open →</span>
+        </div>
+      </a>
+      <a class="game-card" href="tictactoe.html">
+        <div class="card-thumb thumb-upcoming">
+          <div class="thumb-art"><span class="thumb-emoji">✕</span></div>
+          <span class="thumb-label">tictactoe.html</span>
+        </div>
+        <div class="card-body">
+          <h3 class="card-title">Tic-Tac-Toe</h3>
+          <p class="card-desc">A compact perfect-information duel where every fork matters.</p>
+          <div class="card-tags"><span class="tag classic">Classic</span><span class="tag strategy">2 Players</span><span class="tag classic">tictactoe.html</span></div>
+        </div>
+        <div class="card-foot">
+          <span class="card-status ready">● Linked File</span>
+          <span class="play-pill">Open →</span>
+        </div>
+      </a>
+      <a class="game-card" href="water-sort.html">
+        <div class="card-thumb thumb-upcoming">
+          <div class="thumb-art"><span class="thumb-emoji">🧪</span></div>
+          <span class="thumb-label">water-sort.html</span>
+        </div>
+        <div class="card-body">
+          <h3 class="card-title">Water Sort</h3>
+          <p class="card-desc">Pour colors between vessels until every tube holds a single clean stack.</p>
+          <div class="card-tags"><span class="tag puzzle">Puzzle</span><span class="tag puzzle">Solo</span><span class="tag classic">water-sort.html</span></div>
+        </div>
+        <div class="card-foot">
+          <span class="card-status ready">● Linked File</span>
+          <span class="play-pill">Open →</span>
+        </div>
+      </a>
+      <a class="game-card" href="wordle.html">
+        <div class="card-thumb thumb-upcoming">
+          <div class="thumb-art"><span class="thumb-emoji">⌨️</span></div>
+          <span class="thumb-label">wordle.html</span>
+        </div>
+        <div class="card-body">
+          <h3 class="card-title">Wordle</h3>
+          <p class="card-desc">Probe the hidden word through constrained guesses and positional feedback.</p>
+          <div class="card-tags"><span class="tag puzzle">Word</span><span class="tag puzzle">Solo</span><span class="tag classic">wordle.html</span></div>
+        </div>
+        <div class="card-foot">
+          <span class="card-status ready">● Linked File</span>
+          <span class="play-pill">Open →</span>
+        </div>
+      </a>
+      <a class="game-card" href="yahtzee.html">
+        <div class="card-thumb thumb-upcoming">
+          <div class="thumb-art"><span class="thumb-emoji">🎲</span></div>
+          <span class="thumb-label">yahtzee.html</span>
+        </div>
+        <div class="card-body">
+          <h3 class="card-title">Yahtzee</h3>
+          <p class="card-desc">Balance rerolls, category scoring, and risk in the classic dice chase.</p>
+          <div class="card-tags"><span class="tag classic">Dice</span><span class="tag classic">Score</span><span class="tag classic">yahtzee.html</span></div>
+        </div>
+        <div class="card-foot">
+          <span class="card-status ready">● Linked File</span>
+          <span class="play-pill">Open →</span>
+        </div>
+      </a>
     </div>
-
   </main>
 
-  <!-- ── FOOTER ──────────────────────────────────────────────── -->
   <footer class="hub-footer">
     <span>© <span id="year"></span> Rising Phoenix Gallery · Michigan City, IN</span>
-    <span>Crafted by John Ryszka II · <a href="https://www.risingphxgallery.com" style="color:var(--gold);text-decoration:none;">RisingPhxGallery.com</a></span>
+    <span>Crafted by John Ryszka II · <a href="https://www.risingphxgallery.com">RisingPhxGallery.com</a></span>
   </footer>
-
 </div>
-
-<script>
-  document.getElementById('year').textContent = new Date().getFullYear();
-</script>
+<script>document.getElementById('year').textContent = new Date().getFullYear();</script>
 </body>
 </html>
