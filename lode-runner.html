@@ -1,0 +1,1174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Lode Runner — Rising Phoenix Games</title>
+  <link rel="stylesheet" href="shared.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700;900&family=Cinzel+Decorative:wght@400;700&family=IM+Fell+English:ital@0;1&display=swap" rel="stylesheet" />
+  <style>
+    html, body { height: 100%; margin: 0; padding: 0; }
+    body {
+      display: flex;
+      flex-direction: column;
+      background:
+        radial-gradient(ellipse 80% 55% at 20% 10%, rgba(80,40,10,0.55) 0%, transparent 60%),
+        radial-gradient(ellipse 60% 70% at 80% 85%, rgba(40,20,5,0.6)  0%, transparent 55%),
+        linear-gradient(160deg, #1a1005 0%, #0f0c07 40%, #100d08 100%);
+      background-attachment: fixed;
+      min-height: 100vh;
+    }
+
+    /* ── HEADER ─────────────────────────────────────────────── */
+    .game-header {
+      background: linear-gradient(180deg, #1e1508 0%, #120e06 100%);
+      border-bottom: 2px solid #c8952a;
+      box-shadow: 0 4px 24px rgba(0,0,0,0.7), inset 0 1px 0 rgba(200,149,42,0.12);
+      flex-shrink: 0;
+      position: relative;
+      overflow: hidden;
+    }
+    .game-header::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: repeating-linear-gradient(90deg,
+        transparent 0px, transparent 56px,
+        rgba(200,149,42,0.03) 56px, rgba(200,149,42,0.03) 57px);
+      pointer-events: none;
+    }
+    .header-inner {
+      display: grid;
+      grid-template-columns: 1fr auto 1fr;
+      align-items: center;
+      padding: 12px 20px;
+      gap: 12px;
+      position: relative;
+    }
+    .header-left { display: flex; align-items: center; }
+    .header-center {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      justify-content: center;
+    }
+    .header-right { display: flex; justify-content: flex-end; align-items: center; }
+
+    .rpg-logo {
+      width: 44px;
+      height: 44px;
+      filter: drop-shadow(0 0 8px rgba(200,149,42,0.45));
+      flex-shrink: 0;
+    }
+
+    .game-title {
+      font-family: 'Cinzel Decorative', serif;
+      font-size: clamp(16px, 3.5vw, 26px);
+      font-weight: 700;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      margin: 0;
+      background: linear-gradient(135deg, #f0d080 0%, #c8952a 45%, #a07020 80%, #f0d080 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      line-height: 1.1;
+      white-space: nowrap;
+    }
+    .game-subtitle {
+      font-family: 'IM Fell English', serif;
+      font-style: italic;
+      font-size: 11px;
+      color: #a09070;
+      letter-spacing: 1px;
+      text-align: center;
+      margin-top: 2px;
+    }
+
+    /* ── SCORE BAR ──────────────────────────────────────────── */
+    .score-bar {
+      display: flex;
+      justify-content: center;
+      gap: 32px;
+      padding: 8px 20px;
+      background: rgba(0,0,0,0.3);
+      border-bottom: 1px solid rgba(200,149,42,0.15);
+      flex-wrap: wrap;
+    }
+    .score-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 1px;
+    }
+    .score-label {
+      font-family: 'Cinzel', serif;
+      font-size: 9px;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: #8a6818;
+    }
+    .score-value {
+      font-family: 'Cinzel', serif;
+      font-size: 18px;
+      font-weight: 700;
+      color: #f0d080;
+      letter-spacing: 1px;
+      line-height: 1;
+    }
+
+    /* ── GAME WRAPPER ───────────────────────────────────────── */
+    .game-wrapper {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+      gap: 12px;
+    }
+
+    .canvas-shell {
+      position: relative;
+      border: 2px solid rgba(200,149,42,0.4);
+      border-radius: 8px;
+      box-shadow:
+        0 0 40px rgba(0,0,0,0.8),
+        0 0 0 1px rgba(0,0,0,0.6),
+        inset 0 0 60px rgba(0,0,0,0.4);
+      overflow: hidden;
+      background: #0a0804;
+    }
+
+    #gameCanvas {
+      display: block;
+      image-rendering: pixelated;
+    }
+
+    /* ── OVERLAYS ───────────────────────────────────────────── */
+    .overlay {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 16px;
+      background: rgba(5,3,1,0.88);
+      z-index: 10;
+      transition: opacity 0.3s;
+    }
+    .overlay.hidden { opacity: 0; pointer-events: none; }
+
+    .overlay-title {
+      font-family: 'Cinzel Decorative', serif;
+      font-size: clamp(20px, 5vw, 36px);
+      font-weight: 700;
+      letter-spacing: 3px;
+      text-align: center;
+      background: linear-gradient(135deg, #f0d080, #c8952a, #f0d080);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin: 0;
+      text-shadow: none;
+    }
+    .overlay-subtitle {
+      font-family: 'IM Fell English', serif;
+      font-style: italic;
+      font-size: 13px;
+      color: #a09070;
+      letter-spacing: 1px;
+      text-align: center;
+      margin: 0;
+      padding: 0 20px;
+    }
+    .overlay-score {
+      font-family: 'Cinzel', serif;
+      font-size: 28px;
+      font-weight: 700;
+      color: #f0d080;
+    }
+    .overlay-btn {
+      font-family: 'Cinzel', serif;
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: #f0d080;
+      background: linear-gradient(180deg, #2a2010 0%, #1a1508 100%);
+      border: 1px solid #c8952a;
+      border-bottom-color: #8a6818;
+      padding: 10px 28px;
+      border-radius: 4px;
+      cursor: pointer;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.5), inset 0 1px 0 rgba(240,208,128,0.1);
+      transition: all 0.15s;
+    }
+    .overlay-btn:hover {
+      background: linear-gradient(180deg, #3a2c14 0%, #241a09 100%);
+      border-color: #f0d080;
+      box-shadow: 0 2px 14px rgba(200,149,42,0.35);
+      transform: translateY(-1px);
+    }
+
+    /* ── CONTROLS HINT ──────────────────────────────────────── */
+    .controls-hint {
+      font-family: 'Cinzel', serif;
+      font-size: 10px;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      color: #5a4820;
+      text-align: center;
+    }
+    .controls-hint span { color: #8a6818; }
+
+    /* ── VICTORY BANNER ─────────────────────────────────────── */
+    #victoryBanner {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      transform: translate(-50%, -50%) scale(0);
+      background: linear-gradient(160deg, #261c0a, #1a1005);
+      border: 2px solid #c8952a;
+      border-radius: 8px;
+      padding: 18px 28px;
+      text-align: center;
+      z-index: 20;
+      pointer-events: none;
+      box-shadow: 0 0 40px rgba(200,149,42,0.4), inset 0 0 20px rgba(0,0,0,0.4);
+      white-space: nowrap;
+    }
+    #victoryBanner .v-title {
+      font-family: 'Cinzel Decorative', serif;
+      font-size: clamp(18px, 4vw, 28px);
+      font-weight: 700;
+      color: #f0d080;
+      letter-spacing: 2px;
+      display: block;
+      margin-bottom: 4px;
+    }
+    #victoryBanner .v-sub {
+      font-family: 'IM Fell English', serif;
+      font-style: italic;
+      font-size: 12px;
+      color: #a09070;
+    }
+
+    /* ── CONFETTI ───────────────────────────────────────────── */
+    .confetti-piece {
+      position: absolute;
+      width: 8px;
+      height: 8px;
+      border-radius: 1px;
+      pointer-events: none;
+      z-index: 19;
+      animation: confettiFall linear forwards;
+    }
+    @keyframes confettiFall {
+      0%   { opacity: 1; transform: translateY(0) rotate(0deg); }
+      100% { opacity: 0; transform: translateY(300px) rotate(720deg); }
+    }
+
+    /* ── FOOTER ─────────────────────────────────────────────── */
+    .game-footer {
+      padding: 8px 20px 12px;
+      border-top: 1px solid rgba(200,149,42,0.1);
+      font-family: 'IM Fell English', serif;
+      font-style: italic;
+      font-size: 11px;
+      color: rgba(200,170,100,0.35);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 8px;
+      flex-shrink: 0;
+    }
+
+    @media (max-width: 600px) {
+      .header-inner { padding: 10px 14px; }
+      .score-bar { gap: 16px; padding: 6px 12px; }
+      .score-value { font-size: 15px; }
+      .game-wrapper { padding: 10px; }
+    }
+  </style>
+</head>
+<body>
+<div style="display:flex;flex-direction:column;min-height:100vh;">
+
+  <!-- HEADER -->
+  <header class="game-header">
+    <div class="header-inner">
+      <div class="header-left">
+        <a href="index.html" class="rpg-back" style="font-family:'Cinzel',serif;font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:#a09070;text-decoration:none;display:inline-flex;align-items:center;gap:6px;transition:color 0.15s;padding:4px 0;white-space:nowrap;">Hub</a>
+      </div>
+      <div class="header-center">
+        <img class="rpg-logo" src="data:image/png;base64,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" alt="Rising Phoenix Games logo" />
+        <div>
+          <h1 class="game-title">Lode Runner</h1>
+          <div class="game-subtitle">Endless Runner of the Phoenix</div>
+        </div>
+      </div>
+      <div class="header-right">
+        <!-- mirror spacer -->
+      </div>
+    </div>
+  </header>
+
+  <!-- SCORE BAR -->
+  <div class="score-bar">
+    <div class="score-item">
+      <span class="score-label">Score</span>
+      <span class="score-value" id="scoreDisplay">0</span>
+    </div>
+    <div class="score-item">
+      <span class="score-label">Best</span>
+      <span class="score-value" id="bestDisplay">0</span>
+    </div>
+    <div class="score-item">
+      <span class="score-label">Distance</span>
+      <span class="score-value" id="distDisplay">0m</span>
+    </div>
+    <div class="score-item">
+      <span class="score-label">Level</span>
+      <span class="score-value" id="levelDisplay">1</span>
+    </div>
+  </div>
+
+  <!-- GAME -->
+  <div class="game-wrapper">
+    <div class="canvas-shell" id="canvasShell">
+      <canvas id="gameCanvas"></canvas>
+
+      <!-- Victory Banner -->
+      <div id="victoryBanner">
+        <span class="v-title">🔥 Phoenix Triumphant! 🔥</span>
+        <span class="v-sub">The flame endures beyond all obstacles</span>
+      </div>
+
+      <!-- Start Overlay -->
+      <div class="overlay" id="startOverlay">
+        <h2 class="overlay-title">Lode Runner</h2>
+        <p class="overlay-subtitle">The Phoenix runs eternal — leap the obstacles, gather the gold, outpace the darkness</p>
+        <button class="overlay-btn" id="startBtn">Begin the Run</button>
+        <div style="font-family:'Cinzel',serif;font-size:9px;letter-spacing:2px;text-transform:uppercase;color:#5a4820;text-align:center;margin-top:4px;">
+          Space / Tap to jump · Double-jump available
+        </div>
+      </div>
+
+      <!-- Game Over Overlay -->
+      <div class="overlay hidden" id="gameOverOverlay">
+        <h2 class="overlay-title">The Run Ends</h2>
+        <p class="overlay-subtitle" id="goMessage">The flame falters — but a phoenix always rises</p>
+        <div class="overlay-score" id="goScore">0</div>
+        <button class="overlay-btn" id="restartBtn">Rise Again</button>
+      </div>
+    </div>
+
+    <div class="controls-hint">
+      <span>Space</span> or <span>↑</span> or <span>Tap</span> to Jump &nbsp;·&nbsp; Double-jump available
+    </div>
+  </div>
+
+  <!-- FOOTER -->
+  <footer class="game-footer">
+    <span>© <span id="year"></span> Rising Phoenix Gallery · Michigan City, IN</span>
+    <span>Crafted by John Ryszka II</span>
+  </footer>
+</div>
+
+<script>
+(function() {
+  'use strict';
+
+  // ── CANVAS SETUP ────────────────────────────────────────────────
+  const canvas = document.getElementById('gameCanvas');
+  const ctx = canvas.getContext('2d');
+  const shell = document.getElementById('canvasShell');
+
+  const BASE_W = 800;
+  const BASE_H = 320;
+  let scale = 1;
+
+  function resizeCanvas() {
+    const maxW = Math.min(window.innerWidth - 32, BASE_W);
+    scale = maxW / BASE_W;
+    canvas.width  = Math.round(BASE_W * scale);
+    canvas.height = Math.round(BASE_H * scale);
+    canvas.style.width  = canvas.width  + 'px';
+    canvas.style.height = canvas.height + 'px';
+  }
+  resizeCanvas();
+  window.addEventListener('resize', () => { resizeCanvas(); if (!running) drawStatic(); });
+
+  // ── STATE ────────────────────────────────────────────────────────
+  let running = false;
+  let score = 0;
+  let best  = parseInt(localStorage.getItem('loderunner_best') || '0');
+  let distance = 0;
+  let level = 1;
+  let animId = null;
+  let lastTime = 0;
+  let frameCount = 0;
+
+  // Speed increases over time
+  let gameSpeed = 3.5;
+  const MAX_SPEED = 12;
+
+  // ── PLAYER ───────────────────────────────────────────────────────
+  const GROUND_Y_BASE = BASE_H - 64; // base ground level
+  const PLAYER_W = 28;
+  const PLAYER_H = 34;
+
+  const player = {
+    x: 90,
+    y: GROUND_Y_BASE - PLAYER_H,
+    vy: 0,
+    jumpsLeft: 2,
+    grounded: false,
+    dead: false,
+    runFrame: 0,
+    runTimer: 0,
+    squish: 1,
+    breathe: 0,
+  };
+
+  const GRAVITY = 0.7;
+  const JUMP_VEL = -13.5;
+
+  // ── PLATFORMS (for platform gaps) ───────────────────────────────
+  const PLATFORM_H = 12;
+  const PLATFORM_Y = GROUND_Y_BASE + PLAYER_H; // bottom of player standing
+
+  // ── OBSTACLES ────────────────────────────────────────────────────
+  let obstacles = [];
+  let coins     = [];
+  let particles = [];
+  let bgStars   = [];
+  let bgLayers  = []; // parallax bg columns
+
+  // Obstacle spawn
+  let spawnTimer = 0;
+  let spawnInterval = 90; // frames
+
+  // ── COIN SPAWN ───────────────────────────────────────────────────
+  let coinTimer = 0;
+
+  // ── PARALLAX BACKGROUND ──────────────────────────────────────────
+  // Columns of "ruins" in background
+  function initBgLayers() {
+    bgLayers = [];
+    for (let i = 0; i < 12; i++) {
+      bgLayers.push({
+        x: (BASE_W / 12) * i + Math.random() * 30,
+        h: 30 + Math.random() * 60,
+        w: 12 + Math.random() * 20,
+        speed: 0.4 + Math.random() * 0.4,
+        alpha: 0.06 + Math.random() * 0.08,
+      });
+    }
+    // Stars
+    bgStars = [];
+    for (let i = 0; i < 40; i++) {
+      bgStars.push({
+        x: Math.random() * BASE_W,
+        y: Math.random() * (BASE_H * 0.55),
+        r: 0.5 + Math.random() * 1.2,
+        twinkle: Math.random() * Math.PI * 2,
+      });
+    }
+  }
+
+  // ── OBSTACLE TYPES ───────────────────────────────────────────────
+  // Types: 'short', 'tall', 'double', 'gap', 'low_bar', 'floating'
+  const OBS_TYPES = [
+    { type: 'short',    w: 22, h: 36, y_off: 0 },
+    { type: 'tall',     w: 22, h: 58, y_off: 0 },
+    { type: 'double',   w: 18, h: 36, y_off: 0, gap: 30 },
+    { type: 'low_bar',  w: 60, h: 14, y_off: 22 }, // must duck under... but we don't have duck, so skip for now
+    { type: 'floating', w: 22, h: 24, y_off: -50 },
+  ];
+
+  function spawnObstacle() {
+    // Pick type weighted by level
+    let pool = ['short', 'tall'];
+    if (level >= 2) pool.push('double');
+    if (level >= 3) pool.push('floating');
+    if (level >= 4) pool = pool.concat(['tall', 'double', 'floating']);
+
+    const typeName = pool[Math.floor(Math.random() * pool.length)];
+
+    if (typeName === 'double') {
+      // Two short obstacles with a gap
+      const gap = 28 + Math.random() * 20;
+      obstacles.push({
+        type: 'short', x: BASE_W + 10,
+        w: 22, h: 36,
+        y: GROUND_Y_BASE - 36,
+        alive: true, shimmer: 0,
+      });
+      obstacles.push({
+        type: 'short', x: BASE_W + 10 + 22 + gap,
+        w: 22, h: 36,
+        y: GROUND_Y_BASE - 36,
+        alive: true, shimmer: 0,
+      });
+    } else if (typeName === 'floating') {
+      obstacles.push({
+        type: 'floating', x: BASE_W + 10,
+        w: 30, h: 18,
+        y: GROUND_Y_BASE - PLAYER_H - 30 - Math.random() * 30,
+        alive: true, shimmer: 0,
+        floatPhase: Math.random() * Math.PI * 2,
+      });
+    } else {
+      const def = OBS_TYPES.find(o => o.type === typeName);
+      obstacles.push({
+        type: typeName, x: BASE_W + 10,
+        w: def.w, h: def.h,
+        y: GROUND_Y_BASE - def.h,
+        alive: true, shimmer: 0,
+      });
+    }
+  }
+
+  function spawnCoin() {
+    const x = BASE_W + 20 + Math.random() * 100;
+    const yBase = GROUND_Y_BASE - PLAYER_H;
+    const y = yBase - 20 - Math.random() * 50;
+    coins.push({ x, y, alive: true, phase: Math.random() * Math.PI * 2, r: 9 });
+  }
+
+  // ── PARTICLES ────────────────────────────────────────────────────
+  function spawnParticles(x, y, color, count) {
+    for (let i = 0; i < count; i++) {
+      const angle = Math.random() * Math.PI * 2;
+      const speed = 1.5 + Math.random() * 4;
+      particles.push({
+        x, y,
+        vx: Math.cos(angle) * speed,
+        vy: Math.sin(angle) * speed - 2,
+        alpha: 1,
+        color,
+        r: 2 + Math.random() * 3,
+        life: 0.6 + Math.random() * 0.4,
+        age: 0,
+      });
+    }
+  }
+
+  // ── RESET ─────────────────────────────────────────────────────────
+  function resetGame() {
+    player.x = 90;
+    player.y = GROUND_Y_BASE - PLAYER_H;
+    player.vy = 0;
+    player.jumpsLeft = 2;
+    player.grounded  = false;
+    player.dead = false;
+    player.runFrame = 0;
+    player.runTimer = 0;
+    player.squish = 1;
+    player.breathe = 0;
+    obstacles  = [];
+    coins      = [];
+    particles  = [];
+    score      = 0;
+    distance   = 0;
+    level      = 1;
+    gameSpeed  = 3.5;
+    spawnTimer = 0;
+    spawnInterval = 90;
+    coinTimer  = 0;
+    frameCount = 0;
+    initBgLayers();
+    updateHUD();
+  }
+
+  // ── INPUT ─────────────────────────────────────────────────────────
+  let jumpQueued = false;
+
+  function tryJump() {
+    if (!running) return;
+    if (player.dead) return;
+    if (player.jumpsLeft > 0) {
+      player.vy = JUMP_VEL * (player.jumpsLeft === 2 ? 1 : 0.85);
+      player.jumpsLeft--;
+      player.grounded = false;
+      // Jump particle burst
+      spawnParticles(
+        player.x + PLAYER_W / 2,
+        player.y + PLAYER_H,
+        player.jumpsLeft === 1 ? '#f0d080' : '#c8952a',
+        6
+      );
+    }
+  }
+
+  document.addEventListener('keydown', e => {
+    if (e.code === 'Space' || e.code === 'ArrowUp' || e.code === 'KeyW') {
+      e.preventDefault();
+      tryJump();
+    }
+  });
+  canvas.addEventListener('pointerdown', e => { e.preventDefault(); tryJump(); });
+  document.addEventListener('touchstart', e => { e.preventDefault(); tryJump(); }, { passive: false });
+
+  // ── COLLISION ─────────────────────────────────────────────────────
+  function rectsOverlap(ax, ay, aw, ah, bx, by, bw, bh) {
+    const margin = 4; // forgiveness margin
+    return ax + margin < bx + bw - margin &&
+           ax + aw - margin > bx + margin &&
+           ay + margin < by + bh - margin &&
+           ay + ah - margin > by + margin;
+  }
+
+  // ── UPDATE ────────────────────────────────────────────────────────
+  function update(dt) {
+    frameCount++;
+    // Speed ramp
+    gameSpeed = Math.min(MAX_SPEED, 3.5 + frameCount * 0.0018);
+    level = Math.floor(1 + frameCount / 500);
+    spawnInterval = Math.max(45, 90 - level * 6);
+
+    // Player physics
+    player.vy += GRAVITY;
+    player.y  += player.vy;
+    player.breathe += 0.05;
+
+    // Ground collision
+    const groundY = GROUND_Y_BASE - PLAYER_H + PLAYER_H; // bottom of player at ground
+    const groundLevel = GROUND_Y_BASE;
+    if (player.y + PLAYER_H >= groundLevel) {
+      player.y = groundLevel - PLAYER_H;
+      if (player.vy > 0) {
+        // Landing squish
+        player.squish = 0.75;
+      }
+      player.vy = 0;
+      player.grounded  = true;
+      player.jumpsLeft = 2;
+    } else {
+      player.grounded = false;
+    }
+    // Squish recovery
+    player.squish += (1 - player.squish) * 0.2;
+
+    // Run animation
+    if (player.grounded) {
+      player.runTimer++;
+      if (player.runTimer % 8 === 0) player.runFrame = (player.runFrame + 1) % 4;
+    }
+
+    // Spawn obstacles
+    spawnTimer++;
+    if (spawnTimer >= spawnInterval) {
+      spawnTimer = 0;
+      spawnObstacle();
+    }
+
+    // Spawn coins
+    coinTimer++;
+    if (coinTimer >= 40) {
+      coinTimer = 0;
+      if (Math.random() < 0.65) spawnCoin();
+    }
+
+    // Move obstacles
+    for (let i = obstacles.length - 1; i >= 0; i--) {
+      const obs = obstacles[i];
+      obs.x -= gameSpeed;
+      obs.shimmer = (obs.shimmer + 0.04) % (Math.PI * 2);
+      if (obs.type === 'floating') {
+        obs.y += Math.sin(obs.floatPhase + frameCount * 0.04) * 0.4;
+      }
+      if (obs.x + obs.w < 0) { obstacles.splice(i, 1); continue; }
+      // Collision
+      if (obs.alive && rectsOverlap(player.x, player.y, PLAYER_W, PLAYER_H, obs.x, obs.y, obs.w, obs.h)) {
+        triggerDeath();
+        return;
+      }
+    }
+
+    // Move coins
+    for (let i = coins.length - 1; i >= 0; i--) {
+      const c = coins[i];
+      c.x -= gameSpeed;
+      c.phase += 0.07;
+      if (c.x + c.r * 2 < 0) { coins.splice(i, 1); continue; }
+      if (!c.alive) continue;
+      // Coin collect
+      if (rectsOverlap(player.x, player.y, PLAYER_W, PLAYER_H,
+                       c.x - c.r, c.y - c.r, c.r * 2, c.r * 2)) {
+        c.alive = false;
+        coins.splice(i, 1);
+        score += 10;
+        spawnParticles(c.x, c.y, '#f0d080', 8);
+        // Milestone check
+        if (score % 100 === 0) triggerVictory();
+      }
+    }
+
+    // Particles
+    for (let i = particles.length - 1; i >= 0; i--) {
+      const p = particles[i];
+      p.x    += p.vx;
+      p.y    += p.vy;
+      p.vy   += 0.15;
+      p.age  += 0.03;
+      p.alpha = Math.max(0, 1 - p.age / p.life);
+      if (p.alpha <= 0) { particles.splice(i, 1); }
+    }
+
+    // Scroll bg columns
+    for (const col of bgLayers) {
+      col.x -= gameSpeed * col.speed;
+      if (col.x + col.w < 0) col.x = BASE_W + Math.random() * 40;
+    }
+
+    // Score from distance
+    distance = Math.floor(frameCount * gameSpeed * 0.01);
+    score += 0.05;
+    updateHUD();
+  }
+
+  function triggerDeath() {
+    if (player.dead) return;
+    player.dead = true;
+    running = false;
+    spawnParticles(player.x + PLAYER_W / 2, player.y + PLAYER_H / 2, '#c04040', 20);
+    // Draw one last frame
+    draw();
+
+    const finalScore = Math.floor(score);
+    if (finalScore > best) {
+      best = finalScore;
+      localStorage.setItem('loderunner_best', best);
+    }
+    document.getElementById('goScore').textContent = 'Score: ' + finalScore;
+    const msgs = [
+      'The flame falters — but a phoenix always rises',
+      'Even embers hold the memory of fire',
+      'The road ends — but the path begins anew',
+      'Fallen, yet unbroken by the dark',
+    ];
+    document.getElementById('goMessage').textContent = msgs[Math.floor(Math.random() * msgs.length)];
+    setTimeout(() => {
+      document.getElementById('gameOverOverlay').classList.remove('hidden');
+    }, 600);
+    updateHUD();
+  }
+
+  // ── MILESTONE VICTORY ─────────────────────────────────────────────
+  function triggerVictory() {
+    fireConfetti();
+    const banner = document.getElementById('victoryBanner');
+    banner.style.transition = 'transform 0.75s cubic-bezier(0.34,1.56,0.64,1)';
+    banner.style.transform  = 'translate(-50%, -50%) scale(1)';
+    setTimeout(() => {
+      banner.style.transition = 'transform 0.3s ease-in';
+      banner.style.transform  = 'translate(-50%, -50%) scale(0)';
+    }, 1750);
+  }
+
+  function fireConfetti() {
+    const colors = ['#f0d080','#c8952a','#ff6060','#60c0ff','#80ff80','#ffaa40','#ff80d0'];
+    const shell2 = document.getElementById('canvasShell');
+    const rect = shell2.getBoundingClientRect();
+    for (let i = 0; i < 60; i++) {
+      setTimeout(() => {
+        const el = document.createElement('div');
+        el.className = 'confetti-piece';
+        el.style.left  = (10 + Math.random() * 80) + '%';
+        el.style.top   = (Math.random() * 40) + '%';
+        el.style.background = colors[Math.floor(Math.random() * colors.length)];
+        el.style.transform  = 'rotate(' + (Math.random() * 360) + 'deg)';
+        el.style.animationDuration = (0.8 + Math.random() * 1.2) + 's';
+        el.style.opacity = '1';
+        shell2.appendChild(el);
+        setTimeout(() => el.remove(), 2500);
+      }, i * 25);
+    }
+  }
+
+  // ── HUD ───────────────────────────────────────────────────────────
+  function updateHUD() {
+    document.getElementById('scoreDisplay').textContent = Math.floor(score);
+    document.getElementById('bestDisplay').textContent  = Math.floor(best);
+    document.getElementById('distDisplay').textContent  = distance + 'm';
+    document.getElementById('levelDisplay').textContent = level;
+  }
+
+  // ── DRAW ──────────────────────────────────────────────────────────
+  function draw() {
+    const S = scale;
+    ctx.save();
+    ctx.scale(S, S);
+
+    const W = BASE_W, H = BASE_H;
+
+    // Sky gradient
+    const sky = ctx.createLinearGradient(0, 0, 0, H);
+    sky.addColorStop(0, '#0a0804');
+    sky.addColorStop(0.6, '#110e06');
+    sky.addColorStop(1,   '#1a1005');
+    ctx.fillStyle = sky;
+    ctx.fillRect(0, 0, W, H);
+
+    // Stars
+    const t = Date.now() * 0.001;
+    for (const star of bgStars) {
+      const tw = 0.6 + 0.4 * Math.sin(star.twinkle + t * 1.5);
+      ctx.globalAlpha = tw * 0.6;
+      ctx.fillStyle = '#f0d080';
+      ctx.beginPath();
+      ctx.arc(star.x, star.y, star.r, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    ctx.globalAlpha = 1;
+
+    // Background ruin columns
+    for (const col of bgLayers) {
+      ctx.globalAlpha = col.alpha;
+      const cg = ctx.createLinearGradient(col.x, H - col.h - 20, col.x, H - 20);
+      cg.addColorStop(0, '#8a6818');
+      cg.addColorStop(1, '#3a2810');
+      ctx.fillStyle = cg;
+      ctx.fillRect(col.x, H - col.h - 20, col.w, col.h);
+      // Battlements
+      for (let b = 0; b < 3; b++) {
+        ctx.fillRect(col.x + b * (col.w / 3), H - col.h - 26, col.w / 3 - 2, 8);
+      }
+    }
+    ctx.globalAlpha = 1;
+
+    // Ground platform
+    const gGrad = ctx.createLinearGradient(0, GROUND_Y_BASE, 0, H);
+    gGrad.addColorStop(0, '#3a2810');
+    gGrad.addColorStop(0.15, '#261c0a');
+    gGrad.addColorStop(1, '#0f0c07');
+    ctx.fillStyle = gGrad;
+    ctx.fillRect(0, GROUND_Y_BASE, W, H - GROUND_Y_BASE);
+
+    // Ground top edge glow
+    ctx.strokeStyle = '#c8952a';
+    ctx.lineWidth = 1.5;
+    ctx.globalAlpha = 0.5;
+    ctx.beginPath();
+    ctx.moveTo(0, GROUND_Y_BASE);
+    ctx.lineTo(W, GROUND_Y_BASE);
+    ctx.stroke();
+    ctx.globalAlpha = 1;
+
+    // Ground stone tiles
+    ctx.strokeStyle = 'rgba(200,149,42,0.1)';
+    ctx.lineWidth = 1;
+    for (let gx = (-(frameCount * gameSpeed) % 48); gx < W; gx += 48) {
+      ctx.beginPath();
+      ctx.moveTo(gx, GROUND_Y_BASE + 12);
+      ctx.lineTo(gx, H);
+      ctx.stroke();
+    }
+    for (let gy = GROUND_Y_BASE + 12; gy < H; gy += 20) {
+      ctx.beginPath();
+      ctx.moveTo(0, gy);
+      ctx.lineTo(W, gy);
+      ctx.stroke();
+    }
+
+    // Coins
+    for (const c of coins) {
+      if (!c.alive) continue;
+      const bobY = c.y + Math.sin(c.phase) * 4;
+      // Glow
+      const cgl = ctx.createRadialGradient(c.x, bobY, 0, c.x, bobY, c.r * 2.5);
+      cgl.addColorStop(0, 'rgba(240,208,128,0.3)');
+      cgl.addColorStop(1, 'rgba(240,208,128,0)');
+      ctx.fillStyle = cgl;
+      ctx.beginPath();
+      ctx.arc(c.x, bobY, c.r * 2.5, 0, Math.PI * 2);
+      ctx.fill();
+      // Coin body
+      const cBody = ctx.createRadialGradient(c.x - 2, bobY - 2, 1, c.x, bobY, c.r);
+      cBody.addColorStop(0, '#fff0a0');
+      cBody.addColorStop(0.5, '#f0d080');
+      cBody.addColorStop(1, '#a07020');
+      ctx.fillStyle = cBody;
+      ctx.beginPath();
+      ctx.arc(c.x, bobY, c.r, 0, Math.PI * 2);
+      ctx.fill();
+      // Inner mark
+      ctx.strokeStyle = 'rgba(160,112,32,0.5)';
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.arc(c.x, bobY, c.r * 0.55, 0, Math.PI * 2);
+      ctx.stroke();
+    }
+
+    // Obstacles
+    for (const obs of obstacles) {
+      drawObstacle(obs);
+    }
+
+    // Player
+    if (!player.dead) {
+      drawPlayer();
+    }
+
+    // Particles
+    for (const p of particles) {
+      ctx.globalAlpha = p.alpha;
+      ctx.fillStyle   = p.color;
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    ctx.globalAlpha = 1;
+
+    // Vignette
+    const vig = ctx.createRadialGradient(W/2, H/2, H*0.3, W/2, H/2, H*0.85);
+    vig.addColorStop(0, 'transparent');
+    vig.addColorStop(1, 'rgba(0,0,0,0.55)');
+    ctx.fillStyle = vig;
+    ctx.fillRect(0, 0, W, H);
+
+    ctx.restore();
+  }
+
+  function drawObstacle(obs) {
+    const ctx2 = ctx;
+    const W = obs.w, H = obs.h, X = obs.x, Y = obs.y;
+    const shimmer = 0.5 + 0.5 * Math.sin(obs.shimmer);
+
+    if (obs.type === 'floating') {
+      // Floating platform / spike
+      const fg = ctx2.createLinearGradient(X, Y, X + W, Y + H);
+      fg.addColorStop(0, '#4a2878');
+      fg.addColorStop(1, '#2a1040');
+      ctx2.fillStyle = fg;
+      ctx2.beginPath();
+      ctx2.roundRect(X, Y, W, H, 4);
+      ctx2.fill();
+      ctx2.strokeStyle = `rgba(180,100,240,${0.4 + shimmer * 0.3})`;
+      ctx2.lineWidth = 1.5;
+      ctx2.stroke();
+      // Spikes on bottom
+      const ns = 3;
+      for (let i = 0; i < ns; i++) {
+        const sx = X + (W / ns) * i + W / (ns * 2);
+        ctx2.fillStyle = `rgba(200,100,255,${0.8 + shimmer * 0.2})`;
+        ctx2.beginPath();
+        ctx2.moveTo(sx - 4, Y + H);
+        ctx2.lineTo(sx, Y + H + 8);
+        ctx2.lineTo(sx + 4, Y + H);
+        ctx2.fill();
+      }
+    } else {
+      // Stone pillar
+      const pg = ctx2.createLinearGradient(X, Y, X + W, Y + H);
+      pg.addColorStop(0, `rgba(${Math.round(80 + shimmer * 30)},50,20,1)`);
+      pg.addColorStop(0.5, '#3a2010');
+      pg.addColorStop(1, '#1a0c04');
+      ctx2.fillStyle = pg;
+      ctx2.fillRect(X, Y, W, H);
+
+      // Stone texture lines
+      ctx2.strokeStyle = 'rgba(200,149,42,0.08)';
+      ctx2.lineWidth = 1;
+      for (let sy = Y + 12; sy < Y + H; sy += 14) {
+        ctx2.beginPath();
+        ctx2.moveTo(X, sy);
+        ctx2.lineTo(X + W, sy);
+        ctx2.stroke();
+      }
+
+      // Gold edge
+      ctx2.strokeStyle = `rgba(200,149,42,${0.3 + shimmer * 0.2})`;
+      ctx2.lineWidth = 1.5;
+      ctx2.strokeRect(X, Y, W, H);
+
+      // Top cap
+      const capG = ctx2.createLinearGradient(X, Y, X + W, Y + 8);
+      capG.addColorStop(0, '#c8952a');
+      capG.addColorStop(1, '#8a6818');
+      ctx2.fillStyle = capG;
+      ctx2.fillRect(X - 2, Y, W + 4, 8);
+
+      // Danger spikes on top
+      const spCount = Math.max(2, Math.floor(W / 10));
+      for (let i = 0; i < spCount; i++) {
+        const sx = X + (W / spCount) * i + W / (spCount * 2);
+        ctx2.fillStyle = `rgba(240,200,60,${0.7 + shimmer * 0.3})`;
+        ctx2.beginPath();
+        ctx2.moveTo(sx - 4, Y + 2);
+        ctx2.lineTo(sx, Y - 10);
+        ctx2.lineTo(sx + 4, Y + 2);
+        ctx2.fill();
+      }
+    }
+  }
+
+  function drawPlayer() {
+    const px = player.x;
+    const squish = player.squish;
+    const stretchY = 1 + (1 - squish) * 0.3;
+    const py = player.y + PLAYER_H * (1 - squish);
+    const PW = PLAYER_W;
+    const PH = PLAYER_H * squish;
+    const cx = px + PW / 2;
+    const t  = Date.now() * 0.001;
+
+    ctx.save();
+    ctx.translate(cx, py + PH);
+    ctx.scale(1, squish);
+    ctx.translate(-cx, -(py + PH));
+
+    // Body glow
+    const glowR = ctx.createRadialGradient(cx, py + PH / 2, 4, cx, py + PH / 2, 28);
+    glowR.addColorStop(0, 'rgba(200,100,20,0.25)');
+    glowR.addColorStop(1, 'rgba(200,100,20,0)');
+    ctx.fillStyle = glowR;
+    ctx.beginPath();
+    ctx.ellipse(cx, py + PH * 0.7, 28, 32, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Legs (run animation)
+    const legPhase = player.runFrame * (Math.PI / 2);
+    const legColors = ['#8a4018', '#6a2808'];
+    for (let leg = 0; leg < 2; leg++) {
+      const phase = legPhase + leg * Math.PI;
+      const lx = cx + (leg === 0 ? -6 : 4);
+      const ly = py + PH - 6;
+      const footX = lx + Math.sin(phase) * 6;
+      const footY = ly + Math.abs(Math.cos(phase)) * 6;
+      ctx.strokeStyle = legColors[leg];
+      ctx.lineWidth = 5;
+      ctx.lineCap = 'round';
+      ctx.beginPath();
+      ctx.moveTo(lx, ly);
+      ctx.lineTo(footX, footY);
+      ctx.stroke();
+    }
+
+    // Cloak / body
+    const bodyG = ctx.createLinearGradient(px, py, px + PW, py + PH);
+    bodyG.addColorStop(0, '#c04030');
+    bodyG.addColorStop(0.5, '#8b1a1a');
+    bodyG.addColorStop(1, '#500c0c');
+    ctx.fillStyle = bodyG;
+    ctx.beginPath();
+    ctx.roundRect(px + 3, py + PH * 0.35, PW - 6, PH * 0.65, [2, 2, 4, 4]);
+    ctx.fill();
+
+    // Cloak trim
+    ctx.strokeStyle = '#c8952a';
+    ctx.lineWidth = 1;
+    ctx.stroke();
+
+    // Arm (swinging)
+    const armPhase = -legPhase;
+    const armX = cx + Math.sin(armPhase) * 8;
+    const armY = py + PH * 0.55 + Math.cos(armPhase) * 3;
+    ctx.strokeStyle = '#a03020';
+    ctx.lineWidth = 4;
+    ctx.lineCap = 'round';
+    ctx.beginPath();
+    ctx.moveTo(cx, py + PH * 0.45);
+    ctx.lineTo(armX, armY);
+    ctx.stroke();
+
+    // Head
+    const headG = ctx.createRadialGradient(cx - 3, py + 6, 2, cx, py + 10, 11);
+    headG.addColorStop(0, '#e8c890');
+    headG.addColorStop(0.6, '#c8a060');
+    headG.addColorStop(1, '#8a6020');
+    ctx.fillStyle = headG;
+    ctx.beginPath();
+    ctx.ellipse(cx, py + 10, 10, 11, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Hood
+    ctx.fillStyle = '#8b1a1a';
+    ctx.beginPath();
+    ctx.moveTo(cx - 11, py + 14);
+    ctx.quadraticCurveTo(cx - 6, py - 8, cx, py - 4);
+    ctx.quadraticCurveTo(cx + 6, py - 8, cx + 11, py + 14);
+    ctx.fill();
+    ctx.strokeStyle = '#c8952a';
+    ctx.lineWidth = 0.8;
+    ctx.stroke();
+
+    // Phoenix flame trails when airborne
+    if (!player.grounded) {
+      const flameColors = ['rgba(255,160,40,0.8)','rgba(255,80,20,0.5)','rgba(200,149,42,0.3)'];
+      for (let f = 0; f < 3; f++) {
+        const fAlpha = (3 - f) / 3;
+        ctx.globalAlpha = fAlpha * 0.6;
+        ctx.fillStyle = flameColors[f];
+        const fw = (3 - f) * 5 + 4;
+        const fh = (3 - f) * 4 + 8;
+        ctx.beginPath();
+        ctx.ellipse(cx - fw / 2 - f * 4, py + PH + f * 5, fw / 2, fh / 2, -0.3, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      ctx.globalAlpha = 1;
+    }
+
+    ctx.restore();
+  }
+
+  // ── GAME LOOP ─────────────────────────────────────────────────────
+  function loop(ts) {
+    if (!running) return;
+    const dt = Math.min(ts - lastTime, 50);
+    lastTime = ts;
+    update(dt);
+    draw();
+    animId = requestAnimationFrame(loop);
+  }
+
+  function startGame() {
+    resetGame();
+    document.getElementById('startOverlay').classList.add('hidden');
+    document.getElementById('gameOverOverlay').classList.add('hidden');
+    running = true;
+    lastTime = performance.now();
+    animId = requestAnimationFrame(loop);
+  }
+
+  function drawStatic() {
+    resizeCanvas();
+    const S = scale;
+    ctx.save();
+    ctx.scale(S, S);
+    const W = BASE_W, H = BASE_H;
+    const sky = ctx.createLinearGradient(0, 0, 0, H);
+    sky.addColorStop(0, '#0a0804');
+    sky.addColorStop(1, '#1a1005');
+    ctx.fillStyle = sky;
+    ctx.fillRect(0, 0, W, H);
+    ctx.fillStyle = '#3a2810';
+    ctx.fillRect(0, GROUND_Y_BASE, W, H - GROUND_Y_BASE);
+    ctx.restore();
+  }
+
+  // Buttons
+  document.getElementById('startBtn').addEventListener('click', startGame);
+  document.getElementById('restartBtn').addEventListener('click', () => {
+    document.getElementById('gameOverOverlay').classList.add('hidden');
+    startGame();
+  });
+
+  // Init
+  document.getElementById('year').textContent = new Date().getFullYear();
+  best = parseInt(localStorage.getItem('loderunner_best') || '0');
+  updateHUD();
+  initBgLayers();
+  drawStatic();
+
+}());
+</script>
+</body>
+</html>

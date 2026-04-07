@@ -1,0 +1,960 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Breakout — Rising Phoenix Games</title>
+  <link rel="stylesheet" href="shared.css" />
+  <link rel="icon" type="image/png" href="data:image/png;base64,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" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700;900&family=Cinzel+Decorative:wght@400;700&family=IM+Fell+English:ital@0;1&display=swap" rel="stylesheet" />
+  <style>
+    html, body { height: 100%; margin: 0; padding: 0; }
+    body {
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+      background:
+        radial-gradient(ellipse 90% 55% at 15% 8%,  rgba(90,48,12,0.55) 0%, transparent 58%),
+        radial-gradient(ellipse 70% 65% at 85% 90%, rgba(50,25,6,0.6)   0%, transparent 55%),
+        radial-gradient(ellipse 60% 40% at 50% 50%, rgba(30,18,5,0.4)   0%, transparent 70%),
+        linear-gradient(160deg, #1c1106 0%, #0f0c07 45%, #13100a 100%);
+      background-attachment: fixed;
+      font-family: 'Cinzel', serif;
+      color: #e8dfc8;
+    }
+
+    /* ── HEADER ── */
+    .game-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 18px;
+      background: linear-gradient(180deg, #1e1508 0%, #120e06 100%);
+      border-bottom: 2px solid #c8952a;
+      box-shadow: 0 4px 24px rgba(0,0,0,0.7);
+      flex-shrink: 0;
+      position: relative;
+    }
+    .header-left {
+      width: 80px;
+      display: flex;
+      align-items: center;
+    }
+    .header-center {
+      display: flex;
+      flex-direction: row;
+      align-items: center;
+      gap: 10px;
+      position: absolute;
+      left: 50%;
+      transform: translateX(-50%);
+    }
+    .header-logo {
+      width: 44px;
+      height: 44px;
+      filter: drop-shadow(0 0 8px rgba(200,149,42,0.5));
+    }
+    .header-title {
+      font-family: 'Cinzel Decorative', serif;
+      font-size: clamp(14px, 3vw, 22px);
+      font-weight: 700;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      background: linear-gradient(135deg, #f0d080 0%, #c8952a 45%, #a07020 80%, #f0d080 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      line-height: 1.1;
+      white-space: nowrap;
+    }
+    .header-right {
+      width: 80px;
+    }
+
+    /* ── MAIN LAYOUT ── */
+    .game-main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 14px 16px;
+      gap: 12px;
+    }
+
+    /* ── STATUS BAR ── */
+    .status-bar {
+      display: flex;
+      gap: 20px;
+      align-items: center;
+      padding: 7px 20px 7px 32px;
+      background: rgba(0,0,0,0.35);
+      border: 1px solid rgba(200,149,42,0.22);
+      border-radius: 4px;
+      font-family: 'Cinzel', serif;
+      font-size: 12px;
+      letter-spacing: 1.5px;
+      color: #f0d080;
+      position: relative;
+      width: 100%;
+      max-width: 560px;
+      box-sizing: border-box;
+    }
+    .status-bar::before {
+      content: '⚜';
+      position: absolute;
+      left: 12px;
+      font-size: 10px;
+      color: #c8952a;
+      opacity: 0.6;
+    }
+    .status-item span { color: #c8a878; }
+
+    /* ── CANVAS WRAPPER ── */
+    .canvas-wrapper {
+      position: relative;
+      border-radius: 10px;
+      overflow: hidden;
+      border: 1px solid rgba(200,149,42,0.4);
+      box-shadow:
+        0 0 0 1px rgba(0,0,0,0.6),
+        0 8px 40px rgba(0,0,0,0.7),
+        inset 0 1px 0 rgba(200,149,42,0.12);
+    }
+    #gameCanvas {
+      display: block;
+      background: #000;
+    }
+
+    /* ── OVERLAY (start/pause/gameover) ── */
+    .overlay {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      background: rgba(0,0,0,0.78);
+      z-index: 10;
+      gap: 14px;
+      padding: 20px;
+    }
+    .overlay.hidden { display: none; }
+    .overlay-title {
+      font-family: 'Cinzel Decorative', serif;
+      font-size: clamp(18px, 4vw, 28px);
+      font-weight: 700;
+      letter-spacing: 3px;
+      background: linear-gradient(135deg, #f0d080 0%, #c8952a 50%, #f0d080 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      text-align: center;
+    }
+    .overlay-sub {
+      font-family: 'IM Fell English', serif;
+      font-style: italic;
+      font-size: 14px;
+      color: #b8986a;
+      text-align: center;
+      max-width: 300px;
+      line-height: 1.6;
+    }
+    .overlay-btn {
+      font-family: 'Cinzel', serif;
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: #f0d080;
+      background: linear-gradient(180deg, #2a2010 0%, #1a1508 100%);
+      border: 1px solid #c8952a;
+      padding: 10px 24px;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: all 0.15s;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.5);
+    }
+    .overlay-btn:hover {
+      background: linear-gradient(180deg, #3a2c14 0%, #241a09 100%);
+      border-color: #f0d080;
+      box-shadow: 0 2px 16px rgba(200,149,42,0.4);
+      transform: translateY(-1px);
+    }
+    .overlay-score-display {
+      font-family: 'Cinzel', serif;
+      font-size: 16px;
+      letter-spacing: 2px;
+      color: #f0d080;
+    }
+
+    /* ── VICTORY MESSAGE (shows on canvas layer) ── */
+    #victoryMsg {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      transform: translate(-50%, -50%) scale(0.05);
+      background: linear-gradient(160deg, #1e1608 0%, #261c0a 100%);
+      border: 2px solid #c8952a;
+      border-radius: 10px;
+      padding: 18px 28px;
+      text-align: center;
+      z-index: 20;
+      box-shadow: 0 0 40px rgba(200,149,42,0.5), 0 8px 32px rgba(0,0,0,0.8);
+      pointer-events: none;
+      opacity: 0;
+      transition: none;
+      white-space: nowrap;
+    }
+    #victoryMsg.animating {
+      animation: victoryGrow 0.75s cubic-bezier(0.34,1.56,0.64,1) forwards;
+    }
+    @keyframes victoryGrow {
+      0%   { transform: translate(-50%,-50%) scale(0.05); opacity: 0; }
+      60%  { opacity: 1; }
+      100% { transform: translate(-50%,-50%) scale(1); opacity: 1; }
+    }
+    #victoryMsg .v-title {
+      font-family: 'Cinzel Decorative', serif;
+      font-size: clamp(16px, 3vw, 22px);
+      font-weight: 700;
+      letter-spacing: 3px;
+      background: linear-gradient(135deg, #f0d080 0%, #c8952a 50%, #f0d080 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    #victoryMsg .v-sub {
+      font-family: 'IM Fell English', serif;
+      font-style: italic;
+      font-size: 13px;
+      color: #b8986a;
+      margin-top: 6px;
+    }
+
+    /* ── CONTROLS HINT ── */
+    .controls-hint {
+      font-family: 'IM Fell English', serif;
+      font-style: italic;
+      font-size: 12px;
+      color: #7a6040;
+      text-align: center;
+      letter-spacing: 0.5px;
+    }
+
+    /* ── CONTROLS ROW ── */
+    .btn-row {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+
+    /* ── FOOTER ── */
+    .game-footer {
+      padding: 10px 20px 14px;
+      border-top: 1px solid rgba(200,149,42,0.1);
+      font-family: 'IM Fell English', serif;
+      font-style: italic;
+      font-size: 11px;
+      color: rgba(200,170,100,0.45);
+      letter-spacing: 0.5px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 8px;
+      flex-shrink: 0;
+    }
+
+    @media (max-width: 600px) {
+      .status-bar { font-size: 11px; gap: 12px; }
+    }
+  </style>
+</head>
+<body>
+<header class="game-header">
+  <div class="header-left">
+    <a href="index.html" class="rpg-back" style="font-family:'Cinzel',serif;font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:#a09070;text-decoration:none;display:inline-flex;align-items:center;gap:6px;transition:color 0.15s;">Hub</a>
+  </div>
+  <div class="header-center">
+    <img class="header-logo" src="data:image/png;base64,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" alt="Rising Phoenix Gallery logo" />
+    <div class="header-title">Breakout</div>
+  </div>
+  <div class="header-right"></div>
+</header>
+
+<main class="game-main">
+  <!-- Status bar -->
+  <div class="status-bar">
+    <div class="status-item">Score <span id="scoreDisplay">0</span></div>
+    <div class="status-item">Best <span id="bestDisplay">0</span></div>
+    <div class="status-item">Lives <span id="livesDisplay">♦♦♦</span></div>
+    <div class="status-item">Level <span id="levelDisplay">1</span></div>
+  </div>
+
+  <!-- Canvas -->
+  <div class="canvas-wrapper">
+    <canvas id="gameCanvas"></canvas>
+
+    <!-- Victory message (injected over canvas) -->
+    <div id="victoryMsg">
+      <div class="v-title">⚜ Level Complete ⚜</div>
+      <div class="v-sub" id="victorySubtitle">The flames rise higher...</div>
+    </div>
+
+    <!-- Overlays -->
+    <div class="overlay" id="startOverlay">
+      <div class="overlay-title">⚜ Breakout ⚜</div>
+      <div class="overlay-sub">Shatter the wall. Reclaim the flame. The Phoenix endures.</div>
+      <button class="overlay-btn" id="startBtn">Begin the Siege</button>
+      <div style="font-family:'IM Fell English',serif;font-style:italic;font-size:12px;color:#7a6040;text-align:center;margin-top:6px;">Mouse / touch to move · Click / tap to launch</div>
+    </div>
+
+    <div class="overlay hidden" id="pauseOverlay">
+      <div class="overlay-title">Paused</div>
+      <div class="overlay-sub">The battle waits...</div>
+      <button class="overlay-btn" id="resumeBtn">Resume</button>
+    </div>
+
+    <div class="overlay hidden" id="gameoverOverlay">
+      <div class="overlay-title">The Flame Fades</div>
+      <div class="overlay-sub" id="gameoverMsg">The Phoenix shall rise again.</div>
+      <div class="overlay-score-display" id="finalScore">Score: 0</div>
+      <button class="overlay-btn" id="restartBtn">Rise Again</button>
+    </div>
+  </div>
+
+  <!-- Controls -->
+  <div class="btn-row">
+    <button class="rpg-btn" id="pauseBtn" style="display:none;">Pause</button>
+    <button class="rpg-btn rpg-btn-crimson" id="quitBtn" style="display:none;">Forfeit</button>
+  </div>
+
+  <div class="controls-hint">Mouse / touch to move paddle · P to pause · Space to launch</div>
+</main>
+
+<footer class="game-footer">
+  <span>© <span id="year"></span> Rising Phoenix Gallery · Michigan City, IN</span>
+  <span>Crafted by John Ryszka II</span>
+</footer>
+
+<script>
+'use strict';
+document.getElementById('year').textContent = new Date().getFullYear();
+
+// ── CANVAS SETUP ─────────────────────────────────────────────
+const canvas = document.getElementById('gameCanvas');
+const ctx = canvas.getContext('2d');
+
+function resizeCanvas() {
+  const maxW = Math.min(window.innerWidth - 32, 560);
+  const maxH = Math.min(window.innerHeight - 260, 520);
+  canvas.width  = maxW;
+  canvas.height = Math.max(maxH, 360);
+}
+resizeCanvas();
+window.addEventListener('resize', () => { resizeCanvas(); if (state !== 'playing') drawStatic(); });
+
+// ── COLOUR PALETTES ───────────────────────────────────────────
+const BRICK_ROWS = [
+  ['#8b1a1a','#a02020'],   // crimson
+  ['#7a3810','#9a4818'],   // amber
+  ['#c8952a','#e0aa3a'],   // gold
+  ['#1a5a20','#2a7a30'],   // sage
+  ['#1a3580','#2a4aaa'],   // cobalt
+  ['#5a1a80','#7a2aaa'],   // violet
+  ['#2a6a70','#3a8a90'],   // teal
+  ['#6a3010','#8a4020'],   // copper
+];
+const BRICK_POINTS = [200, 150, 120, 100, 80, 60, 50, 40];
+
+// ── GAME STATE ────────────────────────────────────────────────
+let state = 'start'; // start | playing | paused | dead | win
+let score = 0;
+let best  = parseInt(localStorage.getItem('rpg_breakout_best') || '0');
+let lives = 3;
+let level = 1;
+let animId = null;
+
+// Ball
+let ball = {};
+// Paddle
+let paddle = {};
+// Bricks
+let bricks = [];
+// Particles
+let particles = [];
+// Confetti (victory)
+let confetti = [];
+
+function initLevel(lvl) {
+  const cw = canvas.width, ch = canvas.height;
+
+  // Paddle
+  const pw = Math.max(60, cw * 0.18);
+  paddle = {
+    w: pw, h: 12,
+    x: (cw - pw) / 2,
+    y: ch - 36,
+    speed: 8
+  };
+
+  // Ball
+  const speed = 3.5 + (lvl - 1) * 0.4;
+  ball = {
+    x: cw / 2,
+    y: ch - 60,
+    r: 7,
+    vx: speed * (Math.random() > 0.5 ? 1 : -1),
+    vy: -speed,
+    launched: false,
+    trail: []
+  };
+
+  // Bricks
+  bricks = [];
+  const numCols = Math.max(6, Math.min(10, Math.floor(cw / 56)));
+  const numRows = Math.min(BRICK_ROWS.length, 4 + Math.floor((lvl - 1) * 0.7));
+  const brickW = (cw - 40) / numCols - 4;
+  const brickH = 18;
+  const offsetX = 20;
+  const offsetY = 60;
+  const gap = 4;
+
+  for (let r = 0; r < numRows; r++) {
+    const [c1, c2] = BRICK_ROWS[r % BRICK_ROWS.length];
+    const pts = BRICK_POINTS[r % BRICK_POINTS.length];
+    for (let c = 0; c < numCols; c++) {
+      // Skip some bricks at higher levels for pattern
+      if (lvl > 2 && Math.random() < 0.08) continue;
+      bricks.push({
+        x: offsetX + c * (brickW + gap),
+        y: offsetY + r * (brickH + gap),
+        w: brickW,
+        h: brickH,
+        color: c1,
+        color2: c2,
+        pts,
+        alive: true,
+        hitFlash: 0
+      });
+    }
+  }
+
+  particles = [];
+  confetti = [];
+}
+
+// ── INPUT ─────────────────────────────────────────────────────
+let mouseX = canvas.width / 2;
+
+canvas.addEventListener('mousemove', e => {
+  const rect = canvas.getBoundingClientRect();
+  mouseX = e.clientX - rect.left;
+});
+canvas.addEventListener('touchmove', e => {
+  e.preventDefault();
+  const rect = canvas.getBoundingClientRect();
+  mouseX = e.touches[0].clientX - rect.left;
+}, { passive: false });
+
+canvas.addEventListener('click', handleLaunch);
+canvas.addEventListener('touchstart', e => {
+  e.preventDefault();
+  const rect = canvas.getBoundingClientRect();
+  mouseX = e.touches[0].clientX - rect.left;
+  handleLaunch();
+}, { passive: false });
+
+function handleLaunch() {
+  if (state === 'playing' && !ball.launched) {
+    ball.launched = true;
+  }
+}
+
+// Held-key state for smooth arrow-key paddle movement
+const keys = { left: false, right: false };
+
+document.addEventListener('keydown', e => {
+  if (e.key === ' ' || e.key === 'Space') {
+    e.preventDefault();
+    if (state === 'playing' && !ball.launched) ball.launched = true;
+  }
+  if ((e.key === 'p' || e.key === 'P') && state === 'playing') togglePause();
+  if (e.key === 'ArrowLeft')  { e.preventDefault(); keys.left  = true; }
+  if (e.key === 'ArrowRight') { e.preventDefault(); keys.right = true; }
+});
+document.addEventListener('keyup', e => {
+  if (e.key === 'ArrowLeft')  keys.left  = false;
+  if (e.key === 'ArrowRight') keys.right = false;
+});
+
+// ── BUTTONS ───────────────────────────────────────────────────
+document.getElementById('startBtn').addEventListener('click', startGame);
+document.getElementById('resumeBtn').addEventListener('click', togglePause);
+document.getElementById('restartBtn').addEventListener('click', startGame);
+document.getElementById('pauseBtn').addEventListener('click', togglePause);
+document.getElementById('quitBtn').addEventListener('click', () => {
+  stopGame();
+  showOverlay('gameoverOverlay');
+  document.getElementById('gameoverMsg').textContent = 'You retreated from the siege.';
+  document.getElementById('finalScore').textContent = 'Score: ' + score;
+});
+
+function showOverlay(id) {
+  ['startOverlay','pauseOverlay','gameoverOverlay'].forEach(o => {
+    document.getElementById(o).classList.toggle('hidden', o !== id);
+  });
+}
+function hideAllOverlays() {
+  ['startOverlay','pauseOverlay','gameoverOverlay'].forEach(o => {
+    document.getElementById(o).classList.add('hidden');
+  });
+}
+
+function startGame() {
+  score = 0; lives = 3; level = 1;
+  updateHUD();
+  initLevel(1);
+  hideAllOverlays();
+  document.getElementById('pauseBtn').style.display = 'inline-flex';
+  document.getElementById('quitBtn').style.display  = 'inline-flex';
+  state = 'playing';
+  if (animId) cancelAnimationFrame(animId);
+  loop();
+}
+
+function stopGame() {
+  state = 'dead';
+  if (animId) cancelAnimationFrame(animId);
+  document.getElementById('pauseBtn').style.display = 'none';
+  document.getElementById('quitBtn').style.display  = 'none';
+  if (score > best) { best = score; localStorage.setItem('rpg_breakout_best', best); }
+  updateHUD();
+}
+
+function togglePause() {
+  if (state === 'playing') {
+    state = 'paused';
+    showOverlay('pauseOverlay');
+    if (animId) cancelAnimationFrame(animId);
+  } else if (state === 'paused') {
+    state = 'playing';
+    hideAllOverlays();
+    loop();
+  }
+}
+
+function updateHUD() {
+  document.getElementById('scoreDisplay').textContent = score;
+  document.getElementById('bestDisplay').textContent  = best;
+  document.getElementById('livesDisplay').textContent = '♦'.repeat(lives) + '◇'.repeat(Math.max(0, 3 - lives));
+  document.getElementById('levelDisplay').textContent = level;
+}
+
+// ── PARTICLES ─────────────────────────────────────────────────
+function spawnParticles(x, y, color) {
+  for (let i = 0; i < 14; i++) {
+    const angle = Math.random() * Math.PI * 2;
+    const speed = 1.5 + Math.random() * 3;
+    particles.push({
+      x, y,
+      vx: Math.cos(angle) * speed,
+      vy: Math.sin(angle) * speed,
+      r: 2 + Math.random() * 3,
+      life: 1,
+      decay: 0.03 + Math.random() * 0.04,
+      color
+    });
+  }
+}
+
+function spawnConfetti() {
+  const colors = ['#f0d080','#c8952a','#ff6060','#60d0ff','#c060ff','#60ff80','#ffaa40'];
+  for (let i = 0; i < 120; i++) {
+    confetti.push({
+      x: Math.random() * canvas.width,
+      y: -10 - Math.random() * 100,
+      vx: (Math.random() - 0.5) * 4,
+      vy: 2 + Math.random() * 4,
+      r: 3 + Math.random() * 4,
+      color: colors[Math.floor(Math.random() * colors.length)],
+      rot: Math.random() * Math.PI * 2,
+      rotV: (Math.random() - 0.5) * 0.2,
+      life: 1,
+      decay: 0.008 + Math.random() * 0.006,
+      shape: Math.random() > 0.5 ? 'rect' : 'circle'
+    });
+  }
+}
+
+// ── DRAW HELPERS ──────────────────────────────────────────────
+function drawBrick(b) {
+  if (!b.alive) return;
+
+  // Gradient fill
+  const grd = ctx.createLinearGradient(b.x, b.y, b.x, b.y + b.h);
+  grd.addColorStop(0, b.color2);
+  grd.addColorStop(1, b.color);
+  ctx.fillStyle = grd;
+  ctx.beginPath();
+  ctx.roundRect(b.x, b.y, b.w, b.h, 3);
+  ctx.fill();
+
+  // Highlight
+  ctx.fillStyle = 'rgba(255,255,255,0.18)';
+  ctx.beginPath();
+  ctx.roundRect(b.x + 2, b.y + 2, b.w - 4, 4, 2);
+  ctx.fill();
+
+  // Flash on hit
+  if (b.hitFlash > 0) {
+    ctx.fillStyle = `rgba(255,255,255,${b.hitFlash * 0.6})`;
+    ctx.beginPath();
+    ctx.roundRect(b.x, b.y, b.w, b.h, 3);
+    ctx.fill();
+    b.hitFlash = Math.max(0, b.hitFlash - 0.15);
+  }
+
+  // Gold shimmer border
+  ctx.strokeStyle = 'rgba(200,149,42,0.35)';
+  ctx.lineWidth = 0.5;
+  ctx.beginPath();
+  ctx.roundRect(b.x, b.y, b.w, b.h, 3);
+  ctx.stroke();
+}
+
+function drawPaddle() {
+  const { x, y, w, h } = paddle;
+  const grd = ctx.createLinearGradient(x, y, x, y + h);
+  grd.addColorStop(0, '#f0d080');
+  grd.addColorStop(0.4, '#c8952a');
+  grd.addColorStop(1, '#6a4810');
+  ctx.fillStyle = grd;
+  ctx.beginPath();
+  ctx.roundRect(x, y, w, h, h / 2);
+  ctx.fill();
+
+  // Sheen
+  ctx.fillStyle = 'rgba(255,255,255,0.25)';
+  ctx.beginPath();
+  ctx.roundRect(x + 4, y + 2, w - 8, 4, 2);
+  ctx.fill();
+
+  // Glow
+  ctx.shadowColor = 'rgba(200,149,42,0.7)';
+  ctx.shadowBlur  = 14;
+  ctx.strokeStyle = '#f0d080';
+  ctx.lineWidth   = 1;
+  ctx.beginPath();
+  ctx.roundRect(x, y, w, h, h / 2);
+  ctx.stroke();
+  ctx.shadowBlur = 0;
+}
+
+function drawBall() {
+  // Trail
+  ball.trail.forEach((t, i) => {
+    const a = (i / ball.trail.length) * 0.35;
+    ctx.fillStyle = `rgba(200,149,42,${a})`;
+    ctx.beginPath();
+    ctx.arc(t.x, t.y, ball.r * (i / ball.trail.length), 0, Math.PI * 2);
+    ctx.fill();
+  });
+
+  // Ball gradient
+  const grd = ctx.createRadialGradient(ball.x - ball.r * 0.3, ball.y - ball.r * 0.3, ball.r * 0.1, ball.x, ball.y, ball.r);
+  grd.addColorStop(0, '#fff8e8');
+  grd.addColorStop(0.5, '#f0d080');
+  grd.addColorStop(1, '#a07020');
+  ctx.fillStyle = grd;
+  ctx.shadowColor = 'rgba(240,208,128,0.8)';
+  ctx.shadowBlur  = 14;
+  ctx.beginPath();
+  ctx.arc(ball.x, ball.y, ball.r, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.shadowBlur = 0;
+}
+
+function drawParticles() {
+  particles.forEach(p => {
+    ctx.globalAlpha = p.life;
+    ctx.fillStyle = p.color;
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, p.r * p.life, 0, Math.PI * 2);
+    ctx.fill();
+  });
+  ctx.globalAlpha = 1;
+}
+
+function drawConfetti() {
+  confetti.forEach(c => {
+    ctx.globalAlpha = c.life;
+    ctx.fillStyle = c.color;
+    ctx.save();
+    ctx.translate(c.x, c.y);
+    ctx.rotate(c.rot);
+    if (c.shape === 'rect') {
+      ctx.fillRect(-c.r, -c.r * 0.5, c.r * 2, c.r);
+    } else {
+      ctx.beginPath();
+      ctx.arc(0, 0, c.r, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    ctx.restore();
+  });
+  ctx.globalAlpha = 1;
+}
+
+function drawBackground() {
+  // Dark canvas bg
+  ctx.fillStyle = '#08060200';
+  const bgGrd = ctx.createRadialGradient(canvas.width/2, canvas.height/2, 0, canvas.width/2, canvas.height/2, canvas.width*0.8);
+  bgGrd.addColorStop(0, '#0f0c07');
+  bgGrd.addColorStop(1, '#080604');
+  ctx.fillStyle = bgGrd;
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+  // Subtle grid lines
+  ctx.strokeStyle = 'rgba(200,149,42,0.04)';
+  ctx.lineWidth = 1;
+  for (let x = 0; x < canvas.width; x += 40) {
+    ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, canvas.height); ctx.stroke();
+  }
+  for (let y = 0; y < canvas.height; y += 40) {
+    ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(canvas.width, y); ctx.stroke();
+  }
+}
+
+function drawLaunchHint() {
+  if (!ball.launched) {
+    ctx.fillStyle = 'rgba(200,149,42,0.55)';
+    ctx.font = '12px Cinzel, serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('Click or tap to launch', canvas.width / 2, canvas.height - 14);
+  }
+}
+
+function drawStatic() {
+  drawBackground();
+  bricks.forEach(drawBrick);
+  drawPaddle();
+  drawBall();
+}
+
+// ── PHYSICS ───────────────────────────────────────────────────
+function updateBall() {
+  const cw = canvas.width, ch = canvas.height;
+
+  if (!ball.launched) {
+    // Sit on paddle
+    ball.x = Math.max(paddle.x + ball.r, Math.min(paddle.x + paddle.w - ball.r, mouseX));
+    ball.y = paddle.y - ball.r - 1;
+    return;
+  }
+
+  // Trail
+  ball.trail.push({ x: ball.x, y: ball.y });
+  if (ball.trail.length > 8) ball.trail.shift();
+
+  ball.x += ball.vx;
+  ball.y += ball.vy;
+
+  // Wall bounces
+  if (ball.x - ball.r < 0) { ball.x = ball.r; ball.vx = Math.abs(ball.vx); }
+  if (ball.x + ball.r > cw) { ball.x = cw - ball.r; ball.vx = -Math.abs(ball.vx); }
+  if (ball.y - ball.r < 0) { ball.y = ball.r; ball.vy = Math.abs(ball.vy); }
+
+  // Bottom — lose life
+  if (ball.y - ball.r > ch) {
+    lives--;
+    updateHUD();
+    if (lives <= 0) {
+      stopGame();
+      document.getElementById('gameoverMsg').textContent = 'The Phoenix shall rise again.';
+      document.getElementById('finalScore').textContent = 'Score: ' + score;
+      showOverlay('gameoverOverlay');
+    } else {
+      // Reset ball
+      const speed = 3.5 + (level - 1) * 0.4;
+      ball.vx = speed * (Math.random() > 0.5 ? 1 : -1);
+      ball.vy = -speed;
+      ball.trail = [];
+      ball.launched = false;
+    }
+    return;
+  }
+
+  // Paddle collision
+  if (
+    ball.vy > 0 &&
+    ball.y + ball.r >= paddle.y &&
+    ball.y + ball.r <= paddle.y + paddle.h + 4 &&
+    ball.x >= paddle.x &&
+    ball.x <= paddle.x + paddle.w
+  ) {
+    ball.vy = -Math.abs(ball.vy);
+    // Angle based on hit position
+    const hitPos = (ball.x - paddle.x) / paddle.w; // 0..1
+    const angle = (hitPos - 0.5) * 1.4; // -0.7..0.7
+    const speed = Math.sqrt(ball.vx * ball.vx + ball.vy * ball.vy);
+    ball.vx = Math.sin(angle) * speed;
+    ball.vy = -Math.cos(angle) * speed;
+    ball.y = paddle.y - ball.r;
+  }
+
+  // Brick collisions
+  let hitAny = false;
+  for (const b of bricks) {
+    if (!b.alive) continue;
+    const dx = ball.x - Math.max(b.x, Math.min(ball.x, b.x + b.w));
+    const dy = ball.y - Math.max(b.y, Math.min(ball.y, b.y + b.h));
+    if (dx * dx + dy * dy < ball.r * ball.r && !hitAny) {
+      hitAny = true;
+      b.alive = false;
+      b.hitFlash = 1;
+      score += b.pts;
+      updateHUD();
+      spawnParticles(b.x + b.w / 2, b.y + b.h / 2, b.color2);
+
+      // Reflect
+      const overlapX = ball.r - Math.abs(dx);
+      const overlapY = ball.r - Math.abs(dy);
+      if (overlapX < overlapY) {
+        ball.vx = dx < 0 ? -Math.abs(ball.vx) : Math.abs(ball.vx);
+      } else {
+        ball.vy = dy < 0 ? -Math.abs(ball.vy) : Math.abs(ball.vy);
+      }
+    }
+  }
+
+  // Check level complete
+  if (bricks.every(b => !b.alive)) {
+    triggerVictory();
+  }
+}
+
+// Paddle velocity for smooth keyboard movement
+let paddleVx = 0;
+const PADDLE_ACCEL = 1.2;
+const PADDLE_MAX   = 14;
+const PADDLE_FRIC  = 0.78;
+
+function updatePaddle() {
+  if (keys.left || keys.right) {
+    // Keyboard: accelerate in held direction, friction when reversing
+    if (keys.left)  paddleVx -= PADDLE_ACCEL;
+    if (keys.right) paddleVx += PADDLE_ACCEL;
+    paddleVx = Math.max(-PADDLE_MAX, Math.min(PADDLE_MAX, paddleVx));
+    paddle.x = Math.max(0, Math.min(canvas.width - paddle.w, paddle.x + paddleVx));
+    // Keep mouseX in sync so switching to mouse feels natural
+    mouseX = paddle.x + paddle.w / 2;
+  } else {
+    // Mouse/touch: snap to cursor, bleed off any residual keyboard velocity
+    paddleVx *= PADDLE_FRIC;
+    if (Math.abs(paddleVx) < 0.1) paddleVx = 0;
+    const targetX = mouseX - paddle.w / 2;
+    paddle.x = Math.max(0, Math.min(canvas.width - paddle.w, targetX));
+  }
+}
+
+function updateParticles() {
+  particles = particles.filter(p => {
+    p.x += p.vx; p.y += p.vy;
+    p.vy += 0.06;
+    p.life -= p.decay;
+    return p.life > 0;
+  });
+}
+
+function updateConfetti() {
+  confetti = confetti.filter(c => {
+    c.x += c.vx; c.y += c.vy;
+    c.rot += c.rotV;
+    c.vy += 0.05;
+    c.life -= c.decay;
+    return c.life > 0;
+  });
+}
+
+// ── VICTORY ───────────────────────────────────────────────────
+const victoryLines = [
+  'The flames rise higher...',
+  'The Phoenix grows stronger.',
+  'Another wall crumbles to ash.',
+  'The siege continues, unbroken.',
+  'Glory echoes through the hall.',
+  'Fire and will — none can stop you.',
+];
+
+function triggerVictory() {
+  state = 'win';
+  if (animId) cancelAnimationFrame(animId);
+
+  // Burst confetti waves
+  spawnConfetti();
+  setTimeout(spawnConfetti, 300);
+  setTimeout(spawnConfetti, 600);
+
+  // Animate confetti and show victory message
+  const vm = document.getElementById('victoryMsg');
+  document.getElementById('victorySubtitle').textContent = victoryLines[Math.min(level - 1, victoryLines.length - 1)];
+  vm.style.opacity = '0';
+  vm.style.transform = 'translate(-50%,-50%) scale(0.05)';
+  vm.classList.remove('animating');
+  void vm.offsetWidth; // reflow
+  vm.classList.add('animating');
+
+  // Confetti animation loop
+  function confettiLoop() {
+    drawBackground();
+    bricks.forEach(drawBrick);
+    drawPaddle();
+    drawBall();
+    updateConfetti();
+    drawConfetti();
+    if (confetti.length > 0 || state === 'win') requestAnimationFrame(confettiLoop);
+  }
+  confettiLoop();
+
+  // After 1.75s hide message, advance level
+  setTimeout(() => {
+    vm.classList.remove('animating');
+    vm.style.opacity = '0';
+    level++;
+    updateHUD();
+    initLevel(level);
+    state = 'playing';
+    loop();
+  }, 750 + 1000);
+}
+
+// ── MAIN LOOP ─────────────────────────────────────────────────
+function loop() {
+  if (state !== 'playing') return;
+  updatePaddle();
+  updateBall();
+  updateParticles();
+
+  drawBackground();
+  bricks.forEach(drawBrick);
+  drawParticles();
+  drawPaddle();
+  drawBall();
+  drawLaunchHint();
+
+  animId = requestAnimationFrame(loop);
+}
+
+// ── INIT ──────────────────────────────────────────────────────
+updateHUD();
+document.getElementById('bestDisplay').textContent = best;
+// Draw static initial scene
+resizeCanvas();
+initLevel(1);
+drawStatic();
+</script>
+</body>
+</html>

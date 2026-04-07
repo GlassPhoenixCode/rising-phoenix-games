@@ -1,0 +1,811 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Phoenix Flight — Rising Phoenix Games</title>
+  <link rel="stylesheet" href="shared.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700;900&family=Cinzel+Decorative:wght@400;700&family=IM+Fell+English:ital@0;1&display=swap" rel="stylesheet" />
+  <style>
+    /* ── PAGE SHELL ─────────────────────────────────────────── */
+    html, body { height: 100%; margin: 0; padding: 0; }
+    body {
+      background:
+        radial-gradient(ellipse 90% 55% at 15% 8%,  rgba(90,48,12,0.55) 0%, transparent 58%),
+        radial-gradient(ellipse 70% 65% at 85% 90%, rgba(50,25,6,0.6)   0%, transparent 55%),
+        radial-gradient(ellipse 60% 40% at 50% 50%, rgba(30,18,5,0.4)   0%, transparent 70%),
+        linear-gradient(160deg, #1c1106 0%, #0f0c07 45%, #13100a 100%);
+      display: flex;
+      flex-direction: column;
+      min-height: 100%;
+    }
+
+    /* ── HEADER ─────────────────────────────────────────────── */
+    .game-header {
+      background: linear-gradient(180deg, #1e1508 0%, #120e06 100%);
+      border-bottom: 2px solid var(--gold);
+      box-shadow: 0 4px 24px rgba(0,0,0,0.7);
+      flex-shrink: 0;
+      position: relative;
+      overflow: hidden;
+    }
+    .game-header::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: repeating-linear-gradient(
+        90deg, transparent 0px, transparent 56px,
+        rgba(200,149,42,0.035) 56px, rgba(200,149,42,0.035) 57px
+      );
+      pointer-events: none;
+    }
+    .header-inner {
+      display: grid;
+      grid-template-columns: 1fr auto 1fr;
+      align-items: center;
+      padding: 12px 20px;
+      gap: 12px;
+      position: relative;
+    }
+    .header-left  { display: flex; align-items: center; }
+    .header-center {
+      display: flex; flex-direction: row;
+      align-items: center; justify-content: center; gap: 12px;
+    }
+    .header-title-block { display: flex; flex-direction: column; align-items: flex-start; gap: 2px; }
+    .header-right { display: flex; justify-content: flex-end; }
+
+    .rpg-logo {
+      width: 44px; height: 44px;
+      filter: drop-shadow(0 0 8px rgba(200,149,42,0.5));
+      flex-shrink: 0;
+    }
+    h1.game-title {
+      font-family: var(--font-display);
+      font-size: clamp(16px, 3.5vw, 26px);
+      font-weight: 700;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      margin: 0;
+      color: #f0d080;
+      background: linear-gradient(135deg, var(--gold-light) 0%, var(--gold) 45%, #a07020 80%, var(--gold-light) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      line-height: 1.1;
+      white-space: nowrap;
+    }
+    .game-subtitle {
+      font-family: var(--font-body);
+      font-style: italic;
+      font-size: 11px;
+      color: #c4a46a;
+      letter-spacing: 1.5px;
+    }
+
+    /* ── MAIN ───────────────────────────────────────────────── */
+    .game-main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 14px 16px;
+      gap: 12px;
+    }
+
+    /* ── SCORE ROW ──────────────────────────────────────────── */
+    .score-row { display: flex; gap: 14px; align-items: center; flex-wrap: wrap; justify-content: center; }
+    .score-box {
+      font-family: var(--font-ui);
+      color: #f0d080;
+      background: rgba(0,0,0,0.4);
+      border: 1px solid rgba(200,149,42,0.3);
+      border-radius: 6px;
+      padding: 5px 18px;
+      display: flex; flex-direction: column; align-items: center; gap: 1px;
+    }
+    .score-label { font-size: 9px; color: #a09070; letter-spacing: 2px; text-transform: uppercase; }
+    .score-value { font-size: 20px; font-weight: 700; color: #f0d080; line-height: 1.1; }
+
+    /* ── CANVAS WRAP ────────────────────────────────────────── */
+    .canvas-wrap {
+      position: relative;
+      border: 2px solid rgba(200,149,42,0.4);
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 0 0 1px rgba(0,0,0,0.8), 0 8px 40px rgba(0,0,0,0.8), 0 0 30px rgba(200,149,42,0.12);
+    }
+    #gameCanvas  { display: block; cursor: pointer; }
+    #confettiCanvas { position: absolute; inset: 0; pointer-events: none; z-index: 90; }
+
+    /* ── OVERLAYS ───────────────────────────────────────────── */
+    .overlay {
+      position: absolute; inset: 0;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      background: rgba(10,8,3,0.83);
+      backdrop-filter: blur(2px);
+      gap: 13px; padding: 24px;
+    }
+    .overlay.hidden { display: none; }
+
+    .overlay-title {
+      font-family: var(--font-display);
+      font-size: clamp(17px, 4vw, 26px);
+      font-weight: 700; letter-spacing: 3px; text-transform: uppercase;
+      background: linear-gradient(135deg, var(--gold-light), var(--gold));
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+      text-align: center; margin: 0;
+    }
+    .overlay-text {
+      font-family: var(--font-body); font-style: italic;
+      font-size: 13px; color: #c8a878; text-align: center;
+      line-height: 1.75; max-width: 300px; margin: 0;
+    }
+    .overlay-score {
+      font-family: var(--font-ui); font-size: 12px;
+      letter-spacing: 2px; color: #f0d080; text-align: center;
+    }
+    .medal { font-size: 34px; filter: drop-shadow(0 0 10px rgba(200,149,42,0.5)); }
+
+    .btn-play {
+      font-family: var(--font-ui); font-size: 11px; font-weight: 700;
+      letter-spacing: 2px; text-transform: uppercase;
+      color: #f0d080;
+      background: linear-gradient(180deg, #382a14 0%, #221808 100%);
+      border: 1px solid #c8952a; border-bottom-color: #7a5510;
+      padding: 10px 28px; border-radius: 4px; cursor: pointer;
+      transition: all 0.15s;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.5), inset 0 1px 0 rgba(240,208,128,0.12);
+      margin-top: 4px;
+    }
+    .btn-play:hover {
+      background: linear-gradient(180deg, #4a3820, #2e2010);
+      border-color: #f0d080;
+      box-shadow: 0 2px 18px rgba(200,149,42,0.4);
+      transform: translateY(-1px);
+    }
+
+    /* ── VICTORY BANNER ─────────────────────────────────────── */
+    #victoryBanner {
+      position: absolute; top: 50%; left: 50%;
+      transform: translate(-50%,-50%) scale(0.05);
+      background: linear-gradient(160deg, #1e1608 0%, #2a1c08 100%);
+      border: 2px solid var(--gold); border-radius: 10px;
+      padding: 16px 32px; text-align: center;
+      z-index: 100; opacity: 0; pointer-events: none;
+      box-shadow: 0 0 40px rgba(200,149,42,0.5), inset 0 1px 0 rgba(240,208,128,0.15);
+      white-space: nowrap;
+    }
+    #victoryBanner .v-title {
+      font-family: var(--font-display); font-size: 18px; font-weight: 700;
+      letter-spacing: 3px; text-transform: uppercase;
+      background: linear-gradient(135deg, var(--gold-light), var(--gold));
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+      display: block;
+    }
+    #victoryBanner .v-sub {
+      font-family: var(--font-body); font-style: italic;
+      font-size: 12px; color: #c8a878; display: block; margin-top: 4px;
+    }
+
+    /* ── CONTROLS HINT ──────────────────────────────────────── */
+    .controls-hint {
+      font-family: var(--font-body); font-style: italic;
+      font-size: 12px; color: #a09070; text-align: center; letter-spacing: 0.5px;
+    }
+
+    /* ── FOOTER ─────────────────────────────────────────────── */
+    .game-footer {
+      padding: 10px 20px 14px;
+      border-top: 1px solid rgba(200,149,42,0.1);
+      font-family: var(--font-body); font-style: italic;
+      font-size: 11px; color: rgba(180,150,90,0.65);
+      display: flex; justify-content: space-between;
+      align-items: center; flex-wrap: wrap; gap: 8px; flex-shrink: 0;
+    }
+
+    @media (max-width: 520px) {
+      .header-inner { padding: 10px 14px; }
+      .game-main    { padding: 8px; gap: 8px; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ── HEADER ───────────────────────────────────────────────── -->
+<header class="game-header">
+  <div class="header-inner">
+    <div class="header-left">
+      <a href="index.html" class="rpg-back">Hub</a>
+    </div>
+    <div class="header-center">
+      <img class="rpg-logo"
+           src="data:image/png;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/4gHYSUNDX1BST0ZJTEUAAQEAAAHIAAAAAAQwAABtbnRyUkdCIFhZWiAH4AABAAEAAAAAAABhY3NwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQAA9tYAAQAAAADTLQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAlkZXNjAAAA8AAAACRyWFlaAAABFAAAABRnWFlaAAABKAAAABRiWFlaAAABPAAAABR3dHB0AAABUAAAABRyVFJDAAABZAAAAChnVFJDAAABZAAAAChiVFJDAAABZAAAAChjcHJ0AAABjAAAADxtbHVjAAAAAAAAAAEAAAAMZW5VUwAAAAgAAAAcAHMAUgBHAEJYWVogAAAAAAAAb6IAADj1AAADkFhZWiAAAAAAAABimQAAt4UAABjaWFlaIAAAAAAAACSgAAAPhAAAts9YWVogAAAAAAAA9tYAAQAAAADTLXBhcmEAAAAAAAQAAAACZmYAAPKnAAANWQAAE9AAAApbAAAAAAAAAABtbHVjAAAAAAAAAAEAAAAMZW5VUwAAACAAAAAcAEcAbwBvAGcAbABlACAASQBuAGMALgAgADIAMAAxADb/2wBDAAUDBAQEAwUEBAQFBQUGBwwIBwcHBw8LCwkMEQ8SEhEPERETFhwXExQaFRERGCEYGh0dHx8fExciJCIeJBweHx7/2wBDAQUFBQcGBw4ICA4eFBEUHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh7/wAARCABAAEADASIAAhEBAxEB/8QAHAAAAwEAAgMAAAAAAAAAAAAABQYHCAAEAQID/8QAMBAAAQMDAwIFAwMFAQAAAAAAAQIDBAUGEQAhMQcSExQiQVEIFXEyQpEjUmGBobH/xAAZAQEBAQEBAQAAAAAAAAAAAAAGBQADBwH/xAAvEQABAwMDAgQFBAMAAAAAAAABAgMRAAQFITFBElEGYXGBFCORobETIlLBYtHw/9oADAMBAAIRAxEAPwDGWiFFpE2qyA1FbJGd1Hga9aHTX6rUW4rKSe4+o/A1fLLthmNHbYZaAAA3xzqRlcqixR3VTLwr4VVmFF989LKdzyT2H9nik23enUZISuWC+vkg/p05QrLjNMBtENCUfHbtojb1Sk3JdjluWo22mPE3nVNae4JA2w2njOdsnVfboDUWG2JDivDCkoCnDkqUogD/AGSeNef5bO3TK0pdVCjrHIB2kcT23p9ZZPDWsosmEhCdCogGfQmSfx2qHzLMiuslC4aFJ+O3SZcXTmOoKXD7o6+QP261G5QW5MNwMOK8MqUgqbOClSTg/wCwRxqQ3DUpFt3Y3bl1ttqYl7wqmhPaFA+zieM52yNbEZ26eWQ0qVDWOSBvA5jtvX29yeGuoResJKFaBQA09xBH4rOVZpM2lSCzLaKfhWNjroa0XedsMyWHWH2gQQfbjUEr9MepNRciug4B9J+Rr0DFZVF8j/KgHirwqrDqD7B6mVbHkHsf6PNPvTWG1Tqb591yEl945SiT3J7kfCV8An43/GqlTL3o9v1GHBuVlNP8xBMkqSlSwhRVhLe2+cA7/J0mW8l0vQAxAfMdp1KWyHyUpCiAT2EEe5/jVorFjUe8LbfiTorRlIYV5aTjC2lAZG/xn20Nzt1bB8fFg9KiZIIkcD6edW2RfMY4oYUUhEQDMKnUnXv5ACvr9JtCgOWbPrEVnsRPqLqkZ5DaThIP43/nTf8AUHVk2tYUWY00FynKpFTGQVBKVOJcCwFH2HpOkr6H6/GkWxU7VdcT5yBKLyEk7qbVtkfgg/zqm/VFApS+iVYnVNJKoPZIiKGMpfCsI55GTuPjURzDqfz7i35ICxA8tI+0UQN0RaBKTxQj6fKqm6bCkzHWgiU3VJSZKQoKSlxThWQk+49Q0nfVlQoDdnU+syme9ECpNKXjktqOFAfnb+NUj6XoFKR0So86mpIVO75EtRxlT5Vhew4GRsPjUy+uCvxo9s0y1WnEmZOlB5aAd0tp2yfyT/zWbw6mM+2tiQCsz6az9prC6JtClR4pNm3nRbmq0um24pEgMwhJD62VYKgfUjt2PBGpb1HifcaV5s+T80yCtTcX1eGn3C1ZO/8AjWhaRYtGtC2mYcGK2JK2EiTJxlbqiMnf4z7ailWajsGbEVT6ke0qQ4XioN+GkqwRgAHAA3OedXMDdWxfPwgPSkiCYk8E+9LX/jHscE3CuoLBkfugbEQBpI8/9GiNp3CiL5BqPT/MB3t7Vl72yB+kA777ZI4OjNydaXqHAqtBRSXG6y2Vxg/3ANgcBwDnON8amFgVXxaV5AqfW4gkIaQohKjjbuCdyM/O2rDatBtW5JyKlWaZDnVFj+k6pBUG1dv6SRnCjjGedd8pa2Vs8XLtoqSNdO86c7cGuLtxkMo0n9J7ccxtGo23FQqw7urNmXPGuGiSfDlMq9QO6XEnlKh7g6vXWjr/AEHqH0UdoTUaRT606+0Xo6k9yFJSckpUPbIHOvHX60bBidPXqrFgw6VVmVIEUR8I8YkgFJSOdsnP+NZo1exlxa5xAvUIKVJMa8xr6EUHvLd2xcLCyDWmOjHX+g9POijNCcjSKhWmn3SzHSO1CUqOQVKPtknjUEvy7qzedzybhrcnxJTyvSBsltI4SkewGgOtMdAbRsGX09ZqsqDDqtWeUsShIwvwSCcJCTxtg51sncWuDQb1SCpSjGnE6+gFazt3b5wMIIFCrb60PV2DSaAukuOVlwojF/uBbI4LhHOcb40G6iyWluOqlTakpAWr+gtgNpb53z27j/fvpqumhWfbVQ+40+htsSZSvLhSHShLQWCCoeydttRu9qg3Cpr0KNIfUHllAbcV6kJGxSoA4PHI1DxNtZvvh6zbKEng9+eTAHFM1Ku7BhTd0oK0+g441k6UmUWoOU2al9BJQfS4n+5PuNVS0a28Kl5+IlDzbjaWAjIAUknJaA4SPk87fOo7rt06oSILmWlZQT6kH9KtMb2yTcpI5otjsiGPluz07iODt9O4/wCN7pdjW5Xam3V6pKnmOSSYK5PiIH4c57f+6YLw6YWZUqA+mi0/7dUW2yphbbilBagNkqBJ2PzqQwb3YmUxFNdV5HKkhSgMpCQcn/zGmGn1ypMELp9THk/SAsqKR+pSjjBwBvjGONEH7DJhwLDyk9J0GsR5xofeTTU2eJcb6bZAcBAlQICuoj+J1AHsKfbQ6X2ZTaAwmtU77jUnGwp9bjikhCiN0pAI2HzpZqtp2db9b+4QanPDCjkQWHvRscHucH7ASAeSNA51eedaacemy3mWVocdTJdC+5eFBeMkjt3GM/Glir3NTY0t52n+IrvcUsNA5b9QwQfnfPxrpaY/IKdUtx5R6txx6a7ewqfcNWLTSUltKYjUnXmTGk7bHuOKea5dyRTZjdWa8FTLikNtelSCj9qQRzj8ai1ZnrqM1b6gEp4QgDASNcqtTlVJ7xJCyQNkpzsBrpaT4/Gt2YJA1NRczn3b5pFqk/LRtMSfWO3Ff//Z"
+           alt="Rising Phoenix Games logo" />
+      <div class="header-title-block">
+        <h1 class="game-title">Phoenix Flight</h1>
+        <span class="game-subtitle">Guide the phoenix through the gauntlet</span>
+      </div>
+    </div>
+    <div class="header-right">
+      <div style="width:44px;height:44px;opacity:0;" aria-hidden="true"></div>
+    </div>
+  </div>
+</header>
+
+<!-- ── MAIN ──────────────────────────────────────────────────── -->
+<main class="game-main">
+
+  <div class="score-row">
+    <div class="score-box">
+      <span class="score-label">Score</span>
+      <span class="score-value" id="scoreDisplay">0</span>
+    </div>
+    <div class="score-box">
+      <span class="score-label">Best</span>
+      <span class="score-value" id="bestDisplay">0</span>
+    </div>
+    <div class="score-box">
+      <span class="score-label">Level</span>
+      <span class="score-value" id="levelDisplay">1</span>
+    </div>
+  </div>
+
+  <div class="canvas-wrap">
+    <canvas id="gameCanvas"></canvas>
+    <canvas id="confettiCanvas"></canvas>
+
+    <!-- Start screen -->
+    <div class="overlay" id="startScreen">
+      <div class="medal">🔥</div>
+      <h2 class="overlay-title">Phoenix Flight</h2>
+      <p class="overlay-text">
+        Guide the undying phoenix through a gauntlet of ancient stone pillars.
+        Tap, click, or press <strong style="color:#f0d080;">Space</strong> to flap your wings.
+        Survive the gauntlet and earn legendary status.
+      </p>
+      <button class="btn-play" id="startBtn">Begin Flight</button>
+    </div>
+
+    <!-- Game over screen -->
+    <div class="overlay hidden" id="gameOverScreen">
+      <div class="medal">💀</div>
+      <h2 class="overlay-title">The Phoenix Falls</h2>
+      <p class="overlay-text" id="gameOverText">The flame is extinguished — but a phoenix always rises again.</p>
+      <div class="overlay-score" id="finalScoreDisplay"></div>
+      <button class="btn-play" id="restartBtn">Rise Again</button>
+    </div>
+
+    <!-- Victory / milestone banner -->
+    <div id="victoryBanner">
+      <span class="v-title" id="victoryTitle">Milestone Reached!</span>
+      <span class="v-sub"   id="victorySub">The phoenix soars ever higher</span>
+    </div>
+  </div>
+
+  <p class="controls-hint">Tap · Click · Space · ↑ Arrow — to flap your wings</p>
+
+</main>
+
+<!-- ── FOOTER ────────────────────────────────────────────────── -->
+<footer class="game-footer">
+  <span>© <span id="year"></span> Rising Phoenix Gallery · Michigan City, IN</span>
+  <span>Crafted by John Ryszka II · <a href="https://www.risingphxgallery.com" style="color:var(--gold);text-decoration:none;">RisingPhxGallery.com</a></span>
+</footer>
+
+<script>
+'use strict';
+/* ═══════════════════════════════════════════════════════════════
+   PHOENIX FLIGHT — Rising Phoenix Games
+   Flappy-bird with medieval RPG aesthetic
+   ═══════════════════════════════════════════════════════════════ */
+
+document.getElementById('year').textContent = new Date().getFullYear();
+
+/* ── CANVAS ─────────────────────────────────────────────────── */
+const canvas   = document.getElementById('gameCanvas');
+const ctx      = canvas.getContext('2d');
+const cEl      = document.getElementById('confettiCanvas');
+const cctx     = cEl.getContext('2d');
+
+function resize() {
+  const maxW = Math.min(window.innerWidth - 32, 480);
+  const maxH = Math.min(window.innerHeight - 260, 650);
+  const W = Math.max(280, maxW);
+  const H = Math.max(400, maxH);
+  canvas.width = W; canvas.height = H;
+  cEl.width    = W; cEl.height    = H;
+}
+resize();
+window.addEventListener('resize', () => {
+  resize();
+  if (gameState === 'idle' || gameState === 'dead') { if (idleRafId) { cancelAnimationFrame(idleRafId); idleRafId = null; } idleLoop(); }
+});
+
+/* ── PERSISTENCE ────────────────────────────────────────────── */
+let bestScore = parseInt(localStorage.getItem('rpg_flappy_best') || '0', 10);
+document.getElementById('bestDisplay').textContent = bestScore;
+
+/* ── CONSTANTS ──────────────────────────────────────────────── */
+const GRAVITY    = 0.22;
+const FLAP_VEL   = -5.8;
+const BIRD_R     = 16;
+const PIPE_W     = 52;
+const GAP_BASE   = 150;
+const GAP_MIN    = 105;
+const PIPE_FRAMES = 120;
+
+/* ── STATE ──────────────────────────────────────────────────── */
+let gameState = 'idle'; // idle | playing | dead
+let score     = 0;
+let pipeSpeed = 2.4;
+let lastMilestone = -1;
+
+/* ── BIRD ───────────────────────────────────────────────────── */
+let bird = { x: 0, y: 0, vy: 0, angle: 0, phase: 0 };
+
+function resetBird() {
+  bird.x = canvas.width * 0.22;
+  bird.y = canvas.height * 0.42;
+  bird.vy = 0; bird.angle = 0; bird.phase = 0;
+}
+
+/* ── PIPES ──────────────────────────────────────────────────── */
+let pipes = [], pipeTimer = 0;
+
+function getGap()   { return Math.max(GAP_MIN, GAP_BASE - Math.floor(score / 5) * 4); }
+function getLevel() { return Math.floor(score / 10) + 1; }
+
+function spawnPipe() {
+  const minY = 65, maxY = canvas.height - 65 - getGap();
+  const topH = minY + Math.random() * Math.max(10, maxY - minY);
+  pipes.push({ x: canvas.width + 12, topH, passed: false });
+}
+
+/* ── BACKGROUND STARS ───────────────────────────────────────── */
+const stars = Array.from({ length: 55 }, () => ({
+  fx: Math.random(), fy: Math.random() * 0.72,
+  r: Math.random() * 1.2 + 0.3,
+  spd: Math.random() * 0.18 + 0.04
+}));
+let parallaxX = 0;
+
+/* ── CONFETTI ───────────────────────────────────────────────── */
+let confParticles = [];
+const CONF_COLORS = ['#f0d080','#c8952a','#ff6b35','#ffd700','#ff4444','#44aaff','#88ff44','#cc44ff'];
+
+function launchConfetti() {
+  confParticles = Array.from({ length: 95 }, () => ({
+    x: Math.random() * cEl.width,
+    y: Math.random() * cEl.height * 0.5,
+    vx: (Math.random() - 0.5) * 5.5,
+    vy: Math.random() * -5.5 - 1.5,
+    color: CONF_COLORS[Math.floor(Math.random() * CONF_COLORS.length)],
+    w: Math.random() * 9 + 4, h: Math.random() * 4 + 2,
+    rot: Math.random() * Math.PI * 2,
+    rotV: (Math.random() - 0.5) * 0.22,
+    life: 1, decay: Math.random() * 0.013 + 0.007
+  }));
+}
+
+function tickConfetti() {
+  cctx.clearRect(0, 0, cEl.width, cEl.height);
+  if (!confParticles.length) return;
+  confParticles = confParticles.filter(p => p.life > 0);
+  for (const p of confParticles) {
+    p.x += p.vx; p.y += p.vy; p.vy += 0.13;
+    p.rot += p.rotV; p.life -= p.decay;
+    cctx.save();
+    cctx.translate(p.x, p.y); cctx.rotate(p.rot);
+    cctx.globalAlpha = Math.max(0, p.life);
+    cctx.fillStyle = p.color;
+    cctx.fillRect(-p.w / 2, -p.h / 2, p.w, p.h);
+    cctx.restore();
+  }
+}
+
+/* ── MILESTONES ─────────────────────────────────────────────── */
+const MILESTONES = {
+  10:  ['First Wing',    'The phoenix spreads its wings at last!'],
+  25:  ['Ember Dancer',  'You weave through stone like living flame.'],
+  50:  ['Blazing Trail', 'Fifty pillars left behind in embers.'],
+  100: ['Inferno Born',  'A century of pillars — the legend grows.'],
+  200: ['Eternal Flame', 'The phoenix ascends to immortal myth!'],
+};
+
+function checkMilestone(sc) {
+  for (const [m, msgs] of Object.entries(MILESTONES)) {
+    const n = parseInt(m, 10);
+    if (sc >= n && lastMilestone < n) {
+      lastMilestone = n;
+      showVictoryBanner(msgs);
+      return;
+    }
+  }
+}
+
+function showVictoryBanner(msgs) {
+  const banner = document.getElementById('victoryBanner');
+  document.getElementById('victoryTitle').textContent = msgs[0];
+  document.getElementById('victorySub').textContent   = msgs[1];
+
+  /* Target = 78% of canvas width. Banner natural width ~260px. */
+  const scaleTarget = (canvas.width * 0.78) / 260;
+
+  banner.style.transition = 'none';
+  banner.style.opacity    = '0';
+  banner.style.transform  = 'translate(-50%,-50%) scale(0.05)';
+
+  requestAnimationFrame(() => requestAnimationFrame(() => {
+    /* Grow over 750ms */
+    banner.style.transition = 'opacity 0.15s ease, transform 0.75s cubic-bezier(0.22,1,0.36,1)';
+    banner.style.opacity    = '1';
+    banner.style.transform  = `translate(-50%,-50%) scale(${scaleTarget})`;
+
+    /* Hold 1s then fade */
+    setTimeout(() => {
+      banner.style.transition = 'opacity 0.4s ease, transform 0.4s ease';
+      banner.style.opacity    = '0';
+      banner.style.transform  = `translate(-50%,-50%) scale(${scaleTarget * 0.88})`;
+    }, 750 + 1000);
+  }));
+
+  launchConfetti();
+}
+
+/* ── DRAWING HELPERS ────────────────────────────────────────── */
+function drawBackground() {
+  const W = canvas.width, H = canvas.height;
+
+  /* Sky */
+  const sky = ctx.createLinearGradient(0, 0, 0, H);
+  sky.addColorStop(0,    '#0f0806');
+  sky.addColorStop(0.45, '#1a0e08');
+  sky.addColorStop(0.78, '#291408');
+  sky.addColorStop(1,    '#0a0805');
+  ctx.fillStyle = sky;
+  ctx.fillRect(0, 0, W, H);
+
+  /* Stars */
+  for (const s of stars) {
+    const sx = ((s.fx * W - parallaxX * s.spd) % W + W) % W;
+    ctx.beginPath();
+    ctx.arc(sx, s.fy * H, s.r, 0, Math.PI * 2);
+    ctx.fillStyle = `rgba(240,208,128,${0.25 + s.r * 0.18})`;
+    ctx.fill();
+  }
+
+  /* Amber horizon glow */
+  const glow = ctx.createRadialGradient(W * 0.5, H * 0.64, 0, W * 0.5, H * 0.64, W * 0.55);
+  glow.addColorStop(0,   'rgba(200,100,20,0.16)');
+  glow.addColorStop(0.5, 'rgba(180,70,10,0.06)');
+  glow.addColorStop(1,   'transparent');
+  ctx.fillStyle = glow;
+  ctx.fillRect(0, 0, W, H);
+
+  /* Ground */
+  const gY = H - 28;
+  const gr = ctx.createLinearGradient(0, gY, 0, H);
+  gr.addColorStop(0, '#2a1808');
+  gr.addColorStop(1, '#0f0904');
+  ctx.fillStyle = gr;
+  ctx.fillRect(0, gY, W, H - gY);
+
+  /* Ground top glow line */
+  ctx.strokeStyle = 'rgba(200,149,42,0.42)';
+  ctx.lineWidth = 1.5;
+  ctx.beginPath(); ctx.moveTo(0, gY); ctx.lineTo(W, gY); ctx.stroke();
+
+  /* Ground cobble marks */
+  ctx.strokeStyle = 'rgba(200,149,42,0.1)';
+  ctx.lineWidth = 0.5;
+  for (let gx = 0; gx < W; gx += 28) {
+    ctx.beginPath(); ctx.moveTo(gx, gY); ctx.lineTo(gx, H); ctx.stroke();
+  }
+}
+
+function drawPillar(px, py, pw, ph, isTop) {
+  if (ph <= 0) return;
+  const capH = 14, cx = px - 5, capW = pw + 10;
+
+  /* Main shaft */
+  const sg = ctx.createLinearGradient(px, 0, px + pw, 0);
+  sg.addColorStop(0,    '#1a1208');
+  sg.addColorStop(0.15, '#2e2010');
+  sg.addColorStop(0.5,  '#3c2a14');
+  sg.addColorStop(0.85, '#2e2010');
+  sg.addColorStop(1,    '#1a1208');
+  ctx.fillStyle = sg;
+  ctx.fillRect(px, py, pw, ph);
+
+  /* Block etch lines */
+  ctx.strokeStyle = 'rgba(200,149,42,0.07)';
+  ctx.lineWidth = 0.5;
+  for (let by = py; by < py + ph; by += 22) {
+    ctx.beginPath(); ctx.moveTo(px, by); ctx.lineTo(px + pw, by); ctx.stroke();
+  }
+
+  /* Edge highlights */
+  ctx.strokeStyle = 'rgba(200,149,42,0.28)';
+  ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(px + 1, py); ctx.lineTo(px + 1, py + ph); ctx.stroke();
+  ctx.strokeStyle = 'rgba(0,0,0,0.45)';
+  ctx.beginPath(); ctx.moveTo(px + pw - 1, py); ctx.lineTo(px + pw - 1, py + ph); ctx.stroke();
+
+  /* Inner shadow fade */
+  const shad = ctx.createLinearGradient(px, 0, px + pw, 0);
+  shad.addColorStop(0,   'rgba(0,0,0,0.32)');
+  shad.addColorStop(0.3, 'rgba(0,0,0,0)');
+  shad.addColorStop(0.7, 'rgba(0,0,0,0)');
+  shad.addColorStop(1,   'rgba(0,0,0,0.32)');
+  ctx.fillStyle = shad;
+  ctx.fillRect(px, py, pw, ph);
+
+  /* Cap */
+  const capG = ctx.createLinearGradient(cx, 0, cx + capW, 0);
+  capG.addColorStop(0,   '#1a1208');
+  capG.addColorStop(0.2, '#3a2814');
+  capG.addColorStop(0.5, '#4c3418');
+  capG.addColorStop(0.8, '#3a2814');
+  capG.addColorStop(1,   '#1a1208');
+  ctx.fillStyle = capG;
+  const capY = isTop ? py + ph - capH : py;
+  ctx.fillRect(cx, capY, capW, capH);
+  ctx.strokeStyle = 'rgba(200,149,42,0.5)';
+  ctx.lineWidth = 1;
+  ctx.strokeRect(cx, capY, capW, capH);
+}
+
+function drawPipe(pipe) {
+  const gap = getGap();
+  const botY = pipe.topH + gap;
+  const groundY = canvas.height - 28;
+
+  drawPillar(pipe.x, 0, PIPE_W, pipe.topH, true);
+  drawPillar(pipe.x, botY, PIPE_W, groundY - botY, false);
+
+  /* Gap passage glow */
+  const gg = ctx.createLinearGradient(pipe.x, pipe.topH, pipe.x, botY);
+  gg.addColorStop(0,   'rgba(200,149,42,0.16)');
+  gg.addColorStop(0.5, 'transparent');
+  gg.addColorStop(1,   'rgba(200,149,42,0.16)');
+  ctx.fillStyle = gg;
+  ctx.fillRect(pipe.x - 5, pipe.topH, PIPE_W + 10, gap);
+}
+
+function drawBird() {
+  const { x, y, angle, phase } = bird;
+  ctx.save();
+  ctx.translate(x, y);
+  ctx.rotate(Math.max(-0.52, Math.min(0.85, angle)));
+
+  const wingOff = Math.sin(phase) * 5.5;
+
+  /* Body aura */
+  const aura = ctx.createRadialGradient(0, 0, 2, 0, 0, BIRD_R * 2.4);
+  aura.addColorStop(0,   'rgba(255,140,30,0.32)');
+  aura.addColorStop(0.5, 'rgba(200,70,10,0.12)');
+  aura.addColorStop(1,   'transparent');
+  ctx.fillStyle = aura;
+  ctx.beginPath(); ctx.arc(0, 0, BIRD_R * 2.4, 0, Math.PI * 2); ctx.fill();
+
+  /* Lower wing */
+  ctx.save();
+  ctx.rotate(0.32 + wingOff * 0.04);
+  ctx.fillStyle = 'rgba(200,75,10,0.68)';
+  ctx.beginPath();
+  ctx.ellipse(2, 5 + wingOff, 14, 6, 0.4, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.restore();
+
+  /* Body */
+  const bg = ctx.createRadialGradient(-2, -2, 1, 0, 0, BIRD_R);
+  bg.addColorStop(0,   '#ffd060');
+  bg.addColorStop(0.42,'#ff8020');
+  bg.addColorStop(0.82,'#cc3008');
+  bg.addColorStop(1,   '#8a1800');
+  ctx.fillStyle = bg;
+  ctx.beginPath(); ctx.arc(0, 0, BIRD_R, 0, Math.PI * 2); ctx.fill();
+
+  /* Upper wing */
+  ctx.save();
+  ctx.rotate(-0.22 - wingOff * 0.04);
+  ctx.fillStyle = 'rgba(255,138,28,0.88)';
+  ctx.beginPath();
+  ctx.ellipse(-2, -4 - wingOff, 16, 7, -0.4, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.restore();
+
+  /* Flame tail */
+  ctx.save();
+  ctx.rotate(Math.PI);
+  const tg = ctx.createLinearGradient(0, 0, 0, 22);
+  tg.addColorStop(0,   'rgba(255,180,20,0.9)');
+  tg.addColorStop(0.5, 'rgba(255,80,10,0.55)');
+  tg.addColorStop(1,   'rgba(200,40,0,0)');
+  ctx.fillStyle = tg;
+  for (let i = -1; i <= 1; i++) {
+    ctx.beginPath();
+    ctx.moveTo(i * 4, 0);
+    ctx.quadraticCurveTo(i * 9 + Math.sin(phase * 0.7 + i) * 4, 12, i * 5 + Math.sin(phase + i * 1.2) * 3, 22);
+    ctx.quadraticCurveTo(i * 2, 14, i * 4, 0);
+    ctx.fill();
+  }
+  ctx.restore();
+
+  /* Eye */
+  ctx.fillStyle = '#fff8e8';
+  ctx.beginPath(); ctx.arc(8, -4, 4, 0, Math.PI * 2); ctx.fill();
+  ctx.fillStyle = '#1a0a00';
+  ctx.beginPath(); ctx.arc(9, -4, 2.5, 0, Math.PI * 2); ctx.fill();
+  ctx.fillStyle = '#fff';
+  ctx.beginPath(); ctx.arc(10, -5, 1, 0, Math.PI * 2); ctx.fill();
+
+  /* Beak */
+  ctx.fillStyle = '#e8a020';
+  ctx.beginPath();
+  ctx.moveTo(14, -2); ctx.lineTo(22, -1); ctx.lineTo(14, 3);
+  ctx.closePath(); ctx.fill();
+
+  ctx.restore();
+}
+
+function drawHUD() {
+  ctx.save();
+  ctx.textAlign = 'center';
+  ctx.font = "bold 22px 'Cinzel', serif";
+  ctx.fillStyle = 'rgba(0,0,0,0.5)';
+  ctx.fillText(score, canvas.width * 0.5 + 1, 38);
+  ctx.fillStyle = '#f0d080';
+  ctx.fillText(score, canvas.width * 0.5, 37);
+  ctx.restore();
+}
+
+/* ── COLLISION ──────────────────────────────────────────────── */
+function hitTest() {
+  const H = canvas.height, bx = bird.x, by = bird.y;
+  if (by + BIRD_R >= H - 28) return true;
+  if (by - BIRD_R <= 0)      return true;
+  const gap = getGap();
+  for (const p of pipes) {
+    const botY = p.topH + gap;
+    if (bx + BIRD_R - 3 > p.x && bx - BIRD_R + 3 < p.x + PIPE_W) {
+      if (by - BIRD_R + 3 < p.topH || by + BIRD_R - 3 > botY) return true;
+    }
+  }
+  return false;
+}
+
+/* ── UI UPDATES ─────────────────────────────────────────────── */
+function updateUI() {
+  document.getElementById('scoreDisplay').textContent = score;
+  document.getElementById('bestDisplay').textContent  = bestScore;
+  document.getElementById('levelDisplay').textContent = getLevel();
+}
+
+/* ── DEATH ──────────────────────────────────────────────────── */
+const DEATH_MSGS = [
+  'Every great flight ends in ash — but ash births fire.',
+  'The stone pillars claimed you this time, brave phoenix.',
+  'Fate is not kind, but the phoenix never yields.',
+  'A worthy run. The flame shall rise again.',
+];
+
+function killBird() {
+  gameState = 'dead';
+  if (score > bestScore) {
+    bestScore = score;
+    localStorage.setItem('rpg_flappy_best', bestScore);
+    document.getElementById('bestDisplay').textContent = bestScore;
+  }
+  document.getElementById('finalScoreDisplay').textContent = `Score: ${score}  ·  Best: ${bestScore}`;
+  document.getElementById('gameOverText').textContent = DEATH_MSGS[Math.floor(Math.random() * DEATH_MSGS.length)];
+  document.getElementById('gameOverScreen').classList.remove('hidden');
+  idleLoop();
+}
+
+/* ── GAME LOOP ──────────────────────────────────────────────── */
+let rafId = null, idleRafId = null;
+
+function gameLoop() {
+  if (gameState !== 'playing') return;
+  parallaxX += pipeSpeed * 0.5;
+
+  /* Physics */
+  bird.vy    += GRAVITY;
+  bird.y     += bird.vy;
+  bird.angle += (bird.vy * 0.04 - bird.angle) * 0.12;
+  bird.phase += 0.22;
+
+  /* Difficulty ramp */
+  pipeSpeed = 2.4 + getLevel() * 0.18;
+
+  /* Pipes */
+  pipeTimer++;
+  if (pipeTimer >= PIPE_FRAMES) { spawnPipe(); pipeTimer = 0; }
+
+  for (const p of pipes) {
+    p.x -= pipeSpeed;
+    if (!p.passed && p.x + PIPE_W < bird.x) {
+      p.passed = true; score++;
+      updateUI();
+      checkMilestone(score);
+      if (score > bestScore) {
+        bestScore = score;
+        localStorage.setItem('rpg_flappy_best', bestScore);
+        document.getElementById('bestDisplay').textContent = bestScore;
+      }
+    }
+  }
+  pipes = pipes.filter(p => p.x + PIPE_W > -20);
+
+  /* Render */
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  drawBackground();
+  pipes.forEach(drawPipe);
+  drawBird();
+  drawHUD();
+  tickConfetti();
+
+  if (hitTest()) { killBird(); return; }
+  rafId = requestAnimationFrame(gameLoop);
+}
+
+/* ── IDLE LOOP ──────────────────────────────────────────────── */
+function idleLoop() {
+  if (gameState === 'playing') { idleRafId = null; return; }
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  drawBackground();
+  bird.x     = canvas.width * 0.22;
+  bird.y     = canvas.height * 0.42 + Math.sin(Date.now() * 0.002) * 8;
+  bird.angle = Math.sin(Date.now() * 0.0012) * 0.15;
+  bird.phase += 0.1;
+  drawBird();
+  tickConfetti();
+  idleRafId = requestAnimationFrame(idleLoop);
+}
+
+/* ── START GAME ─────────────────────────────────────────────── */
+function startGame() {
+  document.getElementById('startScreen').classList.add('hidden');
+  document.getElementById('gameOverScreen').classList.add('hidden');
+  const banner = document.getElementById('victoryBanner');
+  banner.style.transition = 'none';
+  banner.style.opacity    = '0';
+  banner.style.transform  = 'translate(-50%,-50%) scale(0.05)';
+
+  score = 0; pipes = []; pipeTimer = 0;
+  lastMilestone = -1; pipeSpeed = 2.4;
+  confParticles = []; cctx.clearRect(0, 0, cEl.width, cEl.height);
+  gameState = 'playing';
+  resetBird(); updateUI();
+
+  if (rafId)     { cancelAnimationFrame(rafId);     rafId = null; }
+  if (idleRafId) { cancelAnimationFrame(idleRafId); idleRafId = null; }
+  rafId = requestAnimationFrame(gameLoop);
+}
+
+/* ── FLAP ───────────────────────────────────────────────────── */
+function flap() {
+  if (gameState === 'idle' || gameState === 'dead') { startGame(); return; }
+  if (gameState === 'playing') { bird.vy = FLAP_VEL; bird.angle = -0.35; }
+}
+
+/* ── INPUT ──────────────────────────────────────────────────── */
+document.addEventListener('keydown', e => {
+  if (e.code === 'Space' || e.code === 'ArrowUp') { e.preventDefault(); flap(); }
+});
+canvas.addEventListener('click', flap);
+canvas.addEventListener('touchstart', e => { e.preventDefault(); flap(); }, { passive: false });
+document.getElementById('startBtn').addEventListener('click',   e => { e.stopPropagation(); startGame(); });
+document.getElementById('restartBtn').addEventListener('click', e => { e.stopPropagation(); startGame(); });
+
+/* ── BOOT ───────────────────────────────────────────────────── */
+resetBird();
+idleLoop();
+</script>
+</body>
+</html>

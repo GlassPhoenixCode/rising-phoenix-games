@@ -1,0 +1,1231 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Pac-Man — Rising Phoenix Games</title>
+  <link rel="stylesheet" href="shared.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700;900&family=Cinzel+Decorative:wght@400;700&family=IM+Fell+English:ital@0;1&display=swap" rel="stylesheet" />
+  <style>
+    html, body { height: 100%; margin: 0; padding: 0; }
+    body {
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+      background:
+        radial-gradient(ellipse 90% 55% at 15% 8%,  rgba(90,48,12,0.55) 0%, transparent 58%),
+        radial-gradient(ellipse 70% 65% at 85% 90%, rgba(50,25,6,0.6)   0%, transparent 55%),
+        radial-gradient(ellipse 60% 40% at 50% 50%, rgba(30,18,5,0.4)   0%, transparent 70%),
+        linear-gradient(160deg, #1c1106 0%, #0f0c07 45%, #13100a 100%);
+      background-attachment: fixed;
+    }
+
+    /* ── HEADER ── */
+    .game-header {
+      background: linear-gradient(180deg, #1e1508 0%, #120e06 100%);
+      border-bottom: 2px solid var(--gold);
+      box-shadow: 0 4px 24px rgba(0,0,0,0.7), 0 1px 0 rgba(200,149,42,0.12) inset;
+      flex-shrink: 0;
+      position: relative;
+      overflow: hidden;
+    }
+    .game-header::before {
+      content: '';
+      position: absolute; inset: 0;
+      background: repeating-linear-gradient(90deg,
+        transparent 0px, transparent 56px,
+        rgba(200,149,42,0.035) 56px, rgba(200,149,42,0.035) 57px);
+      pointer-events: none;
+    }
+    .header-inner {
+      display: flex;
+      align-items: center;
+      padding: 12px 20px;
+      position: relative;
+      gap: 0;
+    }
+    .header-left {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      width: 120px;
+      flex-shrink: 0;
+    }
+    .header-center {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+    .header-right {
+      width: 120px;
+      flex-shrink: 0;
+    }
+    .phoenix-logo {
+      width: 40px;
+      height: 40px;
+      filter: drop-shadow(0 0 8px rgba(200,149,42,0.5));
+    }
+    h1.game-title {
+      font-family: var(--font-display);
+      font-size: clamp(18px, 3.5vw, 28px);
+      font-weight: 700;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      margin: 0 0 2px 0;
+      background: linear-gradient(135deg, var(--gold-light) 0%, var(--gold) 45%, #a07020 80%, var(--gold-light) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      line-height: 1.1;
+      text-align: center;
+    }
+    .game-subtitle {
+      font-family: var(--font-body);
+      font-style: italic;
+      font-size: 12px;
+      color: #c4a46a;
+      letter-spacing: 1.5px;
+      opacity: 0.85;
+      text-align: center;
+    }
+
+    /* ── MAIN LAYOUT ── */
+    .game-main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 16px 12px;
+      gap: 14px;
+      position: relative;
+      z-index: 1;
+    }
+
+    /* ── STATUS BAR ── */
+    .status-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+    .stat-pill {
+      font-family: var(--font-ui);
+      font-size: 11px;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      padding: 6px 14px;
+      background: rgba(0,0,0,0.4);
+      border: 1px solid rgba(200,149,42,0.3);
+      border-radius: 4px;
+      color: #f0d080;
+      position: relative;
+    }
+    .stat-pill span.val {
+      color: #fff;
+      font-weight: 700;
+    }
+    .lives-display {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-family: var(--font-ui);
+      font-size: 11px;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      color: #f0d080;
+      padding: 6px 14px;
+      background: rgba(0,0,0,0.4);
+      border: 1px solid rgba(200,149,42,0.3);
+      border-radius: 4px;
+    }
+    .life-icon {
+      width: 14px;
+      height: 14px;
+      display: inline-block;
+    }
+
+    /* ── CANVAS WRAPPER ── */
+    .canvas-wrapper {
+      position: relative;
+      border: 2px solid rgba(200,149,42,0.5);
+      border-radius: 8px;
+      box-shadow:
+        0 0 0 1px rgba(0,0,0,0.8),
+        0 8px 40px rgba(0,0,0,0.8),
+        0 0 60px rgba(200,149,42,0.08),
+        inset 0 0 30px rgba(0,0,0,0.5);
+      overflow: hidden;
+      background: #000;
+    }
+    #gameCanvas {
+      display: block;
+    }
+
+    /* ── OVERLAY (start/pause/gameover) ── */
+    #overlay {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      background: rgba(0,0,0,0.82);
+      z-index: 10;
+      gap: 12px;
+      padding: 20px;
+    }
+    #overlay.hidden { display: none; }
+    .overlay-title {
+      font-family: var(--font-display);
+      font-size: clamp(20px, 4vw, 32px);
+      font-weight: 700;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      background: linear-gradient(135deg, #f0d080, #c8952a, #f0d080);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      text-align: center;
+      line-height: 1.2;
+      margin: 0;
+    }
+    .overlay-sub {
+      font-family: var(--font-body);
+      font-style: italic;
+      font-size: 14px;
+      color: #c8a878;
+      text-align: center;
+      margin: 0;
+    }
+    .overlay-score {
+      font-family: var(--font-ui);
+      font-size: 18px;
+      letter-spacing: 2px;
+      color: #f0d080;
+    }
+    .btn-row { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; }
+
+    /* ── VICTORY BURST ── */
+    #victoryMsg {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      transform: translate(-50%, -50%) scale(0.05);
+      background: linear-gradient(135deg, #1a1005 0%, #2a1a08 100%);
+      border: 2px solid var(--gold);
+      border-radius: 10px;
+      padding: 20px 28px;
+      text-align: center;
+      z-index: 20;
+      display: none;
+      box-shadow: 0 0 40px rgba(200,149,42,0.6), 0 0 80px rgba(200,149,42,0.2);
+      white-space: nowrap;
+    }
+    #victoryMsg.show {
+      display: block;
+      animation: victoryGrow 0.75s cubic-bezier(0.34,1.56,0.64,1) forwards;
+    }
+    @keyframes victoryGrow {
+      0%   { transform: translate(-50%, -50%) scale(0.05); opacity: 0; }
+      100% { transform: translate(-50%, -50%) scale(1);    opacity: 1; }
+    }
+    #victoryMsg .v-title {
+      font-family: var(--font-display);
+      font-size: clamp(14px, 3vw, 22px);
+      font-weight: 700;
+      letter-spacing: 2px;
+      background: linear-gradient(135deg, #f0d080, #c8952a, #f0d080);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      display: block;
+    }
+    #victoryMsg .v-sub {
+      font-family: var(--font-body);
+      font-style: italic;
+      font-size: 13px;
+      color: #c8a878;
+      display: block;
+      margin-top: 4px;
+    }
+
+    /* ── CONFETTI ── */
+    #confettiCanvas {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      z-index: 15;
+    }
+
+    /* ── CONTROLS ── */
+    .controls-hint {
+      font-family: var(--font-body);
+      font-style: italic;
+      font-size: 12px;
+      color: #7a6040;
+      text-align: center;
+      letter-spacing: 0.5px;
+    }
+
+    /* ── MOBILE D-PAD ── */
+    .dpad {
+      display: none;
+      grid-template-columns: repeat(3, 48px);
+      grid-template-rows: repeat(3, 48px);
+      gap: 4px;
+      margin-top: 4px;
+    }
+    @media (pointer: coarse) { .dpad { display: grid; } }
+    .dpad-btn {
+      font-family: var(--font-ui);
+      font-size: 18px;
+      color: #f0d080;
+      background: linear-gradient(180deg, #2a2010 0%, #1a1508 100%);
+      border: 1px solid rgba(200,149,42,0.5);
+      border-radius: 6px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      user-select: none;
+      touch-action: manipulation;
+      transition: background 0.1s;
+    }
+    .dpad-btn:active { background: linear-gradient(180deg, #3a3020 0%, #2a2510 100%); }
+    .dpad-center { opacity: 0; pointer-events: none; }
+
+    /* ── FOOTER ── */
+    .game-footer {
+      padding: 10px 20px 14px;
+      border-top: 1px solid rgba(200,149,42,0.1);
+      font-family: var(--font-body);
+      font-style: italic;
+      font-size: 11px;
+      color: rgba(180,150,90,0.6);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 8px;
+      flex-shrink: 0;
+    }
+
+    @media (max-width: 480px) {
+      .header-left { width: 80px; }
+      .header-right { width: 80px; }
+    }
+  </style>
+</head>
+<body class="rpg-bg">
+
+<!-- ── HEADER ── -->
+<header class="game-header">
+  <div class="header-inner">
+    <div class="header-left">
+      <a href="index.html" class="rpg-back">Hub</a>
+      <img class="phoenix-logo" src="data:image/png;base64,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" alt="Rising Phoenix Games logo" />
+    </div>
+    <div class="header-center">
+      <h1 class="game-title">Pac-Man</h1>
+      <p class="game-subtitle">Feast upon the pellets, flee the phantoms</p>
+    </div>
+    <div class="header-right"></div>
+  </div>
+</header>
+
+<!-- ── MAIN ── -->
+<main class="game-main">
+
+  <!-- Status row -->
+  <div class="status-row">
+    <div class="stat-pill">Score <span class="val" id="scoreDisplay">0</span></div>
+    <div class="stat-pill">High Score <span class="val" id="hiDisplay">0</span></div>
+    <div class="stat-pill">Level <span class="val" id="levelDisplay">1</span></div>
+    <div class="lives-display">
+      Lives
+      <svg class="life-icon" id="life1" viewBox="0 0 14 14"><path d="M7 13C3 9 1 7 1 4.5a3.5 3.5 0 0 1 6-2.45A3.5 3.5 0 0 1 13 4.5C13 7 11 9 7 13Z" fill="#f0d080"/></svg>
+      <svg class="life-icon" id="life2" viewBox="0 0 14 14"><path d="M7 13C3 9 1 7 1 4.5a3.5 3.5 0 0 1 6-2.45A3.5 3.5 0 0 1 13 4.5C13 7 11 9 7 13Z" fill="#f0d080"/></svg>
+      <svg class="life-icon" id="life3" viewBox="0 0 14 14"><path d="M7 13C3 9 1 7 1 4.5a3.5 3.5 0 0 1 6-2.45A3.5 3.5 0 0 1 13 4.5C13 7 11 9 7 13Z" fill="#f0d080"/></svg>
+    </div>
+  </div>
+
+  <!-- Canvas -->
+  <div class="canvas-wrapper" id="canvasWrapper">
+    <canvas id="gameCanvas"></canvas>
+    <canvas id="confettiCanvas"></canvas>
+
+    <!-- Victory Message -->
+    <div id="victoryMsg">
+      <span class="v-title">🏆 Level Cleared! 🏆</span>
+      <span class="v-sub">The Phoenix rises through the labyrinth!</span>
+    </div>
+
+    <!-- Overlay -->
+    <div id="overlay">
+      <p class="overlay-title">Pac-Man</p>
+      <p class="overlay-sub">Feast upon the pellets — beware the phantoms!</p>
+      <div class="btn-row">
+        <button class="rpg-btn" id="startBtn" onclick="startGame()">▶ Begin</button>
+      </div>
+      <p class="overlay-sub" style="font-size:11px;color:#5a4030;margin-top:8px;">Arrow keys or WASD · Swipe on mobile</p>
+    </div>
+  </div>
+
+  <!-- D-Pad (touch) -->
+  <div class="dpad" id="dpad">
+    <div class="dpad-btn dpad-center"></div>
+    <button class="dpad-btn" id="dUp">▲</button>
+    <div class="dpad-btn dpad-center"></div>
+    <button class="dpad-btn" id="dLeft">◀</button>
+    <div class="dpad-btn dpad-center"></div>
+    <button class="dpad-btn" id="dRight">▶</button>
+    <div class="dpad-btn dpad-center"></div>
+    <button class="dpad-btn" id="dDown">▼</button>
+    <div class="dpad-btn dpad-center"></div>
+  </div>
+
+  <p class="controls-hint" id="ctrlHint">Arrow Keys / WASD to move · P to pause</p>
+
+</main>
+
+<!-- ── FOOTER ── -->
+<footer class="game-footer">
+  <span>© <span id="year"></span> Rising Phoenix Gallery · Michigan City, IN</span>
+  <span>Crafted by John Ryszka II · <a href="https://www.risingphxgallery.com" style="color:var(--gold);text-decoration:none;">RisingPhxGallery.com</a></span>
+</footer>
+
+<script>
+document.getElementById('year').textContent = new Date().getFullYear();
+
+/* ════════════════════════════════════════════════════════════
+   MAZE DEFINITION
+   0 = empty path, 1 = wall, 2 = pellet, 3 = power pellet, 4 = ghost house door
+   ════════════════════════════════════════════════════════════ */
+const MAZE_TEMPLATE = [
+  [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
+  [1,2,2,2,2,2,2,2,2,2,2,2,2,1,1,2,2,2,2,2,2,2,2,2,2,2,2,1],
+  [1,2,1,1,1,1,2,1,1,1,1,1,2,1,1,2,1,1,1,1,1,2,1,1,1,1,2,1],
+  [1,3,1,1,1,1,2,1,1,1,1,1,2,1,1,2,1,1,1,1,1,2,1,1,1,1,3,1],
+  [1,2,1,1,1,1,2,1,1,1,1,1,2,1,1,2,1,1,1,1,1,2,1,1,1,1,2,1],
+  [1,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,1],
+  [1,2,1,1,1,1,2,1,1,2,1,1,1,1,1,1,1,1,2,1,1,2,1,1,1,1,2,1],
+  [1,2,1,1,1,1,2,1,1,2,1,1,1,1,1,1,1,1,2,1,1,2,1,1,1,1,2,1],
+  [1,2,2,2,2,2,2,1,1,2,2,2,2,1,1,2,2,2,2,1,1,2,2,2,2,2,2,1],
+  [1,1,1,1,1,1,2,1,1,1,1,1,0,1,1,0,1,1,1,1,1,2,1,1,1,1,1,1],
+  [1,1,1,1,1,1,2,1,1,1,1,1,0,1,1,0,1,1,1,1,1,2,1,1,1,1,1,1],
+  [1,1,1,1,1,1,2,1,1,0,0,0,0,0,0,0,0,0,0,1,1,2,1,1,1,1,1,1],
+  [1,1,1,1,1,1,2,1,1,0,1,1,1,4,4,1,1,1,0,1,1,2,1,1,1,1,1,1],
+  [1,1,1,1,1,1,2,1,1,0,1,0,0,0,0,0,0,1,0,1,1,2,1,1,1,1,1,1],
+  [0,0,0,0,0,0,2,0,0,0,1,0,0,0,0,0,0,1,0,0,0,2,0,0,0,0,0,0],
+  [1,1,1,1,1,1,2,1,1,0,1,0,0,0,0,0,0,1,0,1,1,2,1,1,1,1,1,1],
+  [1,1,1,1,1,1,2,1,1,0,1,1,1,1,1,1,1,1,0,1,1,2,1,1,1,1,1,1],
+  [1,1,1,1,1,1,2,1,1,0,0,0,0,0,0,0,0,0,0,1,1,2,1,1,1,1,1,1],
+  [1,1,1,1,1,1,2,1,1,0,1,1,1,1,1,1,1,1,0,1,1,2,1,1,1,1,1,1],
+  [1,1,1,1,1,1,2,1,1,0,1,1,1,1,1,1,1,1,0,1,1,2,1,1,1,1,1,1],
+  [1,2,2,2,2,2,2,2,2,2,2,2,2,1,1,2,2,2,2,2,2,2,2,2,2,2,2,1],
+  [1,2,1,1,1,1,2,1,1,1,1,1,2,1,1,2,1,1,1,1,1,2,1,1,1,1,2,1],
+  [1,2,1,1,1,1,2,1,1,1,1,1,2,1,1,2,1,1,1,1,1,2,1,1,1,1,2,1],
+  [1,3,2,2,1,1,2,2,2,2,2,2,2,0,0,2,2,2,2,2,2,2,1,1,2,2,3,1],
+  [1,1,1,2,1,1,2,1,1,2,1,1,1,1,1,1,1,1,2,1,1,2,1,1,2,1,1,1],
+  [1,1,1,2,1,1,2,1,1,2,1,1,1,1,1,1,1,1,2,1,1,2,1,1,2,1,1,1],
+  [1,2,2,2,2,2,2,1,1,2,2,2,2,1,1,2,2,2,2,1,1,2,2,2,2,2,2,1],
+  [1,2,1,1,1,1,1,1,1,1,1,1,2,1,1,2,1,1,1,1,1,1,1,1,1,1,2,1],
+  [1,2,1,1,1,1,1,1,1,1,1,1,2,1,1,2,1,1,1,1,1,1,1,1,1,1,2,1],
+  [1,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,1],
+  [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]
+];
+
+const ROWS = MAZE_TEMPLATE.length;
+const COLS = MAZE_TEMPLATE[0].length;
+
+/* ── SIZING ── */
+const canvas = document.getElementById('gameCanvas');
+const confCanvas = document.getElementById('confettiCanvas');
+const ctx = canvas.getContext('2d');
+const cctx = confCanvas.getContext('2d');
+const wrapper = document.getElementById('canvasWrapper');
+
+function calcCellSize() {
+  const maxW = Math.min(window.innerWidth - 24, 560);
+  const maxH = window.innerHeight - 280;
+  const byW = Math.floor(maxW / COLS);
+  const byH = Math.floor(maxH / ROWS);
+  return Math.max(12, Math.min(byW, byH, 20));
+}
+
+let CS = calcCellSize();
+
+function resizeCanvas() {
+  CS = calcCellSize();
+  const W = COLS * CS, H = ROWS * CS;
+  canvas.width = W; canvas.height = H;
+  confCanvas.width = W; confCanvas.height = H;
+  canvas.style.width = W + 'px'; canvas.style.height = H + 'px';
+  confCanvas.style.width = W + 'px'; confCanvas.style.height = H + 'px';
+  wrapper.style.width = W + 'px';
+}
+resizeCanvas();
+window.addEventListener('resize', () => { resizeCanvas(); if (!gameRunning) drawMaze(); });
+
+/* ── GAME STATE ── */
+let maze, pacman, ghosts, score, lives, level, gameRunning, gamePaused;
+let totalPellets, pelletsEaten;
+let animFrame;
+let lastTime = 0;
+const TICK = 160; // ms per game step
+let accumulator = 0;
+
+// Ghost colors (thematic — amber/crimson/sage/blue)
+const GHOST_COLORS = ['#c8952a','#c04040','#4a7a3a','#4070c0'];
+const GHOST_NAMES  = ['Blaze','Ember','Wisp','Shade'];
+const GHOST_FRIGHTENED_COLOR = '#2a10a0';
+
+let frightTimer = 0;
+const FRIGHT_DURATION = 7000;
+
+/* ── SAFE MAZE ACCESS ── */
+// All row/col values are always integers. This guards every lookup.
+function cellAt(r, c) {
+  if (r < 0 || r >= ROWS || c < 0 || c >= COLS) return 0;
+  const row = maze[r];
+  if (!row) return 0;
+  return row[c] !== undefined ? row[c] : 0;
+}
+
+function isWall(r, c) {
+  if (r < 0 || r >= ROWS || c < 0 || c >= COLS) return false;
+  const row = maze[r];
+  if (!row) return false;
+  const v = row[c];
+  return v === 1 || v === 4;
+}
+
+/* ── INIT ── */
+function initMaze() {
+  maze = [];
+  totalPellets = 0;
+  for (let r = 0; r < ROWS; r++) {
+    maze[r] = MAZE_TEMPLATE[r].slice(); // fresh copy every time
+    for (let c = 0; c < COLS; c++) {
+      if (maze[r][c] === 2 || maze[r][c] === 3) totalPellets++;
+    }
+  }
+  pelletsEaten = 0;
+}
+
+function initPacman() {
+  // Start at row 23, col 13 — always integers
+  pacman = {
+    row: 23,
+    col: 13,
+    dir: { r: 0, c: 0 },
+    nextDir: { r: 0, c: 0 },
+    mouthOpen: 0,
+    mouthDir: 1,
+    dead: false,
+    deathAnim: 0
+  };
+}
+
+function initGhosts() {
+  // All ghosts start INSIDE the house at integer positions.
+  // mode='house' means they bounce in place and don't call canMove.
+  // They exit one at a time via houseTimer, teleporting to the exit row.
+  ghosts = [
+    { row: 13, col: 13, dir: { r: 0, c: 1 }, mode: 'house', color: GHOST_COLORS[0], name: GHOST_NAMES[0], scatter: { r: 0,      c: 0      }, houseTimer: 500,  frightened: false, eaten: false },
+    { row: 13, col: 14, dir: { r: 0, c:-1 }, mode: 'house', color: GHOST_COLORS[1], name: GHOST_NAMES[1], scatter: { r: 0,      c: COLS-1 }, houseTimer: 3500, frightened: false, eaten: false },
+    { row: 14, col: 13, dir: { r: 0, c: 1 }, mode: 'house', color: GHOST_COLORS[2], name: GHOST_NAMES[2], scatter: { r: ROWS-1, c: 0      }, houseTimer: 6500, frightened: false, eaten: false },
+    { row: 14, col: 14, dir: { r: 0, c:-1 }, mode: 'house', color: GHOST_COLORS[3], name: GHOST_NAMES[3], scatter: { r: ROWS-1, c: COLS-1 }, houseTimer: 9500, frightened: false, eaten: false },
+  ];
+}
+
+/* ── DRAWING ── */
+const WALL_COLOR   = '#c8952a'; // gold walls — RPG aesthetic
+const WALL_INNER   = '#0a0806';
+const PELLET_COLOR = '#f0d080';
+const POWER_COLOR  = '#f0d080';
+
+function drawMaze() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  // Background
+  ctx.fillStyle = '#050403';
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+  if (!maze) return; // not initialised yet
+
+  for (let r = 0; r < ROWS; r++) {
+    if (!maze[r]) continue;
+    for (let c = 0; c < COLS; c++) {
+      const cell = maze[r][c];
+      if (cell === undefined) continue;
+      const x = c * CS, y = r * CS;
+
+      if (cell === 1) {
+        ctx.fillStyle = '#1e1508';
+        ctx.fillRect(x, y, CS, CS);
+        const inset = Math.max(1.5, CS * 0.15);
+        ctx.strokeStyle = 'rgba(200,149,42,0.7)';
+        ctx.lineWidth = Math.max(1, CS * 0.1);
+        ctx.strokeRect(x + inset, y + inset, CS - inset*2, CS - inset*2);
+      } else if (cell === 2) {
+        const r2 = CS * 0.12;
+        ctx.fillStyle = PELLET_COLOR;
+        ctx.shadowColor = '#f0d080';
+        ctx.shadowBlur = 3;
+        ctx.beginPath();
+        ctx.arc(x + CS/2, y + CS/2, r2, 0, Math.PI*2);
+        ctx.fill();
+        ctx.shadowBlur = 0;
+      } else if (cell === 3) {
+        const r3 = CS * 0.28;
+        const pulse = 0.7 + 0.3 * Math.sin(Date.now() / 300);
+        ctx.fillStyle = POWER_COLOR;
+        ctx.shadowColor = '#f0d080';
+        ctx.shadowBlur = 8 * pulse;
+        ctx.beginPath();
+        ctx.arc(x + CS/2, y + CS/2, r3 * pulse, 0, Math.PI*2);
+        ctx.fill();
+        ctx.shadowBlur = 0;
+      } else if (cell === 4) {
+        ctx.fillStyle = 'rgba(200,149,42,0.4)';
+        ctx.fillRect(x, y + CS*0.4, CS, CS*0.2);
+      }
+    }
+  }
+}
+
+function drawPacman() {
+  if (pacman.dead) {
+    // Death animation — shrink away
+    const t = pacman.deathAnim; // 0..1
+    if (t >= 1) return;
+    const r = CS * 0.42 * (1 - t);
+    const cx = (pacman.col + 0.5) * CS;
+    const cy = (pacman.row + 0.5) * CS;
+    ctx.fillStyle = '#f0d080';
+    ctx.shadowColor = '#f0d080';
+    ctx.shadowBlur = 10 * (1-t);
+    ctx.beginPath();
+    ctx.arc(cx, cy, r, 0, Math.PI*2);
+    ctx.fill();
+    ctx.shadowBlur = 0;
+    return;
+  }
+
+  const cx = (pacman.col + 0.5) * CS;
+  const cy = (pacman.row + 0.5) * CS;
+  const r  = CS * 0.42;
+
+  // Mouth angle
+  const mouth = pacman.mouthOpen * 0.35;
+  let startAngle = mouth, endAngle = Math.PI * 2 - mouth;
+
+  // Rotate based on direction
+  let rot = 0;
+  if (pacman.dir.c === 1 || (pacman.dir.r === 0 && pacman.dir.c === 0)) rot = 0;
+  else if (pacman.dir.c === -1) rot = Math.PI;
+  else if (pacman.dir.r === -1) rot = -Math.PI/2;
+  else if (pacman.dir.r === 1)  rot = Math.PI/2;
+
+  ctx.save();
+  ctx.translate(cx, cy);
+  ctx.rotate(rot);
+  ctx.fillStyle = '#f0d080';
+  ctx.shadowColor = '#f0d080';
+  ctx.shadowBlur = 12;
+  ctx.beginPath();
+  ctx.moveTo(0, 0);
+  ctx.arc(0, 0, r, startAngle, endAngle);
+  ctx.closePath();
+  ctx.fill();
+  ctx.shadowBlur = 0;
+
+  // Eye
+  ctx.fillStyle = '#0a0806';
+  ctx.beginPath();
+  ctx.arc(r * 0.3, -r * 0.5, r * 0.12, 0, Math.PI*2);
+  ctx.fill();
+
+  ctx.restore();
+}
+
+function drawGhost(g) {
+  if (g.eaten) return; // eaten ghosts invisible (just eyes)
+
+  const cx = (g.col + 0.5) * CS;
+  const cy = (g.row + 0.5) * CS;
+  const r  = CS * 0.42;
+
+  const color = g.frightened
+    ? (frightTimer < 2000 && Math.floor(Date.now()/250)%2 === 0 ? '#ffffff' : GHOST_FRIGHTENED_COLOR)
+    : g.color;
+
+  ctx.save();
+  ctx.translate(cx, cy);
+
+  // Body
+  ctx.fillStyle = color;
+  ctx.shadowColor = color;
+  ctx.shadowBlur = g.frightened ? 4 : 8;
+
+  ctx.beginPath();
+  // Dome
+  ctx.arc(0, -r*0.1, r, Math.PI, 0);
+  // Skirt with 3 scallops
+  const skirtY = r * 0.9;
+  const w = r * 2;
+  ctx.lineTo(r, skirtY);
+  // Scallops
+  const scallops = 3;
+  const sw = w / scallops;
+  for (let i = scallops - 1; i >= 0; i--) {
+    const sx = -r + (i + 0.5) * sw;
+    ctx.arc(sx, skirtY, sw/2, 0, Math.PI, true);
+  }
+  ctx.lineTo(-r, -r*0.1);
+  ctx.fill();
+  ctx.shadowBlur = 0;
+
+  // Eyes
+  if (!g.frightened) {
+    ctx.fillStyle = 'white';
+    ctx.beginPath();
+    ctx.ellipse(-r*0.3, -r*0.25, r*0.22, r*0.28, 0, 0, Math.PI*2);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.ellipse(r*0.3, -r*0.25, r*0.22, r*0.28, 0, 0, Math.PI*2);
+    ctx.fill();
+    ctx.fillStyle = '#1a5ae0';
+    ctx.beginPath();
+    ctx.ellipse(-r*0.28, -r*0.25, r*0.12, r*0.16, 0, 0, Math.PI*2);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.ellipse(r*0.32, -r*0.25, r*0.12, r*0.16, 0, 0, Math.PI*2);
+    ctx.fill();
+  } else {
+    // Frightened face
+    ctx.strokeStyle = 'rgba(255,255,255,0.7)';
+    ctx.lineWidth = r*0.1;
+    ctx.beginPath();
+    ctx.arc(-r*0.3, -r*0.15, r*0.18, 0, Math.PI);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.arc(r*0.3, -r*0.15, r*0.18, 0, Math.PI);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(-r*0.5, r*0.2);
+    for (let wx = -r*0.5; wx <= r*0.5; wx += r*0.2) {
+      ctx.lineTo(wx + r*0.1, r*0.35);
+      ctx.lineTo(wx + r*0.2, r*0.2);
+    }
+    ctx.stroke();
+  }
+
+  ctx.restore();
+}
+
+function renderFrame() {
+  drawMaze();
+  if (ghosts) ghosts.forEach(g => drawGhost(g));
+  if (pacman) drawPacman();
+}
+
+/* ── MOVEMENT — all positions always integers ── */
+function wrapRC(r, c) {
+  // Wrap columns for horizontal tunnels
+  let wc = ((c % COLS) + COLS) % COLS;
+  // Clamp rows — no vertical tunnel, but never let a row go out of bounds
+  let wr = Math.max(0, Math.min(ROWS - 1, r));
+  return { r: wr, c: wc };
+}
+
+function canStep(r, c, dr, dc) {
+  const w = wrapRC(r + dr, c + dc);
+  return !isWall(w.r, w.c);
+}
+
+function movePacman() {
+  const nd = pacman.nextDir;
+  // Switch to queued direction if it's passable
+  if ((nd.r !== 0 || nd.c !== 0) && canStep(pacman.row, pacman.col, nd.r, nd.c)) {
+    pacman.dir = { r: nd.r, c: nd.c };
+  }
+
+  const d = pacman.dir;
+  if (d.r === 0 && d.c === 0) return;
+
+  if (canStep(pacman.row, pacman.col, d.r, d.c)) {
+    const w = wrapRC(pacman.row + d.r, pacman.col + d.c);
+    pacman.row = w.r;
+    pacman.col = w.c;
+  }
+
+  // Eat pellet at current cell
+  const cell = cellAt(pacman.row, pacman.col);
+  if (cell === 2 || cell === 3) {
+    if (cell === 3) {
+      frightenGhosts();
+      score += 50;
+    } else {
+      score += 10;
+    }
+    if (maze[pacman.row]) maze[pacman.row][pacman.col] = 0; // guard write
+    pelletsEaten++;
+    updateScoreDisplay();
+    checkWin();
+  }
+
+  // Animate mouth
+  pacman.mouthOpen += pacman.mouthDir * 0.15;
+  if (pacman.mouthOpen >= 1) pacman.mouthDir = -1;
+  if (pacman.mouthOpen <= 0) pacman.mouthDir = 1;
+}
+
+function frightenGhosts() {
+  frightTimer = FRIGHT_DURATION;
+  ghosts.forEach(g => {
+    if (g.mode !== 'house') {
+      g.frightened = true;
+      g.eaten = false;
+    }
+  });
+}
+
+/* ── GHOST AI — integer grid, safe canStep ── */
+function moveGhost(g, dt) {
+  g.houseTimer -= dt;
+
+  if (g.mode === 'house') {
+    if (g.houseTimer <= 0) {
+      // Exit: teleport to just above the ghost house door (row 11, col 13)
+      g.mode = 'scatter';
+      g.row = 11;
+      g.col = 13;
+      g.dir = { r: -1, c: 0 };
+    }
+    // While in house just jiggle in place (no maze checks needed)
+    return;
+  }
+
+  // Eaten ghosts return to house spawn
+  if (g.eaten) {
+    const tr = 13, tc = 13;
+    if (g.row === tr && g.col === tc) {
+      g.eaten = false;
+      g.frightened = false;
+      g.mode = 'scatter';
+      return;
+    }
+    // Pathfind back toward house — always wrap/clamp before checking
+    const dr = Math.sign(tr - g.row);
+    const dc = Math.sign(tc - g.col);
+    const tryR = wrapRC(g.row + dr, g.col);
+    const tryC = wrapRC(g.row, g.col + dc);
+    if (dr !== 0 && !isWall(tryR.r, tryR.c)) {
+      g.row = tryR.r; g.col = tryR.c;
+    } else if (dc !== 0 && !isWall(tryC.r, tryC.c)) {
+      g.row = tryC.r; g.col = tryC.c;
+    }
+    return;
+  }
+
+  const DIRS = [{ r:-1,c:0 },{ r:1,c:0 },{ r:0,c:-1 },{ r:0,c:1 }];
+
+  // Never reverse (unless it's the only option)
+  const rev = { r: -g.dir.r, c: -g.dir.c };
+  let choices = DIRS.filter(d =>
+    !(d.r === rev.r && d.c === rev.c) && canStep(g.row, g.col, d.r, d.c)
+  );
+  // Fallback: allow reverse if no other options
+  if (choices.length === 0) {
+    choices = DIRS.filter(d => canStep(g.row, g.col, d.r, d.c));
+  }
+  if (choices.length === 0) return;
+
+  let chosen;
+  if (g.frightened) {
+    chosen = choices[Math.floor(Math.random() * choices.length)];
+  } else {
+    const target = g.mode === 'scatter'
+      ? g.scatter
+      : { r: pacman.row, c: pacman.col };
+    let bestDist = Infinity;
+    chosen = choices[0];
+    choices.forEach(d => {
+      const w = wrapRC(g.row + d.r, g.col + d.c);
+      const dist = Math.hypot(w.r - target.r, w.c - target.c);
+      if (dist < bestDist) { bestDist = dist; chosen = d; }
+    });
+  }
+
+  g.dir = chosen;
+  const w = wrapRC(g.row + chosen.r, g.col + chosen.c);
+  g.row = w.r;
+  g.col = w.c;
+}
+
+/* ── COLLISION — integer exact match ── */
+function checkCollisions() {
+  if (pacman.dead) return;
+  ghosts.forEach(g => {
+    if (g.mode === 'house' || g.eaten) return;
+    if (g.row === pacman.row && g.col === pacman.col) {
+      // frightened=true means edible — always consume, even while flashing
+      if (g.frightened) {
+        g.eaten = true;
+        g.frightened = false;
+        score += 200;
+        updateScoreDisplay();
+        showFloatingScore(g.col, g.row, 200);
+      } else {
+        pacmanDie();
+      }
+    }
+  });
+}
+
+let floatingScores = [];
+function showFloatingScore(col, row, pts) {
+  floatingScores.push({ col, row, pts, alpha: 1, dy: 0 });
+}
+
+function checkWin() {
+  if (pelletsEaten >= totalPellets) {
+    triggerVictory();
+  }
+}
+
+/* ── PACMAN DEATH ── */
+function pacmanDie() {
+  if (pacman.dead) return;
+  pacman.dead = true;
+  gameRunning = false;
+
+  // Animate death
+  let t = 0;
+  const deathInterval = setInterval(() => {
+    t += 0.04;
+    pacman.deathAnim = Math.min(t, 1);
+    drawMaze();
+    ghosts.forEach(g => drawGhost(g));
+    drawPacman();
+    if (t >= 1) {
+      clearInterval(deathInterval);
+      lives--;
+      updateLivesDisplay();
+      if (lives <= 0) {
+        showGameOver();
+      } else {
+        setTimeout(() => resetRound(), 800);
+      }
+    }
+  }, 40);
+}
+
+function resetRound() {
+  initPacman();
+  initGhosts();
+  frightTimer = 0;
+  gameRunning = true;
+  lastTime = 0;
+  accumulator = 0;
+  requestAnimationFrame(gameLoop);
+}
+
+/* ── VICTORY ── */
+function triggerVictory() {
+  gameRunning = false;
+
+  // Confetti burst
+  startConfetti();
+
+  // Victory message
+  const vm = document.getElementById('victoryMsg');
+  vm.querySelector('.v-title').textContent = '🏆 Level ' + level + ' Cleared! 🏆';
+  vm.querySelector('.v-sub').textContent = 'Score: ' + score + ' · The Phoenix conquers the labyrinth!';
+  vm.style.display = 'none';
+  vm.classList.remove('show');
+  // Force reflow
+  void vm.offsetWidth;
+  vm.style.display = 'block';
+  vm.classList.add('show');
+
+  setTimeout(() => {
+    vm.style.transition = 'opacity 0.4s';
+    vm.style.opacity = '0';
+    setTimeout(() => {
+      vm.style.display = 'none';
+      vm.style.opacity = '1';
+      vm.classList.remove('show');
+      stopConfetti();
+      level++;
+      document.getElementById('levelDisplay').textContent = level;
+      initMaze();
+      initPacman();
+      initGhosts();
+      frightTimer = 0;
+      gameRunning = true;
+      lastTime = 0;
+      accumulator = 0;
+      requestAnimationFrame(gameLoop);
+    }, 500);
+  }, 1750);
+}
+
+/* ── CONFETTI ── */
+let confParticles = [];
+let confRunning = false;
+let confAnimFrame;
+
+function startConfetti() {
+  confRunning = true;
+  confParticles = [];
+  for (let i = 0; i < 120; i++) {
+    confParticles.push({
+      x: Math.random() * confCanvas.width,
+      y: Math.random() * confCanvas.height * 0.5,
+      r: Math.random() * 5 + 2,
+      color: ['#f0d080','#c8952a','#c04040','#4a7a3a','#4070c0','#ffffff','#f0d080'][Math.floor(Math.random()*7)],
+      vx: (Math.random() - 0.5) * 4,
+      vy: Math.random() * 3 + 1,
+      rot: Math.random() * Math.PI * 2,
+      rotV: (Math.random() - 0.5) * 0.2,
+      shape: Math.random() > 0.5 ? 'rect' : 'circle',
+      life: 1
+    });
+  }
+  animateConfetti();
+}
+
+function stopConfetti() {
+  confRunning = false;
+  cancelAnimationFrame(confAnimFrame);
+  cctx.clearRect(0, 0, confCanvas.width, confCanvas.height);
+  confParticles = [];
+}
+
+function animateConfetti() {
+  cctx.clearRect(0, 0, confCanvas.width, confCanvas.height);
+  confParticles.forEach(p => {
+    p.x += p.vx;
+    p.y += p.vy;
+    p.vy += 0.08;
+    p.rot += p.rotV;
+    p.life -= 0.008;
+
+    cctx.save();
+    cctx.globalAlpha = Math.max(0, p.life);
+    cctx.fillStyle = p.color;
+    cctx.translate(p.x, p.y);
+    cctx.rotate(p.rot);
+    if (p.shape === 'rect') {
+      cctx.fillRect(-p.r, -p.r/2, p.r*2, p.r);
+    } else {
+      cctx.beginPath();
+      cctx.arc(0, 0, p.r, 0, Math.PI*2);
+      cctx.fill();
+    }
+    cctx.restore();
+  });
+
+  confParticles = confParticles.filter(p => p.life > 0 && p.y < confCanvas.height + 20);
+  if (confParticles.length > 0 && confRunning) {
+    confAnimFrame = requestAnimationFrame(animateConfetti);
+  } else if (confParticles.length === 0 && confRunning) {
+    // Burst again
+    startConfetti();
+  }
+}
+
+/* ── OVERLAY ── */
+function showGameOver() {
+  const hi = parseInt(localStorage.getItem('pacman_hi') || '0');
+  if (score > hi) localStorage.setItem('pacman_hi', score);
+  const ov = document.getElementById('overlay');
+  ov.innerHTML = `
+    <p class="overlay-title">Game Over</p>
+    <p class="overlay-sub">The phantoms have claimed your spirit.</p>
+    <div class="overlay-score">Score: ${score}</div>
+    <div class="btn-row">
+      <button class="rpg-btn" onclick="startGame()">▶ Play Again</button>
+    </div>`;
+  ov.classList.remove('hidden');
+  updateHiScore();
+}
+
+function updateScoreDisplay() {
+  document.getElementById('scoreDisplay').textContent = score;
+  const hi = parseInt(localStorage.getItem('pacman_hi') || '0');
+  if (score > hi) {
+    localStorage.setItem('pacman_hi', score);
+    document.getElementById('hiDisplay').textContent = score;
+  }
+}
+
+function updateHiScore() {
+  document.getElementById('hiDisplay').textContent = localStorage.getItem('pacman_hi') || '0';
+}
+
+function updateLivesDisplay() {
+  ['life1','life2','life3'].forEach((id, i) => {
+    const el = document.getElementById(id);
+    if (el) el.style.opacity = i < lives ? '1' : '0.15';
+  });
+}
+
+/* ── GAME LOOP ── */
+function gameLoop(ts) {
+  if (!gameRunning) return;
+  if (!lastTime) lastTime = ts;
+  const dt = ts - lastTime;
+  lastTime = ts;
+
+  accumulator += dt;
+
+  while (accumulator >= TICK) {
+    movePacman();
+    ghosts.forEach(g => moveGhost(g, TICK));
+    checkCollisions(); // always checked while frightened flag is still accurate
+    accumulator -= TICK;
+  }
+
+  // Fright timer decremented AFTER tick+collision so a ghost eaten while
+  // flashing is still frightened — never cleared mid-tick before collision runs
+  if (frightTimer > 0) {
+    frightTimer -= dt;
+    if (frightTimer <= 0) {
+      frightTimer = 0;
+      ghosts.forEach(g => { if (!g.eaten) g.frightened = false; });
+    }
+  }
+
+  // Draw floating scores
+  renderFrame();
+
+  // Draw floating score popups
+  floatingScores = floatingScores.filter(fs => fs.alpha > 0);
+  floatingScores.forEach(fs => {
+    fs.dy -= 0.5;
+    fs.alpha -= 0.025;
+    ctx.save();
+    ctx.globalAlpha = Math.max(0, fs.alpha);
+    ctx.fillStyle = '#f0d080';
+    ctx.font = `bold ${Math.max(8, CS * 0.7)}px Cinzel, serif`;
+    ctx.textAlign = 'center';
+    ctx.fillText(fs.pts, (fs.col + 0.5) * CS, (fs.row + 0.5) * CS + fs.dy);
+    ctx.restore();
+  });
+
+  animFrame = requestAnimationFrame(gameLoop);
+}
+
+/* ── POWER PELLET PULSE (re-render for animation) ── */
+let pulseFrame;
+function pulseLoop() {
+  if (!gameRunning) { pulseFrame = requestAnimationFrame(pulseLoop); return; }
+  // Power pellet pulse handled in drawMaze by Date.now() — just redraw
+  // Avoid double draw; only needed when game not running
+  pulseFrame = requestAnimationFrame(pulseLoop);
+}
+
+/* ── START / PAUSE ── */
+function startGame() {
+  score = 0; lives = 3; level = 1;
+  frightTimer = 0;
+  floatingScores = [];
+  initMaze();
+  initPacman();
+  initGhosts();
+  updateScoreDisplay();
+  updateHiScore();
+  updateLivesDisplay();
+  document.getElementById('levelDisplay').textContent = level;
+
+  document.getElementById('overlay').classList.add('hidden');
+  gameRunning = true;
+  lastTime = 0;
+  accumulator = 0;
+  requestAnimationFrame(gameLoop);
+}
+
+/* ── INPUT ── */
+document.addEventListener('keydown', e => {
+  switch(e.key) {
+    case 'ArrowLeft':  case 'a': case 'A': pacman.nextDir = {r:0,c:-1}; e.preventDefault(); break;
+    case 'ArrowRight': case 'd': case 'D': pacman.nextDir = {r:0,c:1};  e.preventDefault(); break;
+    case 'ArrowUp':    case 'w': case 'W': pacman.nextDir = {r:-1,c:0}; e.preventDefault(); break;
+    case 'ArrowDown':  case 's': case 'S': pacman.nextDir = {r:1,c:0};  e.preventDefault(); break;
+    case 'p': case 'P': togglePause(); break;
+  }
+});
+
+function togglePause() {
+  if (!gameRunning && !gamePaused) return;
+  gamePaused = !gamePaused;
+  if (gamePaused) {
+    gameRunning = false;
+    const ov = document.getElementById('overlay');
+    ov.innerHTML = `
+      <p class="overlay-title">Paused</p>
+      <p class="overlay-sub">The labyrinth awaits your return.</p>
+      <div class="btn-row">
+        <button class="rpg-btn" onclick="resumeGame()">▶ Resume</button>
+      </div>`;
+    ov.classList.remove('hidden');
+  } else {
+    resumeGame();
+  }
+}
+
+function resumeGame() {
+  gamePaused = false;
+  gameRunning = true;
+  document.getElementById('overlay').classList.add('hidden');
+  lastTime = 0;
+  requestAnimationFrame(gameLoop);
+}
+
+/* ── D-PAD ── */
+document.getElementById('dUp').addEventListener('click',    () => { pacman.nextDir = {r:-1,c:0}; });
+document.getElementById('dDown').addEventListener('click',  () => { pacman.nextDir = {r:1,c:0};  });
+document.getElementById('dLeft').addEventListener('click',  () => { pacman.nextDir = {r:0,c:-1}; });
+document.getElementById('dRight').addEventListener('click', () => { pacman.nextDir = {r:0,c:1};  });
+
+/* ── SWIPE ── */
+let touchStartX = 0, touchStartY = 0;
+canvas.addEventListener('touchstart', e => {
+  touchStartX = e.touches[0].clientX;
+  touchStartY = e.touches[0].clientY;
+}, { passive: true });
+canvas.addEventListener('touchend', e => {
+  const dx = e.changedTouches[0].clientX - touchStartX;
+  const dy = e.changedTouches[0].clientY - touchStartY;
+  if (Math.abs(dx) > Math.abs(dy)) {
+    pacman.nextDir = dx > 0 ? {r:0,c:1} : {r:0,c:-1};
+  } else {
+    pacman.nextDir = dy > 0 ? {r:1,c:0} : {r:-1,c:0};
+  }
+}, { passive: true });
+
+/* ── INIT DISPLAY ── */
+updateHiScore();
+resizeCanvas();
+drawMaze();
+
+// Idle power pellet pulse on start screen
+let idlePulse;
+function idlePulseLoop() {
+  if (gameRunning) { clearInterval(idlePulse); return; }
+  drawMaze();
+  idlePulse = requestAnimationFrame(idlePulseLoop);
+}
+idlePulseLoop();
+</script>
+</body>
+</html>

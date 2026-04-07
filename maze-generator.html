@@ -1,0 +1,1122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>The Labyrinth · Rising Phoenix Games</title>
+  <link rel="stylesheet" href="shared.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700;900&family=Cinzel+Decorative:wght@400;700&family=IM+Fell+English:ital@0;1&display=swap" rel="stylesheet" />
+  <style>
+    html, body {
+      height: 100%;
+      margin: 0;
+      padding: 0;
+    }
+    body {
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+      background:
+        radial-gradient(ellipse 90% 55% at 15% 8%,  rgba(90,48,12,0.55) 0%, transparent 58%),
+        radial-gradient(ellipse 70% 65% at 85% 90%, rgba(50,25,6,0.6)   0%, transparent 55%),
+        radial-gradient(ellipse 60% 40% at 50% 50%, rgba(30,18,5,0.4)   0%, transparent 70%),
+        linear-gradient(160deg, #1c1106 0%, #0f0c07 45%, #13100a 100%);
+      background-attachment: fixed;
+      font-family: 'IM Fell English', Georgia, serif;
+      color: #e8dfc8;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* ── HEADER ─────────────────────────────────────────────── */
+    .game-header {
+      background: linear-gradient(180deg, #1e1508 0%, #120e06 100%);
+      border-bottom: 2px solid #c8952a;
+      box-shadow: 0 4px 24px rgba(0,0,0,0.7);
+      flex-shrink: 0;
+      position: relative;
+      overflow: hidden;
+    }
+    .game-header::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: repeating-linear-gradient(
+        90deg,
+        transparent 0px, transparent 56px,
+        rgba(200,149,42,0.035) 56px, rgba(200,149,42,0.035) 57px
+      );
+      pointer-events: none;
+    }
+    .header-inner {
+      display: flex;
+      align-items: center;
+      padding: 12px 20px;
+      position: relative;
+      gap: 0;
+    }
+    /* Three-column layout: back | logo+title | spacer */
+    .header-left {
+      flex: 1;
+      display: flex;
+      align-items: center;
+    }
+    .header-center {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-shrink: 0;
+    }
+    .header-right {
+      flex: 1;
+    }
+
+    .rpg-back {
+      font-family: 'Cinzel', serif;
+      font-size: 11px;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      color: #a09070;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: color 0.15s;
+      padding: 4px 0;
+    }
+    .rpg-back::before { content: '←'; }
+    .rpg-back:hover { color: #f0d080; }
+
+    .header-logo {
+      width: 44px;
+      height: 44px;
+      filter: drop-shadow(0 0 8px rgba(200,149,42,0.45));
+      flex-shrink: 0;
+    }
+    .header-title-block {
+      text-align: center;
+    }
+    .header-title {
+      font-family: 'Cinzel Decorative', 'Cinzel', serif;
+      font-size: clamp(16px, 3.5vw, 26px);
+      font-weight: 700;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      margin: 0 0 1px 0;
+      background: linear-gradient(135deg, #f0d080 0%, #c8952a 45%, #a07020 80%, #f0d080 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      line-height: 1.1;
+    }
+    .header-subtitle {
+      font-family: 'IM Fell English', Georgia, serif;
+      font-style: italic;
+      font-size: 12px;
+      color: #c4a46a;
+      letter-spacing: 1px;
+      margin: 0;
+      opacity: 0.85;
+    }
+
+    /* ── MAIN LAYOUT ─────────────────────────────────────────── */
+    #app {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 20px 16px;
+      gap: 16px;
+      position: relative;
+    }
+
+    /* ── CONTROLS BAR ────────────────────────────────────────── */
+    .controls-bar {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+      justify-content: center;
+      width: 100%;
+      max-width: 720px;
+    }
+    .ctrl-group {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .ctrl-label {
+      font-family: 'Cinzel', serif;
+      font-size: 10px;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: #c8952a;
+    }
+    select.rpg-select {
+      font-family: 'Cinzel', serif;
+      font-size: 11px;
+      letter-spacing: 1px;
+      background: linear-gradient(180deg, #2a2010 0%, #1a1508 100%);
+      border: 1px solid #c8952a;
+      color: #f0d080;
+      padding: 6px 10px;
+      border-radius: 4px;
+      cursor: pointer;
+      outline: none;
+      appearance: none;
+      -webkit-appearance: none;
+      padding-right: 24px;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%23c8952a'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 8px center;
+    }
+    select.rpg-select:hover { border-color: #f0d080; }
+
+    .rpg-btn {
+      font-family: 'Cinzel', serif;
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      color: #f0d080;
+      background: linear-gradient(180deg, #2a2010 0%, #1a1508 100%);
+      border: 1px solid #c8952a;
+      border-bottom-color: #8a6818;
+      padding: 7px 16px;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.5), inset 0 1px 0 rgba(240,208,128,0.1);
+      white-space: nowrap;
+    }
+    .rpg-btn:hover {
+      background: linear-gradient(180deg, #3a2c14 0%, #241a09 100%);
+      border-color: #f0d080;
+      box-shadow: 0 2px 14px rgba(200,149,42,0.35), inset 0 1px 0 rgba(240,208,128,0.18);
+      transform: translateY(-1px);
+    }
+    .rpg-btn:active { transform: translateY(0); }
+    .rpg-btn.active {
+      background: linear-gradient(180deg, #3a2c14 0%, #241a09 100%);
+      border-color: #f0d080;
+      box-shadow: 0 0 12px rgba(200,149,42,0.4);
+    }
+    .rpg-btn-sage {
+      background: linear-gradient(180deg, #1e3a14 0%, #102008 100%);
+      border-color: #7aaa5a;
+      border-bottom-color: #4a7a3a;
+      color: #b8e8a0;
+    }
+    .rpg-btn-sage:hover {
+      background: linear-gradient(180deg, #2a4e1c 0%, #162a0c 100%);
+      border-color: #a0d878;
+      box-shadow: 0 2px 14px rgba(80,160,60,0.35);
+      color: #c8f0b0;
+    }
+    .rpg-btn-crimson {
+      background: linear-gradient(180deg, #5a1818 0%, #300c0c 100%);
+      border-color: #c04040;
+      border-bottom-color: #8b1a1a;
+      color: #ffb0b0;
+    }
+    .rpg-btn-crimson:hover {
+      background: linear-gradient(180deg, #7a2020 0%, #401010 100%);
+      border-color: #e06060;
+      box-shadow: 0 2px 14px rgba(180,40,40,0.4);
+      color: #ffc8c8;
+    }
+
+    /* ── STATUS BAR ─────────────────────────────────────────── */
+    .status-bar {
+      display: flex;
+      gap: 20px;
+      align-items: center;
+      padding: 7px 14px 7px 28px;
+      background: rgba(0,0,0,0.35);
+      border: 1px solid rgba(200,149,42,0.18);
+      border-radius: 4px;
+      position: relative;
+      font-family: 'Cinzel', serif;
+      font-size: 12px;
+      letter-spacing: 1.5px;
+      color: #f0d080;
+      width: 100%;
+      max-width: 720px;
+      flex-wrap: wrap;
+    }
+    .status-bar::before {
+      content: '⚜';
+      position: absolute;
+      left: 10px;
+      font-size: 10px;
+      color: #c8952a;
+      opacity: 0.5;
+    }
+    .stat-item { display: flex; gap: 6px; align-items: center; }
+    .stat-val { color: #f0d080; }
+    .stat-lbl { color: #a09070; font-size: 10px; letter-spacing: 2px; text-transform: uppercase; }
+
+    /* ── MAZE CANVAS WRAPPER ─────────────────────────────────── */
+    .maze-wrapper {
+      position: relative;
+      border-radius: 10px;
+      overflow: hidden;
+      box-shadow:
+        0 0 0 2px rgba(200,149,42,0.5),
+        0 8px 40px rgba(0,0,0,0.8),
+        0 0 60px rgba(200,149,42,0.08);
+    }
+    #mazeCanvas {
+      display: block;
+      background: #0a0804;
+      touch-action: none;
+    }
+
+    /* ── LEGEND ─────────────────────────────────────────────── */
+    .legend {
+      display: flex;
+      gap: 16px;
+      flex-wrap: wrap;
+      justify-content: center;
+      font-family: 'Cinzel', serif;
+      font-size: 10px;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      color: #a09070;
+    }
+    .legend-item { display: flex; align-items: center; gap: 5px; }
+    .legend-dot {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    /* ── CONFETTI ────────────────────────────────────────────── */
+    .confetti-container {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 100;
+      overflow: hidden;
+    }
+    .confetti-piece {
+      position: absolute;
+      width: 10px;
+      height: 10px;
+      opacity: 0;
+      animation: confetti-fall linear forwards;
+    }
+    @keyframes confetti-fall {
+      0%   { transform: translateY(-20px) rotate(0deg); opacity: 1; }
+      80%  { opacity: 1; }
+      100% { transform: translateY(100vh) rotate(720deg); opacity: 0; }
+    }
+
+    /* ── VICTORY BANNER ──────────────────────────────────────── */
+    #victoryBanner {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%) scale(0.05);
+      background: linear-gradient(160deg, #261c0a 0%, #1a1005 100%);
+      border: 2px solid #c8952a;
+      border-radius: 12px;
+      padding: 24px 40px;
+      text-align: center;
+      z-index: 200;
+      box-shadow: 0 0 60px rgba(200,149,42,0.4), 0 16px 60px rgba(0,0,0,0.9);
+      pointer-events: none;
+      display: none;
+      white-space: nowrap;
+    }
+    #victoryBanner.show {
+      display: block;
+      animation: bannerGrow 0.75s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+    }
+    @keyframes bannerGrow {
+      0%   { transform: translate(-50%, -50%) scale(0.05); opacity: 0; }
+      60%  { opacity: 1; }
+      100% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+    }
+    .victory-title {
+      font-family: 'Cinzel Decorative', 'Cinzel', serif;
+      font-size: clamp(20px, 4vw, 32px);
+      font-weight: 700;
+      letter-spacing: 3px;
+      background: linear-gradient(135deg, #f0d080, #c8952a, #f0d080);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin: 0 0 8px 0;
+      animation: rpg-pulse-gold 1.2s ease-in-out infinite alternate;
+    }
+    @keyframes rpg-pulse-gold {
+      from { filter: drop-shadow(0 0 6px rgba(200,149,42,0.5)); }
+      to   { filter: drop-shadow(0 0 20px rgba(200,149,42,0.9)); }
+    }
+    .victory-sub {
+      font-family: 'IM Fell English', Georgia, serif;
+      font-style: italic;
+      font-size: 15px;
+      color: #c4a46a;
+      margin: 0;
+    }
+
+    /* ── FOOTER ─────────────────────────────────────────────── */
+    footer {
+      padding: 10px 20px 14px;
+      border-top: 1px solid rgba(200,149,42,0.1);
+      font-family: 'IM Fell English', Georgia, serif;
+      font-style: italic;
+      font-size: 11px;
+      color: rgba(180,150,90,0.55);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 8px;
+      flex-shrink: 0;
+    }
+    footer a { color: #c8952a; text-decoration: none; }
+
+    /* ── TOUCH CONTROLS ─────────────────────────────────────── */
+    .touch-controls {
+      display: none;
+      grid-template-columns: repeat(3, 52px);
+      grid-template-rows: repeat(3, 52px);
+      gap: 4px;
+    }
+    .touch-btn {
+      font-size: 22px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: linear-gradient(180deg, #2a2010 0%, #1a1508 100%);
+      border: 1px solid rgba(200,149,42,0.4);
+      border-radius: 6px;
+      cursor: pointer;
+      color: #f0d080;
+      user-select: none;
+      transition: all 0.1s;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .touch-btn:active {
+      background: linear-gradient(180deg, #3a2c14 0%, #241a09 100%);
+      border-color: #f0d080;
+      box-shadow: 0 0 10px rgba(200,149,42,0.4);
+    }
+    .touch-btn.empty { background: transparent; border: none; cursor: default; }
+
+    @media (max-width: 600px) {
+      .touch-controls { display: grid; }
+      .header-title { font-size: 16px; letter-spacing: 2px; }
+    }
+    @media (pointer: coarse) {
+      .touch-controls { display: grid; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- CONFETTI LAYER -->
+<div class="confetti-container" id="confettiContainer"></div>
+
+<!-- VICTORY BANNER -->
+<div id="victoryBanner">
+  <p class="victory-title">🜂 Escaped! 🜂</p>
+  <p class="victory-sub" id="victoryMsg">The labyrinth yields to the worthy.</p>
+</div>
+
+<!-- HEADER -->
+<header class="game-header">
+  <div class="header-inner">
+    <div class="header-left">
+      <a href="index.html" class="rpg-back">Hub</a>
+    </div>
+    <div class="header-center">
+      <img class="header-logo"
+        src="data:image/jpeg;base64,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"
+        alt="Rising Phoenix Gallery" />
+      <div class="header-title-block">
+        <h1 class="header-title">The Labyrinth</h1>
+        <p class="header-subtitle">Generate · Navigate · Escape</p>
+      </div>
+    </div>
+    <div class="header-right"></div>
+  </div>
+</header>
+
+<!-- MAIN APP -->
+<div id="app">
+
+  <!-- Controls -->
+  <div class="controls-bar">
+    <div class="ctrl-group">
+      <span class="ctrl-label">Size</span>
+      <select class="rpg-select" id="sizeSelect">
+        <option value="10">Small (10×10)</option>
+        <option value="15" selected>Medium (15×15)</option>
+        <option value="20">Large (20×20)</option>
+        <option value="25">Grand (25×25)</option>
+      </select>
+    </div>
+    <div class="ctrl-group">
+      <span class="ctrl-label">Algorithm</span>
+      <select class="rpg-select" id="algoSelect">
+        <option value="dfs" selected>Recursive Descent</option>
+        <option value="prim">Prim's Method</option>
+        <option value="kruskal">Kruskal's Method</option>
+      </select>
+    </div>
+    <button class="rpg-btn" id="generateBtn">✦ New Maze</button>
+    <button class="rpg-btn rpg-btn-sage" id="solveBtn">⚷ Solve</button>
+    <button class="rpg-btn rpg-btn-crimson" id="resetBtn">↺ Reset</button>
+  </div>
+
+  <!-- Status -->
+  <div class="status-bar">
+    <div class="stat-item">
+      <span class="stat-lbl">Steps</span>
+      <span class="stat-val" id="statSteps">0</span>
+    </div>
+    <div class="stat-item">
+      <span class="stat-lbl">Time</span>
+      <span class="stat-val" id="statTime">0:00</span>
+    </div>
+    <div class="stat-item">
+      <span class="stat-lbl">Status</span>
+      <span class="stat-val" id="statStatus" style="color:#c4a46a;">Ready</span>
+    </div>
+    <div class="stat-item" style="margin-left:auto;">
+      <span class="stat-lbl">Controls</span>
+      <span class="stat-val" style="color:#a09070;font-size:10px;letter-spacing:1px;">Arrow Keys / WASD</span>
+    </div>
+  </div>
+
+  <!-- Canvas -->
+  <div class="maze-wrapper">
+    <canvas id="mazeCanvas"></canvas>
+  </div>
+
+  <!-- Touch controls -->
+  <div class="touch-controls" id="touchControls">
+    <div class="touch-btn empty"></div>
+    <div class="touch-btn" id="tUp">↑</div>
+    <div class="touch-btn empty"></div>
+    <div class="touch-btn" id="tLeft">←</div>
+    <div class="touch-btn empty" style="background:rgba(200,149,42,0.06);border:1px solid rgba(200,149,42,0.15);border-radius:6px;"></div>
+    <div class="touch-btn" id="tRight">→</div>
+    <div class="touch-btn empty"></div>
+    <div class="touch-btn" id="tDown">↓</div>
+    <div class="touch-btn empty"></div>
+  </div>
+
+  <!-- Legend -->
+  <div class="legend">
+    <div class="legend-item">
+      <div class="legend-dot" style="background:#c8952a;box-shadow:0 0 6px rgba(200,149,42,0.6);"></div>
+      <span>Your Position</span>
+    </div>
+    <div class="legend-item">
+      <div class="legend-dot" style="background:#7aaa5a;box-shadow:0 0 6px rgba(122,170,90,0.5);"></div>
+      <span>Entrance</span>
+    </div>
+    <div class="legend-item">
+      <div class="legend-dot" style="background:#c04040;box-shadow:0 0 6px rgba(192,64,64,0.5);"></div>
+      <span>Exit</span>
+    </div>
+    <div class="legend-item">
+      <div class="legend-dot" style="background:rgba(200,149,42,0.25);border:1px solid rgba(200,149,42,0.3);"></div>
+      <span>Breadcrumb Trail</span>
+    </div>
+    <div class="legend-item">
+      <div class="legend-dot" style="background:rgba(192,64,64,0.3);border:1px solid rgba(192,64,64,0.4);"></div>
+      <span>Solution Path</span>
+    </div>
+  </div>
+
+</div>
+
+<!-- FOOTER -->
+<footer>
+  <span>© <span id="year"></span> Rising Phoenix Gallery · Michigan City, IN</span>
+  <span>Crafted by John Ryszka II · <a href="https://www.risingphxgallery.com">RisingPhxGallery.com</a></span>
+</footer>
+
+<script>
+/* ═══════════════════════════════════════════════════════════
+   THE LABYRINTH — Maze Generator & Solver
+   Rising Phoenix Games
+═══════════════════════════════════════════════════════════ */
+
+document.getElementById('year').textContent = new Date().getFullYear();
+
+// ── CONSTANTS ─────────────────────────────────────────────
+const WALL = { N: 1, E: 2, S: 4, W: 8 };
+const DX = { N: 0, E: 1, S: 0, W: -1 };
+const DY = { N: -1, E: 0, S: 1, W: 0 };
+const OPP = { N: 'S', E: 'W', S: 'N', W: 'E' };
+const DIRS = ['N', 'E', 'S', 'W'];
+
+// Colors
+const C = {
+  bg:       '#0a0804',
+  wall:     '#c8952a',
+  path:     '#1e1608',
+  trail:    'rgba(200,149,42,0.18)',
+  trailBorder: 'rgba(200,149,42,0.4)',
+  solution: 'rgba(192,64,64,0.22)',
+  solutionBorder: 'rgba(192,64,64,0.55)',
+  player:   '#c8952a',
+  playerGlow: 'rgba(200,149,42,0.7)',
+  start:    '#7aaa5a',
+  startGlow:'rgba(122,170,90,0.5)',
+  exit:     '#c04040',
+  exitGlow: 'rgba(192,64,64,0.5)',
+};
+
+// ── STATE ──────────────────────────────────────────────────
+let grid = [];          // grid[y][x] = bitmask of open walls (1=N open, 2=E open, 4=S open, 8=W open)
+let cols = 15, rows = 15;
+let cellSize = 32;
+let player = { x: 0, y: 0 };
+let trail = new Set();  // "x,y" strings
+let solutionPath = [];  // array of {x,y}
+let showSolution = false;
+let steps = 0;
+let startTime = null;
+let timerInterval = null;
+let gameWon = false;
+let animFrame = null;
+let playerPulse = 0;    // for breathing animation
+
+const canvas = document.getElementById('mazeCanvas');
+const ctx = canvas.getContext('2d');
+
+// ── HELPERS ────────────────────────────────────────────────
+function shuffle(arr) {
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  return arr;
+}
+
+function inBounds(x, y) {
+  return x >= 0 && x < cols && y >= 0 && y < rows;
+}
+
+function cellKey(x, y) { return `${x},${y}`; }
+
+// Check if wall between (x,y) and neighbor in direction d is open
+function isOpen(x, y, d) {
+  if (!inBounds(x, y)) return false;
+  return (grid[y][x] & WALL[d]) !== 0;
+}
+
+// ── MAZE GENERATION ────────────────────────────────────────
+
+// Recursive backtracker (DFS)
+function generateDFS() {
+  const visited = Array.from({length: rows}, () => new Array(cols).fill(false));
+  function carve(x, y) {
+    visited[y][x] = true;
+    for (const d of shuffle([...DIRS])) {
+      const nx = x + DX[d], ny = y + DY[d];
+      if (inBounds(nx, ny) && !visited[ny][nx]) {
+        grid[y][x] |= WALL[d];
+        grid[ny][nx] |= WALL[OPP[d]];
+        carve(nx, ny);
+      }
+    }
+  }
+  carve(0, 0);
+}
+
+// Prim's algorithm
+function generatePrim() {
+  const visited = Array.from({length: rows}, () => new Array(cols).fill(false));
+  const frontier = [];
+  function addFrontier(x, y) {
+    for (const d of DIRS) {
+      const nx = x + DX[d], ny = y + DY[d];
+      if (inBounds(nx, ny) && !visited[ny][nx]) {
+        frontier.push({x: nx, y: ny, fromX: x, fromY: y, d});
+      }
+    }
+  }
+  visited[0][0] = true;
+  addFrontier(0, 0);
+  while (frontier.length) {
+    const idx = Math.floor(Math.random() * frontier.length);
+    const {x, y, fromX, fromY, d} = frontier.splice(idx, 1)[0];
+    if (visited[y][x]) continue;
+    visited[y][x] = true;
+    grid[fromY][fromX] |= WALL[d];
+    grid[y][x] |= WALL[OPP[d]];
+    addFrontier(x, y);
+  }
+}
+
+// Kruskal's algorithm
+function generateKruskal() {
+  const parent = [];
+  for (let i = 0; i < rows * cols; i++) parent[i] = i;
+  function find(i) {
+    while (parent[i] !== i) { parent[i] = parent[parent[i]]; i = parent[i]; }
+    return i;
+  }
+  function union(a, b) {
+    const ra = find(a), rb = find(b);
+    if (ra === rb) return false;
+    parent[ra] = rb;
+    return true;
+  }
+  const edges = [];
+  for (let y = 0; y < rows; y++) {
+    for (let x = 0; x < cols; x++) {
+      if (x + 1 < cols) edges.push({x, y, d: 'E'});
+      if (y + 1 < rows) edges.push({x, y, d: 'S'});
+    }
+  }
+  shuffle(edges);
+  for (const {x, y, d} of edges) {
+    const nx = x + DX[d], ny = y + DY[d];
+    const a = y * cols + x, b = ny * cols + nx;
+    if (union(a, b)) {
+      grid[y][x] |= WALL[d];
+      grid[ny][nx] |= WALL[OPP[d]];
+    }
+  }
+}
+
+// ── BFS SOLVE ──────────────────────────────────────────────
+function solveBFS(startX, startY, endX, endY) {
+  const visited = Array.from({length: rows}, () => new Array(cols).fill(false));
+  const prev = Array.from({length: rows}, () => new Array(cols).fill(null));
+  const queue = [{x: startX, y: startY}];
+  visited[startY][startX] = true;
+  while (queue.length) {
+    const {x, y} = queue.shift();
+    if (x === endX && y === endY) {
+      // Trace back
+      const path = [];
+      let cx = endX, cy = endY;
+      while (cx !== null) {
+        path.unshift({x: cx, y: cy});
+        const p = prev[cy][cx];
+        if (!p) break;
+        cx = p.x; cy = p.y;
+      }
+      return path;
+    }
+    for (const d of DIRS) {
+      if (!isOpen(x, y, d)) continue;
+      const nx = x + DX[d], ny = y + DY[d];
+      if (!visited[ny][nx]) {
+        visited[ny][nx] = true;
+        prev[ny][nx] = {x, y};
+        queue.push({x: nx, y: ny});
+      }
+    }
+  }
+  return [];
+}
+
+// ── RESIZE & CANVAS SETUP ─────────────────────────────────
+function calcCellSize() {
+  const maxW = Math.min(window.innerWidth - 48, 700);
+  const maxH = Math.min(window.innerHeight - 380, 700);
+  const byW = Math.floor(maxW / cols);
+  const byH = Math.floor(maxH / rows);
+  cellSize = Math.max(14, Math.min(byW, byH));
+}
+
+function resizeCanvas() {
+  calcCellSize();
+  canvas.width  = cols * cellSize;
+  canvas.height = rows * cellSize;
+}
+
+// ── GENERATE MAZE ─────────────────────────────────────────
+function generateMaze() {
+  cols = rows = parseInt(document.getElementById('sizeSelect').value);
+  const algo = document.getElementById('algoSelect').value;
+
+  // Reset grid
+  grid = Array.from({length: rows}, () => new Array(cols).fill(0));
+
+  // Generate
+  if (algo === 'dfs')     generateDFS();
+  else if (algo === 'prim') generatePrim();
+  else                    generateKruskal();
+
+  resizeCanvas();
+  resetPlayer();
+}
+
+// ── RESET PLAYER ──────────────────────────────────────────
+function resetPlayer() {
+  player = {x: 0, y: 0};
+  trail = new Set();
+  trail.add(cellKey(0, 0));
+  solutionPath = [];
+  showSolution = false;
+  steps = 0;
+  gameWon = false;
+
+  document.getElementById('statSteps').textContent = '0';
+  document.getElementById('statStatus').style.color = '#c4a46a';
+  document.getElementById('statStatus').textContent = 'Navigating';
+
+  stopTimer();
+  startTime = Date.now();
+  timerInterval = setInterval(updateTimer, 500);
+
+  document.getElementById('solveBtn').textContent = '⚷ Solve';
+}
+
+// ── TIMER ─────────────────────────────────────────────────
+function stopTimer() {
+  if (timerInterval) { clearInterval(timerInterval); timerInterval = null; }
+}
+function updateTimer() {
+  if (!startTime || gameWon) return;
+  const elapsed = Math.floor((Date.now() - startTime) / 1000);
+  const m = Math.floor(elapsed / 60);
+  const s = elapsed % 60;
+  document.getElementById('statTime').textContent = `${m}:${s.toString().padStart(2,'0')}`;
+}
+
+// ── DRAW ──────────────────────────────────────────────────
+function draw(timestamp) {
+  playerPulse = (Math.sin(timestamp * 0.003) + 1) * 0.5; // 0..1
+
+  ctx.fillStyle = C.bg;
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+  const cs = cellSize;
+  const wallW = Math.max(2, Math.ceil(cs * 0.08));
+
+  // Draw cells: trail, solution
+  for (let y = 0; y < rows; y++) {
+    for (let x = 0; x < cols; x++) {
+      const px = x * cs, py = y * cs;
+      const key = cellKey(x, y);
+
+      // Solution highlight
+      if (showSolution && solutionPath.some(p => p.x === x && p.y === y)) {
+        ctx.fillStyle = C.solution;
+        ctx.fillRect(px + wallW, py + wallW, cs - wallW*2, cs - wallW*2);
+      }
+      // Trail
+      else if (trail.has(key)) {
+        ctx.fillStyle = C.trail;
+        ctx.fillRect(px + wallW, py + wallW, cs - wallW*2, cs - wallW*2);
+      }
+    }
+  }
+
+  // Draw walls
+  ctx.strokeStyle = C.wall;
+  ctx.lineWidth = wallW;
+  ctx.lineCap = 'square';
+
+  for (let y = 0; y < rows; y++) {
+    for (let x = 0; x < cols; x++) {
+      const px = x * cs, py = y * cs;
+      const cell = grid[y][x];
+
+      // North wall
+      if (!(cell & WALL.N)) {
+        ctx.beginPath();
+        ctx.moveTo(px, py);
+        ctx.lineTo(px + cs, py);
+        ctx.stroke();
+      }
+      // West wall
+      if (!(cell & WALL.W)) {
+        ctx.beginPath();
+        ctx.moveTo(px, py);
+        ctx.lineTo(px, py + cs);
+        ctx.stroke();
+      }
+      // East wall (only for rightmost col)
+      if (x === cols - 1 && !(cell & WALL.E)) {
+        ctx.beginPath();
+        ctx.moveTo(px + cs, py);
+        ctx.lineTo(px + cs, py + cs);
+        ctx.stroke();
+      }
+      // South wall (only for bottom row)
+      if (y === rows - 1 && !(cell & WALL.S)) {
+        ctx.beginPath();
+        ctx.moveTo(px, py + cs);
+        ctx.lineTo(px + cs, py + cs);
+        ctx.stroke();
+      }
+    }
+  }
+
+  // Draw outer border
+  ctx.strokeStyle = C.wall;
+  ctx.lineWidth = wallW * 1.5;
+  ctx.strokeRect(wallW * 0.75, wallW * 0.75, canvas.width - wallW * 1.5, canvas.height - wallW * 1.5);
+
+  // Start marker (top-left)
+  const startR = cs * 0.28;
+  const startX = 0 * cs + cs * 0.5;
+  const startY = 0 * cs + cs * 0.5;
+  ctx.save();
+  ctx.shadowColor = C.startGlow;
+  ctx.shadowBlur = 10;
+  ctx.fillStyle = C.start;
+  ctx.beginPath();
+  ctx.arc(startX, startY, startR, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.restore();
+
+  // Exit marker (bottom-right)
+  const exitX = (cols - 1) * cs + cs * 0.5;
+  const exitY = (rows - 1) * cs + cs * 0.5;
+  ctx.save();
+  ctx.shadowColor = C.exitGlow;
+  ctx.shadowBlur = 12 + playerPulse * 8;
+  ctx.fillStyle = C.exit;
+  ctx.beginPath();
+  ctx.arc(exitX, exitY, startR, 0, Math.PI * 2);
+  ctx.fill();
+  // Exit ring
+  ctx.strokeStyle = C.exit;
+  ctx.lineWidth = 1.5;
+  ctx.globalAlpha = 0.4 + playerPulse * 0.3;
+  ctx.beginPath();
+  ctx.arc(exitX, exitY, startR + 4 + playerPulse * 3, 0, Math.PI * 2);
+  ctx.stroke();
+  ctx.globalAlpha = 1;
+  ctx.restore();
+
+  // Player
+  if (!gameWon) {
+    const pr = cs * 0.33;
+    const pxC = player.x * cs + cs * 0.5;
+    const pyC = player.y * cs + cs * 0.5;
+    const scale = 1 + playerPulse * 0.06;
+
+    ctx.save();
+    ctx.shadowColor = C.playerGlow;
+    ctx.shadowBlur = 14 + playerPulse * 10;
+    ctx.fillStyle = C.player;
+    ctx.beginPath();
+    ctx.arc(pxC, pyC, pr * scale, 0, Math.PI * 2);
+    ctx.fill();
+    // Inner highlight
+    ctx.fillStyle = 'rgba(255,235,180,0.4)';
+    ctx.beginPath();
+    ctx.arc(pxC - pr * 0.2, pyC - pr * 0.2, pr * 0.35 * scale, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+  }
+
+  animFrame = requestAnimationFrame(draw);
+}
+
+// ── MOVE PLAYER ───────────────────────────────────────────
+function movePlayer(d) {
+  if (gameWon) return;
+  if (!isOpen(player.x, player.y, d)) return; // wall
+
+  player.x += DX[d];
+  player.y += DY[d];
+  steps++;
+  trail.add(cellKey(player.x, player.y));
+
+  document.getElementById('statSteps').textContent = steps;
+
+  // Check win
+  if (player.x === cols - 1 && player.y === rows - 1) {
+    onWin();
+  }
+}
+
+// ── WIN ───────────────────────────────────────────────────
+function onWin() {
+  gameWon = true;
+  stopTimer();
+
+  const elapsed = Math.floor((Date.now() - startTime) / 1000);
+  const m = Math.floor(elapsed / 60);
+  const s = elapsed % 60;
+  const timeStr = `${m}:${s.toString().padStart(2,'0')}`;
+
+  document.getElementById('statStatus').style.color = '#7aaa5a';
+  document.getElementById('statStatus').textContent = 'Escaped!';
+
+  // Victory messages
+  const msgs = [
+    `Escaped in ${steps} steps — ${timeStr} elapsed.`,
+    `The labyrinth yields. ${steps} steps, ${timeStr} of patience.`,
+    `Freedom found. ${steps} steps through the dark.`,
+    `Well navigated, wayfarer. ${timeStr} to conquer the maze.`,
+    `The phoenix flies free — ${steps} steps to the light.`,
+  ];
+  document.getElementById('victoryMsg').textContent = msgs[Math.floor(Math.random() * msgs.length)];
+
+  spawnConfetti();
+  showVictoryBanner();
+}
+
+// ── CONFETTI ──────────────────────────────────────────────
+function spawnConfetti() {
+  const container = document.getElementById('confettiContainer');
+  container.innerHTML = '';
+  const colors = ['#c8952a','#f0d080','#c04040','#7aaa5a','#4a7a3a','#f2e0a0','#8b1a1a','#a07020'];
+  const shapes = ['■','●','▲','◆','★','✦'];
+  const count = 80;
+  for (let i = 0; i < count; i++) {
+    const el = document.createElement('div');
+    el.className = 'confetti-piece';
+    const color = colors[Math.floor(Math.random() * colors.length)];
+    const shape = shapes[Math.floor(Math.random() * shapes.length)];
+    const left = Math.random() * 100;
+    const delay = Math.random() * 1.5;
+    const dur = 2.5 + Math.random() * 2;
+    const size = 8 + Math.random() * 14;
+    el.style.cssText = `
+      left: ${left}%;
+      top: -20px;
+      font-size: ${size}px;
+      color: ${color};
+      animation-duration: ${dur}s;
+      animation-delay: ${delay}s;
+      text-shadow: 0 0 6px ${color};
+    `;
+    el.textContent = shape;
+    container.appendChild(el);
+    // Second burst cluster
+    if (i < 30) {
+      const el2 = document.createElement('div');
+      el2.className = 'confetti-piece';
+      el2.style.cssText = `
+        left: ${20 + Math.random() * 60}%;
+        top: -10px;
+        font-size: ${size * 0.8}px;
+        color: ${color};
+        animation-duration: ${dur * 1.2}s;
+        animation-delay: ${delay + 0.3}s;
+        text-shadow: 0 0 6px ${color};
+      `;
+      el2.textContent = shapes[Math.floor(Math.random() * shapes.length)];
+      container.appendChild(el2);
+    }
+  }
+  // Clear after all finish
+  setTimeout(() => { container.innerHTML = ''; }, 6000);
+}
+
+// ── VICTORY BANNER ────────────────────────────────────────
+function showVictoryBanner() {
+  const banner = document.getElementById('victoryBanner');
+  banner.style.display = 'none';
+  banner.classList.remove('show');
+  // Force reflow
+  void banner.offsetWidth;
+  banner.classList.add('show');
+
+  // Hide after 1.75s total (0.75 grow + 1 hold)
+  setTimeout(() => {
+    banner.style.transition = 'opacity 0.4s ease';
+    banner.style.opacity = '0';
+    setTimeout(() => {
+      banner.style.display = 'none';
+      banner.style.transition = '';
+      banner.style.opacity = '';
+      banner.classList.remove('show');
+    }, 400);
+  }, 1750);
+}
+
+// ── SOLVE ─────────────────────────────────────────────────
+function toggleSolve() {
+  if (gameWon) return;
+  showSolution = !showSolution;
+  if (showSolution) {
+    solutionPath = solveBFS(player.x, player.y, cols - 1, rows - 1);
+    document.getElementById('solveBtn').textContent = '✕ Hide Solution';
+  } else {
+    solutionPath = [];
+    document.getElementById('solveBtn').textContent = '⚷ Solve';
+  }
+}
+
+// ── KEYBOARD ──────────────────────────────────────────────
+document.addEventListener('keydown', e => {
+  const map = {
+    ArrowUp: 'N', ArrowRight: 'E', ArrowDown: 'S', ArrowLeft: 'W',
+    w: 'N', d: 'E', s: 'S', a: 'W',
+    W: 'N', D: 'E', S: 'S', A: 'W',
+  };
+  if (map[e.key]) {
+    e.preventDefault();
+    movePlayer(map[e.key]);
+  }
+});
+
+// ── TOUCH CONTROLS ────────────────────────────────────────
+function addTouchBtn(id, dir) {
+  const btn = document.getElementById(id);
+  btn.addEventListener('click', () => movePlayer(dir));
+  btn.addEventListener('touchstart', e => { e.preventDefault(); movePlayer(dir); }, {passive: false});
+}
+addTouchBtn('tUp', 'N');
+addTouchBtn('tDown', 'S');
+addTouchBtn('tLeft', 'W');
+addTouchBtn('tRight', 'E');
+
+// ── SWIPE SUPPORT ─────────────────────────────────────────
+let touchStart = null;
+canvas.addEventListener('touchstart', e => {
+  touchStart = {x: e.touches[0].clientX, y: e.touches[0].clientY};
+  e.preventDefault();
+}, {passive: false});
+canvas.addEventListener('touchend', e => {
+  if (!touchStart) return;
+  const dx = e.changedTouches[0].clientX - touchStart.x;
+  const dy = e.changedTouches[0].clientY - touchStart.y;
+  const adx = Math.abs(dx), ady = Math.abs(dy);
+  if (adx < 10 && ady < 10) return;
+  if (adx > ady) movePlayer(dx > 0 ? 'E' : 'W');
+  else           movePlayer(dy > 0 ? 'S' : 'N');
+  touchStart = null;
+  e.preventDefault();
+}, {passive: false});
+
+// ── BUTTON EVENTS ─────────────────────────────────────────
+document.getElementById('generateBtn').addEventListener('click', () => {
+  cancelAnimationFrame(animFrame);
+  generateMaze();
+  animFrame = requestAnimationFrame(draw);
+});
+document.getElementById('solveBtn').addEventListener('click', toggleSolve);
+document.getElementById('resetBtn').addEventListener('click', () => {
+  showSolution = false;
+  solutionPath = [];
+  document.getElementById('solveBtn').textContent = '⚷ Solve';
+  resetPlayer();
+});
+
+// ── RESIZE ────────────────────────────────────────────────
+window.addEventListener('resize', () => {
+  resizeCanvas();
+});
+
+// ── INIT ──────────────────────────────────────────────────
+generateMaze();
+animFrame = requestAnimationFrame(draw);
+document.getElementById('statStatus').textContent = 'Navigating';
+
+</script>
+</body>
+</html>

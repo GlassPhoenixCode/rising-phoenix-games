@@ -1,0 +1,1325 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>The Wandering Toad — Rising Phoenix Games</title>
+  <link rel="stylesheet" href="shared.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700;900&family=Cinzel+Decorative:wght@400;700&family=IM+Fell+English:ital@0;1&display=swap" rel="stylesheet" />
+  <style>
+    /* ── PAGE SHELL ───────────────────────────────────────────── */
+    html, body { height: 100%; margin: 0; padding: 0; }
+    body {
+      display: flex;
+      flex-direction: column;
+      background:
+        radial-gradient(ellipse 90% 55% at 15% 8%,  rgba(20,60,20,0.55) 0%, transparent 58%),
+        radial-gradient(ellipse 70% 65% at 85% 90%, rgba(10,40,10,0.6)  0%, transparent 55%),
+        radial-gradient(ellipse 60% 40% at 50% 50%, rgba(5,25,5,0.4)    0%, transparent 70%),
+        linear-gradient(160deg, #0a1006 0%, #0f0c07 45%, #0c110a 100%);
+      background-attachment: fixed;
+      min-height: 100vh;
+    }
+
+    #app {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      z-index: 1;
+    }
+
+    /* ── HEADER ───────────────────────────────────────────────── */
+    .game-header {
+      background: linear-gradient(180deg, #0e1a0a 0%, #080e05 100%);
+      border-bottom: 2px solid var(--gold);
+      box-shadow: 0 4px 24px rgba(0,0,0,0.7), 0 1px 0 rgba(200,149,42,0.12) inset;
+      flex-shrink: 0;
+      position: relative;
+      overflow: hidden;
+    }
+    .game-header::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: repeating-linear-gradient(
+        90deg,
+        transparent 0px, transparent 56px,
+        rgba(200,149,42,0.025) 56px, rgba(200,149,42,0.025) 57px
+      );
+      pointer-events: none;
+    }
+
+    .header-inner {
+      display: grid;
+      grid-template-columns: 1fr auto 1fr;
+      align-items: center;
+      padding: 12px 20px;
+      gap: 12px;
+      position: relative;
+    }
+
+    .header-left {
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+    }
+
+    .header-center {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 2px;
+    }
+
+    .header-right {
+      /* invisible mirror */
+    }
+
+    .game-logo {
+      width: 44px;
+      height: 44px;
+      filter: drop-shadow(0 0 8px rgba(200,149,42,0.5));
+    }
+
+    h1.game-title {
+      font-family: var(--font-display);
+      font-size: clamp(16px, 3.5vw, 26px);
+      font-weight: 700;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      margin: 0;
+      background: linear-gradient(135deg, var(--gold-light) 0%, var(--gold) 45%, #a07020 80%, var(--gold-light) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      line-height: 1.1;
+      white-space: nowrap;
+    }
+
+    .game-subtitle {
+      font-family: var(--font-body);
+      font-style: italic;
+      font-size: 11px;
+      color: #a09060;
+      letter-spacing: 1px;
+    }
+
+    /* ── MAIN LAYOUT ──────────────────────────────────────────── */
+    .game-main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 16px;
+      gap: 14px;
+    }
+
+    /* ── STATUS BAR ───────────────────────────────────────────── */
+    .status-bar {
+      display: flex;
+      gap: 20px;
+      align-items: center;
+      justify-content: center;
+      flex-wrap: wrap;
+      padding: 8px 20px;
+      background: rgba(0,0,0,0.4);
+      border: 1px solid rgba(200,149,42,0.2);
+      border-radius: 6px;
+      width: 100%;
+      max-width: 580px;
+      box-sizing: border-box;
+    }
+
+    .stat-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 1px;
+    }
+
+    .stat-label {
+      font-family: var(--font-ui);
+      font-size: 9px;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--gold);
+    }
+
+    .stat-value {
+      font-family: var(--font-ui);
+      font-size: 18px;
+      font-weight: 700;
+      color: #f0d080;
+      line-height: 1;
+      min-width: 40px;
+      text-align: center;
+    }
+
+    .stat-divider {
+      width: 1px;
+      height: 30px;
+      background: rgba(200,149,42,0.2);
+    }
+
+    /* ── LIVES DISPLAY ────────────────────────────────────────── */
+    .lives-display {
+      display: flex;
+      gap: 4px;
+      align-items: center;
+    }
+
+    .life-icon {
+      font-size: 18px;
+      line-height: 1;
+      filter: drop-shadow(0 0 4px rgba(50,200,50,0.5));
+      transition: opacity 0.3s;
+    }
+    .life-icon.lost { opacity: 0.15; filter: none; }
+
+    /* ── CANVAS WRAPPER ───────────────────────────────────────── */
+    .canvas-wrap {
+      position: relative;
+      border-radius: 10px;
+      overflow: hidden;
+      box-shadow:
+        0 0 0 2px rgba(200,149,42,0.4),
+        0 0 30px rgba(0,0,0,0.7),
+        0 0 60px rgba(30,80,10,0.2);
+    }
+
+    #gameCanvas {
+      display: block;
+      image-rendering: pixelated;
+    }
+
+    /* ── CONTROLS / BUTTONS ───────────────────────────────────── */
+    .controls {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      justify-content: center;
+      width: 100%;
+      max-width: 580px;
+    }
+
+    /* ── D-PAD ────────────────────────────────────────────────── */
+    .dpad {
+      display: grid;
+      grid-template-areas: ". up ." "left . right" ". down .";
+      grid-template-columns: 52px 52px 52px;
+      grid-template-rows: 52px 52px 52px;
+      gap: 4px;
+    }
+
+    .dpad-btn {
+      font-family: var(--font-ui);
+      font-size: 20px;
+      background: linear-gradient(180deg, #1a2a10 0%, #0e1808 100%);
+      border: 1px solid rgba(200,149,42,0.5);
+      border-radius: 6px;
+      color: #f0d080;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.1s;
+      -webkit-tap-highlight-color: transparent;
+      user-select: none;
+    }
+    .dpad-btn:hover, .dpad-btn:active {
+      background: linear-gradient(180deg, #2a4018 0%, #182408 100%);
+      border-color: var(--gold-light);
+      box-shadow: 0 0 12px rgba(200,149,42,0.4);
+      transform: scale(0.95);
+    }
+    .dpad-btn.up    { grid-area: up; }
+    .dpad-btn.down  { grid-area: down; }
+    .dpad-btn.left  { grid-area: left; }
+    .dpad-btn.right { grid-area: right; }
+
+    /* ── OVERLAY (start / game over / win) ────────────────────── */
+    #overlay {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      background: rgba(0,0,0,0.82);
+      z-index: 20;
+      gap: 16px;
+      padding: 20px;
+    }
+
+    #overlay.hidden { display: none; }
+
+    .overlay-title {
+      font-family: var(--font-display);
+      font-size: clamp(18px, 4vw, 28px);
+      font-weight: 700;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      text-align: center;
+      background: linear-gradient(135deg, var(--gold-light) 0%, var(--gold) 45%, #a07020 80%, var(--gold-light) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .overlay-sub {
+      font-family: var(--font-body);
+      font-style: italic;
+      font-size: 14px;
+      color: #c8a878;
+      text-align: center;
+      max-width: 280px;
+      line-height: 1.6;
+    }
+
+    .overlay-score {
+      font-family: var(--font-ui);
+      font-size: 22px;
+      font-weight: 700;
+      color: #f0d080;
+      letter-spacing: 2px;
+    }
+
+    /* ── VICTORY BANNER ───────────────────────────────────────── */
+    #victoryBanner {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%) scale(0.05);
+      background: linear-gradient(160deg, #1a3010 0%, #0e1c08 100%);
+      border: 2px solid var(--gold);
+      border-radius: 10px;
+      padding: 16px 24px;
+      text-align: center;
+      z-index: 30;
+      pointer-events: none;
+      box-shadow: 0 0 40px rgba(200,149,42,0.6), inset 0 0 20px rgba(0,0,0,0.4);
+      white-space: nowrap;
+      display: none;
+    }
+
+    #victoryBanner .banner-title {
+      font-family: var(--font-display);
+      font-size: clamp(14px, 3vw, 22px);
+      font-weight: 700;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      background: linear-gradient(135deg, var(--gold-light) 0%, var(--gold) 45%, #a07020 80%, var(--gold-light) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      display: block;
+    }
+
+    #victoryBanner .banner-sub {
+      font-family: var(--font-body);
+      font-style: italic;
+      font-size: 12px;
+      color: #c8a878;
+      display: block;
+      margin-top: 4px;
+    }
+
+    /* ── CONFETTI ─────────────────────────────────────────────── */
+    .confetti-piece {
+      position: absolute;
+      width: 8px;
+      height: 8px;
+      pointer-events: none;
+      z-index: 25;
+      border-radius: 2px;
+      animation: confettiFall linear forwards;
+    }
+
+    @keyframes confettiFall {
+      0%   { transform: translate(0, 0) rotate(0deg); opacity: 1; }
+      100% { transform: translate(var(--dx), var(--dy)) rotate(var(--dr)); opacity: 0; }
+    }
+
+    /* ── CHRONICLE ────────────────────────────────────────────── */
+    .chronicle-wrap {
+      width: 100%;
+      max-width: 580px;
+      background: rgba(0,0,0,0.3);
+      border: 1px solid rgba(200,149,42,0.15);
+      border-radius: 6px;
+      padding: 8px 12px;
+      position: relative;
+    }
+    .chronicle-label {
+      font-family: var(--font-ui);
+      font-size: 9px;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--gold);
+      margin-bottom: 6px;
+    }
+    .chronicle-scroll {
+      display: flex;
+      gap: 8px;
+      overflow-x: auto;
+      padding-bottom: 4px;
+      scrollbar-width: thin;
+    }
+    .chronicle-entry {
+      font-family: var(--font-body);
+      font-style: italic;
+      font-size: 11px;
+      color: #c8a878;
+      background: rgba(200,149,42,0.07);
+      border: 1px solid rgba(200,149,42,0.18);
+      border-radius: 999px;
+      padding: 3px 10px;
+      white-space: nowrap;
+      animation: rpg-fadein 0.3s ease both;
+    }
+    .chronicle-entry.good { color: #88d870; border-color: rgba(100,200,80,0.3); }
+    .chronicle-entry.bad  { color: #f09090; border-color: rgba(200,60,60,0.3); }
+
+    /* ── FOOTER ───────────────────────────────────────────────── */
+    .game-footer {
+      padding: 10px 24px 14px;
+      border-top: 1px solid rgba(200,149,42,0.1);
+      font-family: var(--font-body);
+      font-style: italic;
+      font-size: 11px;
+      color: rgba(180,150,90,0.55);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 8px;
+      flex-shrink: 0;
+    }
+
+    @media (max-width: 480px) {
+      .header-inner { padding: 10px 14px; }
+      h1.game-title { font-size: 14px; letter-spacing: 2px; }
+    }
+  </style>
+</head>
+<body class="rpg-bg">
+<div id="app">
+
+  <!-- ── HEADER ─────────────────────────────────────────────── -->
+  <header class="game-header">
+    <div class="header-inner">
+      <div class="header-left">
+        <a href="index.html" class="rpg-back" style="color:#a09070;font-family:'Cinzel',serif;font-size:11px;letter-spacing:1.5px;text-transform:uppercase;text-decoration:none;display:inline-flex;align-items:center;gap:6px;transition:color 0.15s;">Hub</a>
+      </div>
+      <div class="header-center" style="display:flex;flex-direction:row;align-items:center;gap:12px;">
+        <img class="game-logo"
+          src="data:image/jpeg;base64,/9j/4AAQSkZJRgABAgAAAQABAAD/wAARCABUAFQDACIAAREBAhEB/9sAQwAIBgYHBgUIBwcHCQkICgwUDQwLCwwZEhMPFB0aHx4dGhwcICQuJyAiLCMcHCg3KSwwMTQ0NB8nOT04MjwuMzQy/9sAQwEJCQkMCwwYDQ0YMiEcITIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIy/8QAHwAAAQUBAQEBAQEAAAAAAAAAAAECAwQFBgcICQoL/8QAtRAAAgEDAwIEAwUFBAQAAAF9AQIDAAQRBRIhMUEGE1FhByJxFDKBkaEII0KxwRVS0fAkM2JyggkKFhcYGRolJicoKSo0NTY3ODk6Q0RFRkdISUpTVFVWV1hZWmNkZWZnaGlqc3R1dnd4eXqDhIWGh4iJipKTlJWWl5iZmqKjpKWmp6ipqrKztLW2t7i5usLDxMXGx8jJytLT1NXW19jZ2uHi4+Tl5ufo6erx8vP09fb3+Pn6/8QAHwEAAwEBAQEBAQEBAQAAAAAAAAECAwQFBgcICQoL/8QAtREAAgECBAQDBAcFBAQAAQJ3AAECAxEEBSExBhJBUQdhcRMiMoEIFEKRobHBCSMzUvAVYnLRChYkNOEl8RcYGRomJygpKjU2Nzg5OkNERUZHSElKU1RVVldYWVpjZGVmZ2hpanN0dXZ3eHl6goOEhYaHiImKkpOUlZaXmJmaoqOkpaanqKmqsrO0tba3uLm6wsPExcbHyMnK0tPU1dbX2Nna4uPk5ebn6Onq8vP09fb3+Pn6/9oADAMAAAERAhEAPwDwA9atWVhPfSBIlJHr6UWNm99crEgPJ5r0vRdFSGNY0T059a5cVio0I3e57GU5TLHS5paQW7MHTvCUYCtPmRuuD0rfh8OxJGFEKgemKt6deS6xrTaXo6qIoObi8YZwBxhR0znjJrul0pIYFEjHaCF3MckkkD8yT0r53GZjVhbmdr9PL0PpaFXL8O3ChBabt/5nnUvh2J4yDCCPTFc/qHhGMgtBmNuvtXsraWssDBGO0kqSnBBBwfxBHSuF1G8k0fWl0vWFUxzcwXijGQezDpnPGRSwmY1ZtqD1XQrEV8BWtGvBWeiaPKLywnsZSkyke9Va9W1nRUmjeORPX8K8zv7J7G6aJwcA8e9fQ4TGRrrzPm82yh4NqpTd6b69j70ooorsPECiiigD4y8OQLaWv2h2gEjnhZcjK+zdMn8fpXZW3iSx0q5gt9VQW3m25lyAWCknAXjnOAefU1z+nBzJbCO2kMSOAp8wkAEgE7SCO5/KvQbzwzY+INJkhuIUMyxnypcYZCBkc+me1fN5hVp869tez69j6qh7elhnGk7W/G4/4T6ZbPoNzfQptW5unK567QcAH6c/nW98QL8aJ4bhnRN0zXcIiUkAFgwYAnsODXO/BDVYptIvNHdh59tMZFBPJU8ZH0IP512HxQtbNvh9f3F2CTb7ZYSMZEgOF69Rk8j0rzKuElUzJym7pNW9NLHje2ao2RR+H98Nb8Nyzum2ZbuYSgEEBixYgHuORWD8WNMtk0K1vpk3LbXSFsdSpOCB9ePyrrPhfa2a/D6wuLUEG43SzE4yZCcNwOgyOB6Vx/xv1SKLSLPR0YGe4mEjKDyFHGT9Sf0oeDdLMoypae9/w4RrN0WmzAn8Q2Gs3k9rpZWURwCUSMhwSDyuOD0IrjfEUH2u0Ex8nzowWKw87R/tHPX2r1K08M2OgaTHBbwr5zRgSzdWckZPPpntXnl4kcX2iE21ycEqxkJC7RnBGAAcADk5616ODq0lUkqF2l1fXuezzV6mFSqu6fTW3kfXtFFFfTHyoUUUUAfJuk6ssH2ZI7bzN+MMX9wOgB554yR0NX9S+Iz6ZbXunLZst+u6ISZwoHQMB1zjnFcfoF9vtPs5MjMCdqKSAeOMgcnn14rvNK0vR9YuVur60guLqP5HKkhTjoSM4JxjPWvncZQw8J3rxbXkfTyr4nFQXs5Hmug6/feHdYi1Owl2zIeQeQwPUEdwa9M8afFTTvFvw/fT0ikttQeRC8RGVIBySCO2QOtHj/QfDkHheS8it4LS+jKiERYXeSQCCB14yc+1eQV3YadDHr20E046HgVqdShLkkev+DPirp3hL4fx6e8UlzqCSOUiAwoBOQST2yT0rzPXtfvvEWsS6nfy7pnPAHAUDoAOwFZdeweANB8OT+F47yW3gu76QsJhLhthBOAAenGDmrxMqGCTxM02328yaUJ1peziUtN+Ir6pb2WnNZs1+22IyZBUjoWI65xzis/xHMjM5mnuioY/u2j2hevOccj8e9bWqaZomj3X2q209Y5pj5WVcqEDAgkdhxxXBazdpbW0kEcshDsVCseVA4wQOD0615uFp4epP2mHi0n37nvxdfDw5azv+iPtWiiivoz5oKKKKAPgqzu2tLgSLnaeGHqO9dppGpSC7+0QhXVlEYXgAg87AOgHqevHrXBgVYgu5bZvlOVzyp6GsK9FVFbqduFxPs/dnselWvhrS9Tu1vbua4MWSTbNLuX8G64/WtTWPBeg3mmyCwtvs10qkxsjEhiBwCCTwfWuFg8Rxz2i2rn7PkgEgZGAc1qW+p3UWDbXX7jgbiSB1JOMHAHOMY6V4tSji1JOM2rPRf5nuPD4OUfcXNdatb39DptI8FaFZ6bGL61+03bKDIzsQFJHIABHA9ayLrQtD0rUPtNvd3AjJyLaN/l4ODlh/CCQD1IrNn1WR0RnnmeNGVnErhstghsZJGORjPpWPd6xbRTyPbbjuYtszleRzn17+lXTo4qc3Kc3Z9On4nPOlh4QS5UrdWzo77Xh9lnW8TYUYqqcFSvYZHXH0rz+8uTdztIRgdAB0AouryW7k3SMTjoPSq3Ir08NhY0bvuceNzGVamqEfhX3s+/qKKK6zygooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooA/9k="
+          alt="Rising Phoenix Games logo" />
+        <div style="display:flex;flex-direction:column;align-items:center;gap:2px;">
+          <h1 class="game-title">The Wandering Toad</h1>
+          <span class="game-subtitle">A perilous crossing through river and road</span>
+        </div>
+      </div>
+      <div class="header-right"></div>
+    </div>
+  </header>
+
+  <!-- ── MAIN ───────────────────────────────────────────────── -->
+  <main class="game-main">
+
+    <!-- Status Bar -->
+    <div class="status-bar">
+      <div class="stat-item">
+        <span class="stat-label">Score</span>
+        <span class="stat-value" id="scoreDisplay" style="color:#f0d080;">0</span>
+      </div>
+      <div class="stat-divider"></div>
+      <div class="stat-item">
+        <span class="stat-label">High</span>
+        <span class="stat-value" id="highDisplay" style="color:#c8952a;">0</span>
+      </div>
+      <div class="stat-divider"></div>
+      <div class="stat-item">
+        <span class="stat-label">Level</span>
+        <span class="stat-value" id="levelDisplay" style="color:#f0d080;">1</span>
+      </div>
+      <div class="stat-divider"></div>
+      <div class="stat-divider"></div>
+      <div class="stat-item" id="timerDisplay" style="display:none;">
+        <span class="stat-label">Time</span>
+        <span class="stat-value" id="timerVal" style="color:#f0d080;">30</span>
+      </div>
+      <div class="stat-item">
+        <span class="stat-label">Lives</span>
+        <div class="lives-display" id="livesDisplay">
+          <span class="life-icon">🐸</span>
+          <span class="life-icon">🐸</span>
+          <span class="life-icon">🐸</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Canvas -->
+    <div class="canvas-wrap" id="canvasWrap">
+      <canvas id="gameCanvas" width="520" height="520"></canvas>
+
+      <!-- Overlay -->
+      <div id="overlay">
+        <div class="overlay-title">The Wandering Toad</div>
+        <div class="overlay-sub">Guide the weary toad across perilous roads and treacherous rivers to reach the sanctuary beyond.</div>
+        <button class="rpg-btn" id="startBtn" style="font-size:13px;padding:10px 28px;">Begin the Crossing</button>
+        <div style="font-family:'IM Fell English',serif;font-style:italic;font-size:11px;color:rgba(180,150,80,0.6);margin-top:4px;">Arrow keys · WASD · or the d-pad below</div>
+      </div>
+
+      <!-- Victory Banner -->
+      <div id="victoryBanner">
+        <span class="banner-title">🐸 Safe Passage! 🐸</span>
+        <span class="banner-sub">The toad reaches the sacred shore</span>
+      </div>
+    </div>
+
+    <!-- D-Pad -->
+    <div class="dpad">
+      <button class="dpad-btn up"    id="btnUp"    aria-label="Up">▲</button>
+      <button class="dpad-btn left"  id="btnLeft"  aria-label="Left">◀</button>
+      <button class="dpad-btn right" id="btnRight" aria-label="Right">▶</button>
+      <button class="dpad-btn down"  id="btnDown"  aria-label="Down">▼</button>
+    </div>
+
+    <!-- Controls row -->
+    <div class="controls">
+      <button class="rpg-btn rpg-btn-crimson" id="restartBtn" style="display:none;">New Game</button>
+    </div>
+
+    <!-- Chronicle -->
+    <div class="chronicle-wrap">
+      <div class="chronicle-label">⚜ Chronicle of Crossings</div>
+      <div class="chronicle-scroll" id="chronicle"></div>
+    </div>
+
+  </main>
+
+  <!-- ── FOOTER ──────────────────────────────────────────────── -->
+  <footer class="game-footer">
+    <span>© <span id="year"></span> Rising Phoenix Gallery · Michigan City, IN</span>
+    <span style="color:rgba(180,150,90,0.55);">Crafted by John Ryszka II · <a href="https://www.risingphxgallery.com" style="color:var(--gold);text-decoration:none;">RisingPhxGallery.com</a></span>
+  </footer>
+</div>
+
+<script>
+document.getElementById('year').textContent = new Date().getFullYear();
+
+// ── CONSTANTS ──────────────────────────────────────────────────
+const COLS = 13;
+const ROWS = 13;
+const CELL = 40;
+const W = COLS * CELL;
+const H = ROWS * CELL;
+const canvas = document.getElementById('gameCanvas');
+const ctx = canvas.getContext('2d');
+canvas.width = W;
+canvas.height = H;
+const FROG_SIZE = 32;
+
+// Row layout (top=0, bottom=12):
+// 0: goal (lily pads)
+// 1-2: water-safe bank edges
+// 3: bank (safe)
+// 4-8: river
+// 9: median (safe)
+// 10-11: road
+// 12: ground (start)
+const ROW_TYPE = [];
+for (let r = 0; r < ROWS; r++) {
+  if (r === 0) ROW_TYPE[r] = 'goal';
+  else if (r <= 2) ROW_TYPE[r] = 'bank';
+  else if (r === 3) ROW_TYPE[r] = 'bank';
+  else if (r <= 8) ROW_TYPE[r] = 'river';
+  else if (r === 9) ROW_TYPE[r] = 'median';
+  else if (r <= 11) ROW_TYPE[r] = 'road';
+  else ROW_TYPE[r] = 'ground';
+}
+
+// ── LEVEL CONFIG TABLE ──────────────────────────────────────────
+// Each tier adds new hazards. Levels cycle through tiers 1-5 with speed scaling.
+// tier 1: basic (levels 1-2)
+// tier 2: shorter logs, more cars (levels 3-4)
+// tier 3: diving turtles (levels 5-6)
+// tier 4: snakes on logs (levels 7-8)
+// tier 5: fast lane + time pressure (levels 9+)
+function getLevelConfig(lvl) {
+  const tier = Math.min(Math.ceil(lvl / 2), 5);
+  const speedScale = 1 + (lvl - 1) * 0.08;   // 8% faster each level
+  const baseSpd = 0.038 * speedScale;
+
+  const cfg = {
+    tier,
+    speed: baseSpd,
+    logLen: Math.max(2, 4 - Math.floor(lvl / 3)),   // logs shrink: 4→3→2 cells wide
+    logCount: Math.min(4, 2 + Math.floor(lvl / 4)),  // more logs at higher levels
+    carCount: Math.min(5, 2 + Math.floor(lvl / 3)),  // more cars
+    divingTurtles: tier >= 3,   // turtles submerge periodically
+    hasSnakes: tier >= 4,       // snakes patrol logs
+    hasFastLane: tier >= 5,     // one extra-fast lane appears
+    timeLimit: tier >= 5 ? Math.max(15, 30 - lvl) : 0,  // seconds per frog; 0=none
+    bonusScore: 200 + lvl * 50,
+  };
+  return cfg;
+}
+
+// ── STATE ─────────────────────────────────────────────────────
+let lanes = [];
+let frog = {};
+let score = 0;
+let highScore = parseInt(localStorage.getItem('rpg_frogger_hs') || '0');
+let lives = 3;
+let level = 1;
+let gameRunning = false;
+let animId = null;
+let lastTime = 0;
+let goals = [];
+const NUM_GOALS = 5;
+let goalSlots = [];
+let snakes = [];          // [{laneIdx, x, dir, phase}]
+let turtleDiveTimer = 0;  // global timer for dive cycle
+let turtleDiving = false; // are turtles currently submerged?
+let timeLeft = 0;         // countdown timer per frog
+let timerActive = false;
+let cfg = null;           // current level config
+
+// ── HUD ───────────────────────────────────────────────────────
+const chronicle = document.getElementById('chronicle');
+function addChronicle(txt, cls) {
+  const el = document.createElement('div');
+  el.className = 'chronicle-entry' + (cls ? ' ' + cls : '');
+  el.textContent = txt;
+  chronicle.prepend(el);
+  while (chronicle.children.length > 20) chronicle.removeChild(chronicle.lastChild);
+}
+
+function updateHUD() {
+  document.getElementById('scoreDisplay').textContent = score;
+  document.getElementById('highDisplay').textContent = highScore;
+  document.getElementById('levelDisplay').textContent = level;
+  const ld = document.getElementById('livesDisplay');
+  for (let i = 0; i < ld.children.length; i++) {
+    ld.children[i].classList.toggle('lost', i >= lives);
+  }
+  // Timer display
+  const td = document.getElementById('timerDisplay');
+  if (cfg && cfg.timeLimit > 0) {
+    td.style.display = 'flex';
+    const secs = Math.ceil(timeLeft / 1000);
+    document.getElementById('timerVal').textContent = secs;
+    document.getElementById('timerVal').style.color = secs <= 5 ? '#ff6060' : '#f0d080';
+  } else {
+    td.style.display = 'none';
+  }
+}
+
+// ── INIT ──────────────────────────────────────────────────────
+function initGame() {
+  cfg = getLevelConfig(level);
+
+  frog = { col:6, row:ROWS-1, x:6*CELL+CELL/2, y:(ROWS-1)*CELL+CELL/2,
+           onLog:null, dead:false, deathTimer:0 };
+
+  goals = [];
+  goalSlots = [];
+  for (let i = 0; i < NUM_GOALS; i++) {
+    goalSlots.push(Math.round(i * (COLS-1) / (NUM_GOALS-1)));
+  }
+
+  snakes = [];
+  turtleDiveTimer = 0;
+  turtleDiving = false;
+
+  if (cfg.timeLimit > 0) {
+    timeLeft = cfg.timeLimit * 1000;
+    timerActive = true;
+  } else {
+    timeLeft = 0;
+    timerActive = false;
+  }
+
+  buildLanes();
+  updateHUD();
+}
+
+function buildLanes() {
+  const s = cfg.speed;
+  const ll = cfg.logLen;    // log length in cells
+  const lc = cfg.logCount;  // log count
+
+  lanes = [
+    // river rows 4-8
+    { row:4, dir:1,  speed:s*1.1,  type:'log',    entities:[] },
+    { row:5, dir:-1, speed:s*0.9,  type:'log',    entities:[] },
+    { row:6, dir:1,  speed:s*1.3,  type:'turtle', entities:[] },
+    { row:7, dir:-1, speed:s*0.85, type:'log',    entities:[] },
+    { row:8, dir:1,  speed:s*1.0,  type:'turtle', entities:[] },
+    // road rows 10-11
+    { row:10, dir:-1, speed:s*1.5, type:'car', entities:[] },
+    { row:11, dir:1,  speed:s*1.2, type:'car', entities:[] },
+  ];
+
+  // Fast lane at tier 5+
+  if (cfg.hasFastLane) {
+    lanes[5].speed = s * 2.8;  // row 10 becomes a speed demon lane
+    lanes[5].color = '#ff2020';
+  }
+
+  lanes.forEach(lane => spawnLane(lane, ll, lc));
+
+  // Snakes: one per log lane at tier 4+
+  if (cfg.hasSnakes) {
+    lanes.forEach((lane, idx) => {
+      if (lane.type === 'log' && lane.entities.length > 0) {
+        const e = lane.entities[0];
+        snakes.push({
+          laneIdx: idx,
+          x: e.x + e.w * 0.3,
+          localX: e.w * 0.3,   // offset within the log's coordinate system
+          phase: Math.random() * Math.PI * 2,
+          color: '#c84020'
+        });
+      }
+    });
+  }
+}
+
+function spawnLane(lane, logLen, logCount) {
+  lane.entities = [];
+  if (lane.type === 'log') {
+    const len = logLen;
+    const gap = Math.max(1.2, 2.5 - logCount * 0.2);
+    for (let i = 0; i < logCount + 1; i++) {
+      lane.entities.push({ x: i * (len + gap) * CELL, w: len * CELL, h: CELL * 0.62 });
+    }
+  } else if (lane.type === 'turtle') {
+    const count = Math.ceil(COLS / 3.5);
+    for (let i = 0; i < count; i++) {
+      lane.entities.push({ x: i * 3.4 * CELL, w: CELL * 1.4, h: CELL * 0.62, diving: false, divePhase: Math.random() * Math.PI * 2 });
+    }
+  } else if (lane.type === 'car') {
+    const count = cfg.carCount;
+    const gap = W / count;
+    for (let i = 0; i < count; i++) {
+      lane.entities.push({ x: i * gap, w: CELL * 1.5, h: CELL * 0.58, color: carColor() });
+    }
+  }
+}
+
+function carColor() {
+  const colors = ['#c0302a','#2a60c0','#b8a020','#20a040','#a020a0','#c06020'];
+  return colors[Math.floor(Math.random() * colors.length)];
+}
+
+// ── FROG MOVEMENT ─────────────────────────────────────────────
+function tryMove(dr, dc) {
+  if (!gameRunning || frog.dead) return;
+  const nr = frog.row + dr;
+  const nc = frog.col + dc;
+  if (nc < 0 || nc >= COLS || nr < 0 || nr >= ROWS) return;
+
+  frog.row = nr;
+  frog.col = nc;
+  frog.x = nc * CELL + CELL/2;
+  frog.y = nr * CELL + CELL/2;
+  frog.onLog = null;
+
+  if (dr < 0) { score += 10; updateHUD(); }
+  checkState();
+}
+
+// ── STATE CHECK ───────────────────────────────────────────────
+function checkState() {
+  const row = frog.row;
+  const type = ROW_TYPE[row];
+
+  if (type === 'ground' || type === 'median' || type === 'bank') return;
+
+  if (type === 'goal') {
+    const slot = goalSlots.find(s => s === frog.col);
+    if (slot !== undefined && !goals.includes(slot)) {
+      goals.push(slot);
+      const pts = cfg.bonusScore;
+      score += pts;
+      addChronicle(`Safe passage! +${pts}`, 'good');
+      updateHUD();
+      if (goals.length === NUM_GOALS) {
+        levelComplete();
+      } else {
+        // Reset timer for next frog
+        if (cfg.timeLimit > 0) { timeLeft = cfg.timeLimit * 1000; timerActive = true; }
+        setTimeout(() => resetFrog(), 500);
+      }
+    } else {
+      killFrog('Misstep at the lily pad!');
+    }
+    return;
+  }
+
+  if (type === 'river' || type === 'water-safe') {
+    if (type === 'water-safe') { killFrog('Swept into the current!'); return; }
+    const lane = lanes.find(l => l.row === row);
+    if (!lane) { killFrog('Fallen into the river!'); return; }
+    if (!isOnPlatform(lane)) { killFrog('Into the murky depths!'); }
+    else frog.onLog = lane;
+    return;
+  }
+
+  if (type === 'road') {
+    checkCarCollision();
+  }
+}
+
+function isOnPlatform(lane) {
+  const row = lane.row;
+  const fx = frog.x;
+  const fy = frog.y;
+  const ey = row * CELL + CELL * 0.19;
+  for (const e of lane.entities) {
+    if (lane.type === 'turtle' && e.diving) continue; // submerged turtle = no platform
+    if (fx > e.x + 4 && fx < e.x + e.w - 4 && fy > ey && fy < ey + e.h) {
+      return true;
+    }
+  }
+  return false;
+}
+
+function checkCarCollision() {
+  const row = frog.row;
+  const lane = lanes.find(l => l.row === row);
+  if (!lane) return;
+  const fx = frog.x;
+  const fw = FROG_SIZE * 0.55;
+  const ey = row * CELL + CELL * 0.21;
+  for (const car of lane.entities) {
+    if (fx + fw > car.x + 4 && fx - fw < car.x + car.w - 4) {
+      killFrog('Run down on the road!');
+      return;
+    }
+  }
+}
+
+function checkSnakeCollision() {
+  for (const sn of snakes) {
+    const lane = lanes[sn.laneIdx];
+    if (!lane) continue;
+    if (lane.row !== frog.row) continue;
+    const dist = Math.abs(frog.x - sn.x);
+    if (dist < 14) { killFrog('Bitten by a river serpent!'); return; }
+  }
+}
+
+function killFrog(reason) {
+  if (frog.dead) return;
+  frog.dead = true;
+  frog.deathTimer = 70;
+  timerActive = false;
+  lives--;
+  addChronicle(reason || 'The toad met its fate!', 'bad');
+  updateHUD();
+
+  if (lives <= 0) {
+    setTimeout(gameOver, 1300);
+  } else {
+    setTimeout(resetFrog, 1300);
+  }
+}
+
+function resetFrog() {
+  frog = { col:6, row:ROWS-1, x:6*CELL+CELL/2, y:(ROWS-1)*CELL+CELL/2,
+           onLog:null, dead:false, deathTimer:0 };
+  if (cfg.timeLimit > 0) { timeLeft = cfg.timeLimit * 1000; timerActive = true; }
+}
+
+// ── LEVEL / GAME OVER ─────────────────────────────────────────
+function levelComplete() {
+  gameRunning = false;
+  timerActive = false;
+  const tierMsg = [
+    '',
+    'The road is mastered.',
+    'Shorter logs, more peril.',
+    'The turtles breathe!',
+    'Serpents guard the river.',
+    'The current grows wild!'
+  ];
+  const nextTier = Math.min(Math.ceil((level+1)/2), 5);
+  const tierChange = nextTier > cfg.tier;
+
+  addChronicle(`Level ${level} conquered!`, 'good');
+  if (tierChange) addChronicle(tierMsg[nextTier], 'good');
+
+  fireConfetti();
+  showVictoryBanner(level);
+
+  setTimeout(() => {
+    level++;
+    score += 500 + level * 20;
+    lives = Math.min(lives + 1, 3);
+    updateHUD();
+    initGame();
+    gameRunning = true;
+    addChronicle(`Level ${level} begins — ${getTierName(cfg.tier)}...`);
+  }, 3000);
+}
+
+function getTierName(tier) {
+  return ['','Novice Crossing','The Shrinking Logs','The Breathing Turtles','Serpent Waters','The Wild Current'][tier] || 'Beyond Legend';
+}
+
+function gameOver() {
+  gameRunning = false;
+  timerActive = false;
+  if (score > highScore) {
+    highScore = score;
+    localStorage.setItem('rpg_frogger_hs', highScore);
+    addChronicle('New record! Legendary!', 'good');
+  }
+  updateHUD();
+
+  const overlay = document.getElementById('overlay');
+  overlay.innerHTML = `
+    <div class="overlay-title">Journey's End</div>
+    <div class="overlay-sub">The toad's legs carry it no further. It rests now in the reeds.</div>
+    <div class="overlay-score" style="color:#f0d080;font-family:'Cinzel',serif;font-size:22px;font-weight:700;letter-spacing:2px;">Score: ${score}</div>
+    <div style="font-family:'Cinzel',serif;font-size:11px;color:#a09060;letter-spacing:2px;">Reached Level ${level} · ${getTierName(cfg.tier)}</div>
+    ${score >= highScore ? '<div style="font-family:\'Cinzel\',serif;font-size:11px;color:#88d870;letter-spacing:2px;">✦ New Record ✦</div>' : ''}
+    <button class="rpg-btn" id="startBtn" style="font-size:13px;padding:10px 28px;margin-top:6px;">Try Again</button>
+  `;
+  overlay.classList.remove('hidden');
+  document.getElementById('startBtn').addEventListener('click', startGame);
+  document.getElementById('restartBtn').style.display = 'none';
+}
+
+// ── CONFETTI ──────────────────────────────────────────────────
+function fireConfetti() {
+  const wrap = document.getElementById('canvasWrap');
+  const colors = ['#f0d080','#c8952a','#88d870','#60b0ff','#ff9060','#ff60a0','#c0e040'];
+  for (let i = 0; i < 90; i++) {
+    const el = document.createElement('div');
+    el.className = 'confetti-piece';
+    const dx = (Math.random() - 0.5) * 320;
+    const dy = Math.random() * 420 + 80;
+    const dr = (Math.random() - 0.5) * 720 + 'deg';
+    const dur = Math.random() * 1.5 + 1;
+    el.style.cssText = `left:${Math.random()*100}%;top:${Math.random()*50}%;
+      background:${colors[Math.floor(Math.random()*colors.length)]};
+      --dx:${dx}px;--dy:${dy}px;--dr:${dr};
+      animation-duration:${dur}s;animation-delay:${Math.random()*0.5}s;
+      width:${Math.random()*8+4}px;height:${Math.random()*8+4}px;
+      border-radius:${Math.random()>0.5?'50%':'2px'};`;
+    wrap.appendChild(el);
+    setTimeout(() => el.remove(), (dur + 0.6) * 1000 + 400);
+  }
+}
+
+function showVictoryBanner(lvl) {
+  const banner = document.getElementById('victoryBanner');
+  const wrap = document.getElementById('canvasWrap');
+  banner.querySelector('.banner-title').textContent = lvl % 5 === 0 ? '🏆 Legendary Crossing! 🏆' : '🐸 Safe Passage! 🐸';
+  banner.querySelector('.banner-sub').textContent = `Level ${lvl} complete — ${getTierName(cfg.tier)}`;
+  banner.style.maxWidth = (wrap.clientWidth * 0.88) + 'px';
+  banner.style.display = 'block';
+  banner.style.opacity = '1';
+  banner.style.transform = 'translate(-50%, -50%) scale(0.05)';
+  banner.style.transition = 'transform 0.75s cubic-bezier(0.175, 0.885, 0.32, 1.275)';
+  requestAnimationFrame(() => requestAnimationFrame(() => {
+    banner.style.transform = 'translate(-50%, -50%) scale(1)';
+  }));
+  setTimeout(() => {
+    banner.style.transition = 'transform 0.3s ease-in, opacity 0.3s ease-in';
+    banner.style.opacity = '0';
+    banner.style.transform = 'translate(-50%, -50%) scale(0.9)';
+    setTimeout(() => { banner.style.display = 'none'; banner.style.opacity = '1'; }, 320);
+  }, 750 + 1000);
+}
+
+// ── DRAW ──────────────────────────────────────────────────────
+function drawRow(r) {
+  const type = ROW_TYPE[r];
+  const y = r * CELL;
+
+  if (type === 'ground') {
+    ctx.fillStyle = '#1a2a10';
+    ctx.fillRect(0, y, W, CELL);
+    ctx.fillStyle = 'rgba(40,80,20,0.35)';
+    for (let gx = 0; gx < W; gx += 8) ctx.fillRect(gx + Math.sin(gx+r)*2, y+CELL-7, 2, 7);
+  } else if (type === 'road') {
+    const isFast = cfg.hasFastLane && r === 10;
+    ctx.fillStyle = isFast ? '#2a1010' : '#1c1c1c';
+    ctx.fillRect(0, y, W, CELL);
+    ctx.strokeStyle = isFast ? 'rgba(255,60,60,0.3)' : 'rgba(200,180,50,0.2)';
+    ctx.setLineDash([20,15]); ctx.lineWidth = 1.5;
+    ctx.beginPath(); ctx.moveTo(0, y+CELL/2); ctx.lineTo(W, y+CELL/2); ctx.stroke();
+    ctx.setLineDash([]);
+    if (isFast) {
+      ctx.fillStyle = 'rgba(255,40,40,0.06)';
+      ctx.fillRect(0, y, W, CELL);
+    }
+  } else if (type === 'median') {
+    ctx.fillStyle = '#1e3010';
+    ctx.fillRect(0, y, W, CELL);
+    ctx.fillStyle = 'rgba(100,180,40,0.12)';
+    for (let gx = 0; gx < W; gx += 12) ctx.fillRect(gx, y+4, 6, CELL-8);
+  } else if (type === 'river') {
+    ctx.fillStyle = '#0a1e3a';
+    ctx.fillRect(0, y, W, CELL);
+    ctx.strokeStyle = 'rgba(60,120,200,0.18)';
+    ctx.lineWidth = 1; ctx.setLineDash([6,10]);
+    ctx.beginPath(); ctx.moveTo(0, y+CELL*0.35); ctx.lineTo(W, y+CELL*0.35); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(0, y+CELL*0.72); ctx.lineTo(W, y+CELL*0.72); ctx.stroke();
+    ctx.setLineDash([]);
+  } else if (type === 'bank') {
+    ctx.fillStyle = '#1a3010';
+    ctx.fillRect(0, y, W, CELL);
+    // subtle grass suggestion on safe ground
+    ctx.fillStyle = 'rgba(60,120,30,0.18)';
+    for (let gx = 0; gx < W; gx += 10) ctx.fillRect(gx, y + CELL - 6, 3, 6);
+  } else if (type === 'goal') {
+    ctx.fillStyle = '#081828';
+    ctx.fillRect(0, y, W, CELL);
+    goalSlots.forEach(col => {
+      const gx = col * CELL;
+      const filled = goals.includes(col);
+      ctx.fillStyle = filled ? '#2a7a20' : 'rgba(30,80,15,0.45)';
+      ctx.beginPath();
+      ctx.ellipse(gx+CELL/2, y+CELL/2, CELL*0.42, CELL*0.35, 0, 0, Math.PI*2);
+      ctx.fill();
+      ctx.strokeStyle = filled ? '#60c050' : 'rgba(60,140,30,0.38)';
+      ctx.lineWidth = 1.5; ctx.stroke();
+      if (filled) {
+        ctx.font = '18px serif';
+        ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+        ctx.fillText('🐸', gx+CELL/2, y+CELL/2);
+      }
+    });
+  }
+}
+
+function drawLane(lane, laneIdx) {
+  const row = lane.row;
+  const y = row * CELL;
+  const ey = y + CELL * 0.19;
+
+  lane.entities.forEach(e => {
+    const ex = e.x, ew = e.w, eh = e.h;
+
+    if (lane.type === 'log') {
+      const grad = ctx.createLinearGradient(ex, ey, ex, ey+eh);
+      grad.addColorStop(0, '#8B5E3C');
+      grad.addColorStop(0.5, '#6B3E1C');
+      grad.addColorStop(1, '#5a3010');
+      ctx.fillStyle = grad;
+      ctx.beginPath(); ctx.roundRect(ex, ey, ew, eh, 5); ctx.fill();
+      ctx.strokeStyle = 'rgba(0,0,0,0.22)'; ctx.lineWidth = 1;
+      for (let gx = ex+18; gx < ex+ew-10; gx+=18) {
+        ctx.beginPath(); ctx.moveTo(gx, ey+2); ctx.lineTo(gx, ey+eh-2); ctx.stroke();
+      }
+      ctx.strokeStyle = 'rgba(255,200,100,0.14)'; ctx.lineWidth = 1.5;
+      ctx.beginPath(); ctx.moveTo(ex+6, ey+2); ctx.lineTo(ex+ew-6, ey+2); ctx.stroke();
+
+    } else if (lane.type === 'turtle') {
+      const alpha = e.diving ? 0.3 : 1;
+      ctx.globalAlpha = alpha;
+      ctx.fillStyle = e.diving ? '#1a4a14' : '#2a6a20';
+      ctx.beginPath(); ctx.ellipse(ex+ew/2, ey+eh/2, ew/2, eh/2, 0, 0, Math.PI*2); ctx.fill();
+      ctx.strokeStyle = e.diving ? '#2a7020' : '#60b050'; ctx.lineWidth = 1.5; ctx.stroke();
+      if (!e.diving) {
+        ctx.strokeStyle = 'rgba(40,120,30,0.55)'; ctx.lineWidth = 1;
+        ctx.beginPath(); ctx.moveTo(ex+ew/2,ey); ctx.lineTo(ex+ew/2,ey+eh); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(ex,ey+eh/2); ctx.lineTo(ex+ew,ey+eh/2); ctx.stroke();
+        ctx.fillStyle = '#ffd060';
+        ctx.beginPath(); ctx.arc(ex+ew/2-4, ey+eh*0.28, 2, 0, Math.PI*2); ctx.fill();
+        ctx.beginPath(); ctx.arc(ex+ew/2+4, ey+eh*0.28, 2, 0, Math.PI*2); ctx.fill();
+      }
+      ctx.globalAlpha = 1;
+
+    } else if (lane.type === 'car') {
+      const isFast = cfg.hasFastLane && row === 10;
+      ctx.fillStyle = isFast ? '#ff2020' : e.color;
+      ctx.beginPath(); ctx.roundRect(ex, ey, ew, eh, 4); ctx.fill();
+      if (isFast) {
+        ctx.strokeStyle = 'rgba(255,180,60,0.6)'; ctx.lineWidth = 1.5; ctx.stroke();
+      }
+      ctx.fillStyle = 'rgba(150,220,255,0.55)';
+      if (lane.dir > 0) ctx.fillRect(ex+ew*0.62, ey+3, ew*0.22, eh-8);
+      else ctx.fillRect(ex+ew*0.16, ey+3, ew*0.22, eh-8);
+      ctx.fillStyle = '#ffee80';
+      const lx = lane.dir > 0 ? ex+ew-5 : ex+2;
+      ctx.fillRect(lx, ey+5, 3, eh-13);
+      ctx.fillStyle = 'rgba(255,255,255,0.1)';
+      ctx.fillRect(ex+4, ey+2, ew-8, 2.5);
+    }
+  });
+}
+
+function drawSnakes() {
+  snakes.forEach(sn => {
+    const lane = lanes[sn.laneIdx];
+    if (!lane) return;
+    if (frog.row !== lane.row) return; // only draw when frog is in that row? No - always draw
+    // Actually draw always so player can see the snake
+    const y = lane.row * CELL + CELL * 0.5;
+    const x = sn.x;
+    const t = performance.now() / 600;
+    // Serpentine body
+    ctx.save();
+    ctx.strokeStyle = sn.color;
+    ctx.lineWidth = 5;
+    ctx.lineCap = 'round';
+    ctx.beginPath();
+    for (let i = 0; i <= 10; i++) {
+      const bx = x - 20 + i * 4;
+      const by = y + Math.sin(t + i * 0.8) * 6;
+      if (i === 0) ctx.moveTo(bx, by);
+      else ctx.lineTo(bx, by);
+    }
+    ctx.stroke();
+    // Head
+    ctx.fillStyle = '#e04020';
+    ctx.beginPath(); ctx.arc(x + 20, y + Math.sin(t) * 5, 5, 0, Math.PI*2); ctx.fill();
+    // Tongue
+    ctx.strokeStyle = '#ff4060'; ctx.lineWidth = 1.5;
+    const hx = x+26, hy = y + Math.sin(t)*5;
+    ctx.beginPath(); ctx.moveTo(hx, hy); ctx.lineTo(hx+5, hy-2); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(hx, hy); ctx.lineTo(hx+5, hy+2); ctx.stroke();
+    ctx.restore();
+  });
+}
+
+function drawTimer() {
+  if (!cfg || cfg.timeLimit <= 0) return;
+  const secs = Math.ceil(timeLeft / 1000);
+  const frac = timeLeft / (cfg.timeLimit * 1000);
+  const barW = W * frac;
+  const barH = 4;
+  const barY = ROWS * CELL - barH;
+  ctx.fillStyle = secs <= 5 ? '#ff3030' : secs <= 10 ? '#ff9020' : '#40c040';
+  ctx.fillRect(0, barY, barW, barH);
+  // Flash at low time
+  if (secs <= 5 && Math.floor(performance.now() / 250) % 2 === 0) {
+    ctx.fillStyle = 'rgba(255,60,60,0.15)';
+    ctx.fillRect(0, 0, W, H);
+  }
+}
+
+function drawFrog() {
+  if (frog.dead) {
+    const t = frog.deathTimer / 70;
+    ctx.save();
+    ctx.globalAlpha = t * 0.85;
+    ctx.translate(frog.x, frog.y);
+    ctx.rotate((1 - t) * Math.PI * 5);
+    ctx.scale(t * 1.2, t * 1.2);
+    ctx.font = `${FROG_SIZE}px serif`;
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillText('💀', 0, 0);
+    ctx.restore();
+    return;
+  }
+  ctx.save();
+  ctx.translate(frog.x, frog.y);
+  ctx.shadowColor = 'rgba(60,200,60,0.6)';
+  ctx.shadowBlur = 12;
+  // Body
+  ctx.fillStyle = '#2a8a30';
+  ctx.beginPath(); ctx.ellipse(0, 2, FROG_SIZE*0.38, FROG_SIZE*0.3, 0, 0, Math.PI*2); ctx.fill();
+  // Head
+  ctx.fillStyle = '#30a038';
+  ctx.beginPath(); ctx.ellipse(0, -FROG_SIZE*0.2, FROG_SIZE*0.28, FROG_SIZE*0.22, 0, 0, Math.PI*2); ctx.fill();
+  // Eyes
+  ctx.fillStyle = '#e8d060';
+  ctx.beginPath(); ctx.arc(-FROG_SIZE*0.15, -FROG_SIZE*0.3, FROG_SIZE*0.1, 0, Math.PI*2); ctx.fill();
+  ctx.beginPath(); ctx.arc(FROG_SIZE*0.15, -FROG_SIZE*0.3, FROG_SIZE*0.1, 0, Math.PI*2); ctx.fill();
+  ctx.fillStyle = '#1a1a1a';
+  ctx.beginPath(); ctx.arc(-FROG_SIZE*0.14, -FROG_SIZE*0.3, FROG_SIZE*0.055, 0, Math.PI*2); ctx.fill();
+  ctx.beginPath(); ctx.arc(FROG_SIZE*0.14, -FROG_SIZE*0.3, FROG_SIZE*0.055, 0, Math.PI*2); ctx.fill();
+  // Legs
+  ctx.fillStyle = '#206820';
+  ctx.beginPath(); ctx.ellipse(-FROG_SIZE*0.38, FROG_SIZE*0.18, FROG_SIZE*0.16, FROG_SIZE*0.1, -0.6, 0, Math.PI*2); ctx.fill();
+  ctx.beginPath(); ctx.ellipse(FROG_SIZE*0.38, FROG_SIZE*0.18, FROG_SIZE*0.16, FROG_SIZE*0.1, 0.6, 0, Math.PI*2); ctx.fill();
+  // Belly
+  ctx.fillStyle = 'rgba(180,240,120,0.28)';
+  ctx.beginPath(); ctx.ellipse(0, 4, FROG_SIZE*0.22, FROG_SIZE*0.18, 0, 0, Math.PI*2); ctx.fill();
+  ctx.restore();
+}
+
+function draw() {
+  ctx.clearRect(0, 0, W, H);
+  for (let r = 0; r < ROWS; r++) drawRow(r);
+  lanes.forEach((lane, i) => drawLane(lane, i));
+  drawSnakes();
+  drawFrog();
+  drawTimer();
+  // Vignette
+  const vg = ctx.createRadialGradient(W/2, H/2, H*0.3, W/2, H/2, H*0.75);
+  vg.addColorStop(0, 'transparent');
+  vg.addColorStop(1, 'rgba(0,0,0,0.32)');
+  ctx.fillStyle = vg; ctx.fillRect(0, 0, W, H);
+}
+
+// ── UPDATE ────────────────────────────────────────────────────
+function update(dt) {
+  // Move lanes
+  lanes.forEach(lane => {
+    const dx = lane.dir * lane.speed * dt;
+    lane.entities.forEach(e => {
+      e.x += dx;
+      if (lane.dir > 0 && e.x > W) e.x = -e.w;
+      if (lane.dir < 0 && e.x + e.w < 0) e.x = W;
+    });
+  });
+
+  // Turtle dive cycle (tier 3+)
+  if (cfg.divingTurtles) {
+    turtleDiveTimer += dt;
+    // Cycle: 3s visible, 2s submerged
+    const cycleDur = 5000;
+    const divePhaseDur = 2000;
+    const phase = turtleDiveTimer % cycleDur;
+    const shouldDive = phase > (cycleDur - divePhaseDur);
+    if (shouldDive !== turtleDiving) {
+      turtleDiving = shouldDive;
+      // Kill frog if on a now-diving turtle
+      if (turtleDiving && !frog.dead && frog.onLog) {
+        const laneRow = frog.onLog.row;
+        const laneType = frog.onLog.type;
+        if (laneType === 'turtle') {
+          // Delay slightly so player sees the dive start
+          setTimeout(() => { if (!frog.dead) killFrog('The turtle dives beneath!'); }, 400);
+        }
+      }
+    }
+    lanes.forEach(lane => {
+      if (lane.type === 'turtle') {
+        lane.entities.forEach(e => { e.diving = shouldDive; });
+      }
+    });
+  }
+
+  // Move snakes along their log (relative to log movement, snakes patrol back and forth)
+  snakes.forEach(sn => {
+    const lane = lanes[sn.laneIdx];
+    if (!lane) return;
+    const dx = lane.dir * lane.speed * dt;
+    sn.x += dx;
+    // patrol oscillation
+    sn.phase += dt * 0.0015;
+    const osc = Math.sin(sn.phase) * CELL * 1.2;
+    // find reference log
+    if (lane.entities.length > 0) {
+      const ref = lane.entities.reduce((best, e) => {
+        return Math.abs(e.x + e.w/2 - sn.x) < Math.abs(best.x + best.w/2 - sn.x) ? e : best;
+      }, lane.entities[0]);
+      sn.x = ref.x + ref.w/2 + osc;
+    }
+    // Wrap
+    if (sn.x > W + 40) sn.x = -40;
+    if (sn.x < -40) sn.x = W + 40;
+  });
+
+  // Ride log
+  if (!frog.dead && frog.onLog) {
+    const lane = frog.onLog;
+    const dx = lane.dir * lane.speed * dt;
+    frog.x += dx;
+    frog.col = Math.round((frog.x - CELL/2) / CELL);
+    if (!isOnPlatform(lane) || frog.x < 0 || frog.x > W) {
+      killFrog('Carried off the edge!');
+    }
+  }
+
+  // Continuous road collision
+  if (!frog.dead && ROW_TYPE[frog.row] === 'road') {
+    checkCarCollision();
+  }
+
+  // Continuous snake collision (if on river row that has snake)
+  if (!frog.dead && cfg.hasSnakes && ROW_TYPE[frog.row] === 'river') {
+    checkSnakeCollision();
+  }
+
+  // Timer countdown
+  if (timerActive && !frog.dead && cfg.timeLimit > 0) {
+    timeLeft -= dt;
+    if (timeLeft <= 0) {
+      timeLeft = 0;
+      killFrog('Time runs out!');
+    }
+    updateHUD();
+  }
+
+  // Death timer
+  if (frog.dead && frog.deathTimer > 0) frog.deathTimer--;
+}
+
+// ── MAIN LOOP ─────────────────────────────────────────────────
+function gameLoop(ts) {
+  const dt = Math.min(ts - lastTime, 50);
+  lastTime = ts;
+  if (gameRunning) { update(dt); draw(); }
+  animId = requestAnimationFrame(gameLoop);
+}
+
+// ── START ─────────────────────────────────────────────────────
+function startGame() {
+  document.getElementById('overlay').classList.add('hidden');
+  document.getElementById('restartBtn').style.display = 'inline-flex';
+  score = 0; lives = 3; level = 1;
+  updateHUD();
+  initGame();
+  gameRunning = true;
+  addChronicle('A new toad sets forth...', 'good');
+  addChronicle(getTierName(1) + ' awaits.');
+  if (!animId) { lastTime = performance.now(); animId = requestAnimationFrame(gameLoop); }
+}
+
+// ── INPUT ─────────────────────────────────────────────────────
+document.addEventListener('keydown', e => {
+  if (!gameRunning) return;
+  switch(e.key) {
+    case 'ArrowUp':   case 'w': case 'W': e.preventDefault(); tryMove(-1,0); break;
+    case 'ArrowDown': case 's': case 'S': e.preventDefault(); tryMove(1,0);  break;
+    case 'ArrowLeft': case 'a': case 'A': e.preventDefault(); tryMove(0,-1); break;
+    case 'ArrowRight':case 'd': case 'D': e.preventDefault(); tryMove(0,1);  break;
+  }
+});
+document.getElementById('btnUp').addEventListener('click',    () => tryMove(-1,0));
+document.getElementById('btnDown').addEventListener('click',  () => tryMove(1,0));
+document.getElementById('btnLeft').addEventListener('click',  () => tryMove(0,-1));
+document.getElementById('btnRight').addEventListener('click', () => tryMove(0,1));
+
+let touchStartX=0, touchStartY=0;
+canvas.addEventListener('touchstart', e => { touchStartX=e.touches[0].clientX; touchStartY=e.touches[0].clientY; e.preventDefault(); }, {passive:false});
+canvas.addEventListener('touchend',   e => {
+  const dx=e.changedTouches[0].clientX-touchStartX, dy=e.changedTouches[0].clientY-touchStartY;
+  if (Math.max(Math.abs(dx),Math.abs(dy))<15) return;
+  Math.abs(dy)>Math.abs(dx) ? tryMove(dy<0?-1:1,0) : tryMove(0,dx<0?-1:1);
+  e.preventDefault();
+}, {passive:false});
+
+document.getElementById('restartBtn').addEventListener('click', () => {
+  document.getElementById('overlay').classList.add('hidden');
+  score=0; lives=3; level=1;
+  updateHUD(); initGame(); gameRunning=true;
+  addChronicle('The toad begins anew...','good');
+});
+
+document.getElementById('startBtn').addEventListener('click', startGame);
+
+// ── BOOT ──────────────────────────────────────────────────────
+cfg = getLevelConfig(1);
+updateHUD();
+draw();
+lastTime = performance.now();
+animId = requestAnimationFrame(gameLoop);
+</script>
+</body>
+</html>

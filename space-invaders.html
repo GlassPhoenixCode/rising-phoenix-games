@@ -1,0 +1,1103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Space Invaders — Rising Phoenix Games</title>
+  <link rel="stylesheet" href="shared.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700;900&family=Cinzel+Decorative:wght@400;700&family=IM+Fell+English:ital@0;1&display=swap" rel="stylesheet" />
+  <style>
+    /* ── SHELL ─────────────────────────────────────── */
+    html, body { height: 100%; margin: 0; padding: 0; }
+    body {
+      display: flex; flex-direction: column;
+      background:
+        radial-gradient(ellipse 90% 55% at 15% 8%,  rgba(10,40,90,0.7)  0%, transparent 58%),
+        radial-gradient(ellipse 70% 65% at 85% 90%, rgba(5,20,60,0.6)   0%, transparent 55%),
+        radial-gradient(ellipse 60% 40% at 50% 50%, rgba(30,18,5,0.4)   0%, transparent 70%),
+        linear-gradient(160deg, #080c18 0%, #0a0d1a 45%, #0f0c07 100%);
+      background-attachment: fixed;
+      overflow: hidden;
+    }
+
+    /* ── HEADER ────────────────────────────────────── */
+    .game-header {
+      display: flex;
+      align-items: center;
+      padding: 10px 18px;
+      background: linear-gradient(180deg, #0e0a1e 0%, #080612 100%);
+      border-bottom: 2px solid #c8952a;
+      box-shadow: 0 4px 24px rgba(0,0,0,0.8);
+      flex-shrink: 0;
+      position: relative;
+      z-index: 10;
+    }
+    .header-left  { flex: 1; display: flex; align-items: center; }
+    .header-center { flex: 2; display: flex; align-items: center; justify-content: center; gap: 12px; }
+    .header-right  { flex: 1; }
+
+    .rpg-logo {
+      width: 40px; height: 40px;
+      filter: drop-shadow(0 0 8px rgba(200,149,42,0.5));
+      flex-shrink: 0;
+    }
+
+    .game-title {
+      font-family: 'Cinzel Decorative', serif;
+      font-size: clamp(14px, 2.5vw, 22px);
+      font-weight: 700;
+      letter-spacing: 2px;
+      background: linear-gradient(135deg, #f0d080 0%, #c8952a 50%, #f0d080 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      white-space: nowrap;
+      margin: 0;
+    }
+
+    /* ── SCORE BAR ─────────────────────────────────── */
+    .score-bar {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 30px;
+      padding: 6px 18px;
+      background: rgba(0,0,0,0.5);
+      border-bottom: 1px solid rgba(200,149,42,0.2);
+      flex-shrink: 0;
+      flex-wrap: wrap;
+    }
+    .score-item {
+      display: flex; flex-direction: column; align-items: center;
+    }
+    .score-label {
+      font-family: 'Cinzel', serif;
+      font-size: 9px; letter-spacing: 2px;
+      text-transform: uppercase;
+      color: #c8952a;
+    }
+    .score-value {
+      font-family: 'Cinzel', serif;
+      font-size: 18px; font-weight: 700;
+      color: #f0d080;
+      letter-spacing: 2px;
+      line-height: 1;
+    }
+    .lives-display { display: flex; gap: 5px; align-items: center; margin-top: 2px; }
+    .life-ship {
+      font-size: 16px;
+      filter: drop-shadow(0 0 4px rgba(100,200,255,0.7));
+    }
+
+    /* ── CANVAS WRAPPER ────────────────────────────── */
+    #canvas-wrap {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      overflow: hidden;
+      min-height: 0;
+    }
+
+    #gameCanvas {
+      display: block;
+      image-rendering: pixelated;
+      border: 1px solid rgba(200,149,42,0.3);
+      box-shadow: 0 0 40px rgba(0,0,100,0.4), 0 0 80px rgba(0,0,60,0.2);
+    }
+
+    /* Starfield behind canvas */
+    #starfield {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      z-index: 0;
+    }
+    #gameCanvas { position: relative; z-index: 1; }
+
+    /* ── OVERLAY SCREENS ───────────────────────────── */
+    .overlay {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      background: rgba(5,5,20,0.88);
+      z-index: 20;
+      gap: 18px;
+    }
+    .overlay h2 {
+      font-family: 'Cinzel Decorative', serif;
+      font-size: clamp(22px, 4vw, 36px);
+      letter-spacing: 3px;
+      background: linear-gradient(135deg, #f0d080, #c8952a, #f0d080);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin: 0;
+      text-align: center;
+    }
+    .overlay p {
+      font-family: 'IM Fell English', serif;
+      font-style: italic;
+      color: #c8a878;
+      font-size: 15px;
+      text-align: center;
+      margin: 0;
+      max-width: 380px;
+    }
+    .overlay .high-score-disp {
+      font-family: 'Cinzel', serif;
+      font-size: 13px;
+      letter-spacing: 2px;
+      color: #f0d080;
+    }
+    .hidden { display: none !important; }
+
+    /* ── VICTORY MESSAGE ───────────────────────────── */
+    #victoryMsg {
+      position: absolute;
+      left: 50%; top: 50%;
+      transform: translate(-50%, -50%) scale(0);
+      z-index: 30;
+      background: linear-gradient(160deg, rgba(30,18,8,0.97) 0%, rgba(15,12,7,0.97) 100%);
+      border: 2px solid #c8952a;
+      border-radius: 12px;
+      padding: 20px 32px;
+      text-align: center;
+      box-shadow: 0 0 40px rgba(200,149,42,0.5), inset 0 0 20px rgba(0,0,0,0.5);
+      white-space: nowrap;
+      pointer-events: none;
+    }
+    #victoryMsg h3 {
+      font-family: 'Cinzel Decorative', serif;
+      font-size: clamp(18px, 3vw, 28px);
+      background: linear-gradient(135deg, #f0d080, #c8952a, #f0d080);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin: 0 0 8px 0;
+      letter-spacing: 2px;
+    }
+    #victoryMsg p {
+      font-family: 'IM Fell English', serif;
+      font-style: italic;
+      color: #c8a878;
+      font-size: 14px;
+      margin: 0;
+    }
+
+    /* ── CONFETTI ──────────────────────────────────── */
+    .confetti-piece {
+      position: absolute;
+      width: 8px; height: 10px;
+      pointer-events: none;
+      z-index: 25;
+      border-radius: 2px;
+    }
+
+    /* ── BUTTONS ───────────────────────────────────── */
+    .rpg-btn {
+      font-family: 'Cinzel', serif;
+      font-size: 11px; font-weight: 600;
+      letter-spacing: 1.5px; text-transform: uppercase;
+      color: #f0d080;
+      background: linear-gradient(180deg, #2a2010 0%, #1a1508 100%);
+      border: 1px solid #c8952a;
+      padding: 9px 22px;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: all 0.15s;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.5);
+    }
+    .rpg-btn:hover {
+      background: linear-gradient(180deg, #3a2c14 0%, #241a09 100%);
+      border-color: #f0d080;
+      box-shadow: 0 2px 14px rgba(200,149,42,0.35);
+      transform: translateY(-1px);
+    }
+
+    /* ── FOOTER ────────────────────────────────────── */
+    .game-footer {
+      padding: 6px 20px 10px;
+      border-top: 1px solid rgba(200,149,42,0.1);
+      font-family: 'IM Fell English', serif;
+      font-style: italic;
+      font-size: 11px;
+      color: rgba(200,170,100,0.45);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-shrink: 0;
+    }
+
+    /* Mobile */
+    @media (max-width: 600px) {
+      .score-bar { gap: 14px; }
+      .score-value { font-size: 15px; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- Starfield canvas -->
+<canvas id="starfield"></canvas>
+
+<div style="display:flex;flex-direction:column;height:100%;position:relative;z-index:1;">
+
+  <!-- HEADER -->
+  <header class="game-header">
+    <div class="header-left">
+      <a href="index.html" class="rpg-back" style="font-family:'Cinzel',serif;font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:#a09070;text-decoration:none;display:inline-flex;align-items:center;gap:6px;transition:color 0.15s;white-space:nowrap;" onmouseover="this.style.color='#f0d080'" onmouseout="this.style.color='#a09070'">← Hub</a>
+    </div>
+    <div class="header-center">
+      <img src="data:image/png;base64,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" alt="Rising Phoenix Games" class="rpg-logo" />
+      <h1 class="game-title">Space Invaders</h1>
+    </div>
+    <div class="header-right"></div>
+  </header>
+
+  <!-- SCORE BAR -->
+  <div class="score-bar">
+    <div class="score-item">
+      <span class="score-label">Score</span>
+      <span class="score-value" id="scoreDisp">0</span>
+    </div>
+    <div class="score-item">
+      <span class="score-label">High Score</span>
+      <span class="score-value" id="hiDisp">0</span>
+    </div>
+    <div class="score-item">
+      <span class="score-label">Wave</span>
+      <span class="score-value" id="waveDisp">1</span>
+    </div>
+    <div class="score-item">
+      <span class="score-label">Lives</span>
+      <div class="lives-display" id="livesDisp">
+        <span class="life-ship">🚀</span>
+        <span class="life-ship">🚀</span>
+        <span class="life-ship">🚀</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- CANVAS AREA -->
+  <div id="canvas-wrap">
+    <canvas id="gameCanvas"></canvas>
+
+    <!-- START SCREEN -->
+    <div class="overlay" id="startScreen">
+      <h2>Space Invaders</h2>
+      <p>The alien armada descends upon the realm. Man the phoenix cannon — defend the stars or perish in darkness.</p>
+      <div class="high-score-disp" id="startHiScore">High Score: 0</div>
+      <button class="rpg-btn" onclick="startGame()">Begin the Siege</button>
+      <p style="font-size:12px;color:#a09070;margin-top:8px;">Arrow Keys / WASD · Space to fire · Touch controls on mobile</p>
+    </div>
+
+    <!-- GAME OVER SCREEN -->
+    <div class="overlay hidden" id="gameOverScreen">
+      <h2>The Realm Falls</h2>
+      <p>The invaders overwhelm your defenses. The stars grow dark. But the phoenix rises again...</p>
+      <div class="high-score-disp" id="goScore">Score: 0 &nbsp;|&nbsp; High Score: 0</div>
+      <button class="rpg-btn" onclick="startGame()">Rise Again</button>
+    </div>
+
+    <!-- VICTORY MESSAGE (wave clear) -->
+    <div id="victoryMsg" class="hidden">
+      <h3 id="victoryTitle">Wave Cleared!</h3>
+      <p id="victorySubtitle">The skies are quiet... for now.</p>
+    </div>
+
+  </div>
+
+  <!-- FOOTER -->
+  <footer class="game-footer">
+    <span>© <span id="year"></span> Rising Phoenix Gallery · Michigan City, IN</span>
+    <span>Crafted by John Ryszka II</span>
+  </footer>
+
+</div>
+
+<script>
+// ══════════════════════════════════════════════════════════════
+//  SPACE INVADERS — Rising Phoenix Games
+// ══════════════════════════════════════════════════════════════
+
+document.getElementById('year').textContent = new Date().getFullYear();
+
+// ── STARFIELD ────────────────────────────────────────────────
+(function() {
+  const sf = document.getElementById('starfield');
+  const ctx = sf.getContext('2d');
+  let stars = [];
+  function resize() {
+    sf.width = window.innerWidth;
+    sf.height = window.innerHeight;
+    stars = Array.from({length: 200}, () => ({
+      x: Math.random() * sf.width,
+      y: Math.random() * sf.height,
+      r: Math.random() * 1.5 + 0.3,
+      a: Math.random(),
+      speed: Math.random() * 0.3 + 0.05,
+      twinkleSpeed: Math.random() * 0.02 + 0.005
+    }));
+  }
+  resize();
+  window.addEventListener('resize', resize);
+  let t = 0;
+  function drawStars() {
+    ctx.clearRect(0, 0, sf.width, sf.height);
+    t += 1;
+    stars.forEach(s => {
+      s.a = 0.3 + 0.7 * Math.abs(Math.sin(t * s.twinkleSpeed));
+      ctx.beginPath();
+      ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
+      ctx.fillStyle = `rgba(200,210,255,\${s.a})`;
+      ctx.fill();
+    });
+    requestAnimationFrame(drawStars);
+  }
+  drawStars();
+})();
+
+// ── CANVAS SETUP ─────────────────────────────────────────────
+const canvas = document.getElementById('gameCanvas');
+const ctx = canvas.getContext('2d');
+const wrap = document.getElementById('canvas-wrap');
+
+const BASE_W = 480;
+const BASE_H = 560;
+let scale = 1;
+
+function resizeCanvas() {
+  const availW = wrap.clientWidth  - 20;
+  const availH = wrap.clientHeight - 20;
+  scale = Math.min(availW / BASE_W, availH / BASE_H, 2);
+  canvas.width  = BASE_W;
+  canvas.height = BASE_H;
+  canvas.style.width  = (BASE_W * scale) + 'px';
+  canvas.style.height = (BASE_H * scale) + 'px';
+}
+resizeCanvas();
+window.addEventListener('resize', resizeCanvas);
+
+// ── GAME STATE ───────────────────────────────────────────────
+let gameState = 'start'; // start | playing | gameover | waveclear
+let score = 0;
+let hiScore = parseInt(localStorage.getItem('rpg_si_hi') || '0');
+let lives = 3;
+let wave = 1;
+let rafId = null;
+let lastTime = 0;
+
+document.getElementById('hiDisp').textContent = hiScore;
+document.getElementById('startHiScore').textContent = 'High Score: ' + hiScore;
+
+// ── PLAYER ───────────────────────────────────────────────────
+const PLAYER_W = 32, PLAYER_H = 20;
+let player = {};
+
+function resetPlayer() {
+  player = {
+    x: BASE_W / 2 - PLAYER_W / 2,
+    y: BASE_H - 40,
+    w: PLAYER_W,
+    h: PLAYER_H,
+    speed: 220,
+    invincible: 0,
+    flash: 0
+  };
+}
+
+// Draw player ship (pixel-art phoenix cannon)
+function drawPlayer() {
+  if (player.invincible > 0 && Math.floor(player.flash * 8) % 2 === 0) return;
+  const x = player.x, y = player.y;
+  ctx.save();
+  // Engine glow
+  ctx.shadowColor = 'rgba(100,180,255,0.8)';
+  ctx.shadowBlur = 12;
+  // Hull
+  ctx.fillStyle = '#5090d0';
+  ctx.beginPath();
+  ctx.moveTo(x + 16, y);
+  ctx.lineTo(x + 28, y + 12);
+  ctx.lineTo(x + 32, y + 20);
+  ctx.lineTo(x,      y + 20);
+  ctx.lineTo(x + 4,  y + 12);
+  ctx.closePath();
+  ctx.fill();
+  // Highlight
+  ctx.fillStyle = '#80c0f0';
+  ctx.beginPath();
+  ctx.moveTo(x+16,y+2); ctx.lineTo(x+24,y+11); ctx.lineTo(x+16,y+11); ctx.closePath();
+  ctx.fill();
+  // Cockpit
+  ctx.fillStyle = '#f0d080';
+  ctx.shadowColor = 'rgba(240,208,128,0.9)';
+  ctx.shadowBlur = 8;
+  ctx.beginPath();
+  ctx.arc(x+16, y+9, 4, 0, Math.PI*2);
+  ctx.fill();
+  // Wings
+  ctx.fillStyle = '#3060a0';
+  ctx.shadowBlur = 0;
+  ctx.fillRect(x,   y+13, 8, 5);
+  ctx.fillRect(x+24,y+13, 8, 5);
+  ctx.restore();
+}
+
+// ── BULLETS ──────────────────────────────────────────────────
+let bullets = [];
+const BULLET_SPEED = 420;
+const BULLET_COOLDOWN = 0.3;
+let bulletCooldown = 0;
+
+function fireBullet() {
+  if (bulletCooldown > 0) return;
+  bullets.push({ x: player.x + PLAYER_W/2 - 2, y: player.y - 4, w: 4, h: 10, speed: -BULLET_SPEED });
+  bulletCooldown = BULLET_COOLDOWN;
+}
+
+function drawBullets() {
+  bullets.forEach(b => {
+    ctx.save();
+    ctx.shadowColor = 'rgba(200,149,42,0.9)';
+    ctx.shadowBlur = 10;
+    ctx.fillStyle = '#f0d080';
+    ctx.fillRect(b.x, b.y, b.w, b.h);
+    // Core bright
+    ctx.fillStyle = '#fff8e0';
+    ctx.fillRect(b.x+1, b.y, 2, 4);
+    ctx.restore();
+  });
+}
+
+// ── ENEMY BULLETS ────────────────────────────────────────────
+let eBullets = [];
+const E_BULLET_SPEED = 180;
+
+function drawEBullets() {
+  eBullets.forEach(b => {
+    ctx.save();
+    ctx.shadowColor = 'rgba(255,80,80,0.9)';
+    ctx.shadowBlur = 8;
+    ctx.fillStyle = '#ff4444';
+    ctx.fillRect(b.x, b.y, 3, 10);
+    ctx.restore();
+  });
+}
+
+// ── INVADERS ─────────────────────────────────────────────────
+const ROWS = 5, COLS = 11;
+const INV_W = 28, INV_H = 20, INV_GAP_X = 14, INV_GAP_Y = 14;
+const INV_STEP_X = INV_W + INV_GAP_X;
+const INV_STEP_Y = INV_H + INV_GAP_Y;
+let invaders = [];
+let invDirX = 1;
+let invMoveTimer = 0;
+let invMoveInterval = 0.8; // seconds between steps
+let invDropQueued = false;
+let invShootTimer = 0;
+let invShootInterval = 1.2;
+
+// Colors by row
+const ROW_COLORS = [
+  '#ff6060', // top row (hard)
+  '#ff8040',
+  '#f0d080',
+  '#80d080',
+  '#60c0f0'  // bottom row (easy)
+];
+const ROW_POINTS = [40, 30, 20, 15, 10];
+
+// Invader shapes (5x5 pixel grids)
+const SHAPES = [
+  // Row 0 — crab alien
+  [0,0,1,0,0, 1,0,1,0,1, 1,1,1,1,1, 0,1,0,1,0, 1,0,0,0,1],
+  // Row 1 — octopus
+  [0,1,1,1,0, 1,1,1,1,1, 1,0,1,0,1, 1,1,1,1,1, 0,1,0,1,0],
+  // Row 2 — squid
+  [0,0,1,0,0, 0,1,1,1,0, 1,1,0,1,1, 0,1,1,1,0, 1,0,0,0,1],
+  // Row 3 — bug
+  [1,0,1,0,1, 0,1,1,1,0, 1,0,1,0,1, 0,1,1,1,0, 1,0,1,0,1],
+  // Row 4 — saucer-like
+  [0,0,1,0,0, 1,1,1,1,1, 0,1,1,1,0, 0,0,1,0,0, 0,1,0,1,0]
+];
+
+function buildInvaders() {
+  invaders = [];
+  const startX = (BASE_W - (COLS * INV_STEP_X - INV_GAP_X)) / 2;
+  const startY = 60;
+  for (let r = 0; r < ROWS; r++) {
+    for (let c = 0; c < COLS; c++) {
+      invaders.push({
+        row: r, col: c,
+        x: startX + c * INV_STEP_X,
+        y: startY + r * INV_STEP_Y,
+        alive: true,
+        animFrame: 0,
+        animTimer: 0,
+        color: ROW_COLORS[r],
+        points: ROW_POINTS[r]
+      });
+    }
+  }
+  invDirX = 1;
+  invMoveTimer = 0;
+  invDropQueued = false;
+}
+
+function drawInvader(inv) {
+  if (!inv.alive) return;
+  const shape = SHAPES[inv.row];
+  const px = 4; // pixel size
+  const ox = inv.x + 4, oy = inv.y + 2;
+  ctx.save();
+  ctx.shadowColor = inv.color;
+  ctx.shadowBlur = 8;
+  for (let i = 0; i < 25; i++) {
+    if (!shape[i]) continue;
+    const col = i % 5, row2 = Math.floor(i / 5);
+    // animate: alternate between two frames by shifting bottom pixels
+    const yOff = (inv.animFrame === 1 && row2 >= 3) ? 1 : 0;
+    ctx.fillStyle = inv.color;
+    ctx.fillRect(ox + col * px, oy + row2 * px + yOff, px - 1, px - 1);
+  }
+  // Eyes glow
+  ctx.fillStyle = '#ffffff';
+  ctx.shadowColor = '#fff';
+  ctx.shadowBlur = 4;
+  ctx.fillRect(ox + 5, oy + 4, 3, 3);
+  ctx.fillRect(ox + 12, oy + 4, 3, 3);
+  ctx.restore();
+}
+
+// ── SHIELDS ──────────────────────────────────────────────────
+const SHIELD_COUNT = 4;
+let shields = [];
+const SH_COLS = 14, SH_ROWS = 8, SH_PX = 4;
+const SH_W = SH_COLS * SH_PX, SH_H = SH_ROWS * SH_PX;
+
+// Shield pixel template (1 = solid)
+function buildShieldTemplate() {
+  const tpl = Array(SH_ROWS * SH_COLS).fill(1);
+  // Cut top corners
+  for (let c = 0; c < 3; c++) { tpl[c] = 0; tpl[SH_COLS - 1 - c] = 0; }
+  for (let c = 0; c < 2; c++) { tpl[SH_COLS + c] = 0; tpl[SH_COLS + SH_COLS - 1 - c] = 0; }
+  // Cut arch at bottom center
+  const archW = 6, archH = 3;
+  const archStartC = Math.floor((SH_COLS - archW) / 2);
+  for (let r = SH_ROWS - archH; r < SH_ROWS; r++) {
+    for (let c = archStartC; c < archStartC + archW; c++) {
+      tpl[r * SH_COLS + c] = 0;
+    }
+  }
+  return tpl;
+}
+
+function buildShields() {
+  shields = [];
+  const tpl = buildShieldTemplate();
+  const totalW = SHIELD_COUNT * SH_W + (SHIELD_COUNT - 1) * 30;
+  let sx = (BASE_W - totalW) / 2;
+  for (let i = 0; i < SHIELD_COUNT; i++) {
+    shields.push({
+      x: sx, y: BASE_H - 110,
+      pixels: tpl.slice()
+    });
+    sx += SH_W + 30;
+  }
+}
+
+function drawShields() {
+  ctx.save();
+  shields.forEach(sh => {
+    for (let i = 0; i < sh.pixels.length; i++) {
+      if (!sh.pixels[i]) continue;
+      const c = i % SH_COLS, r = Math.floor(i / SH_COLS);
+      const bright = sh.pixels[i] === 1 ? '#44aa44' : '#226622';
+      ctx.shadowColor = 'rgba(60,180,60,0.5)';
+      ctx.shadowBlur = 4;
+      ctx.fillStyle = bright;
+      ctx.fillRect(sh.x + c * SH_PX, sh.y + r * SH_PX, SH_PX - 1, SH_PX - 1);
+    }
+  });
+  ctx.restore();
+}
+
+function damageShield(bx, by, bw, bh) {
+  // Returns true if something was hit
+  for (let si = 0; si < shields.length; si++) {
+    const sh = shields[si];
+    // quick AABB
+    if (bx + bw < sh.x || bx > sh.x + SH_W || by + bh < sh.y || by > sh.y + SH_H) continue;
+    // pixel-level
+    for (let i = 0; i < sh.pixels.length; i++) {
+      if (!sh.pixels[i]) continue;
+      const c = i % SH_COLS, r = Math.floor(i / SH_COLS);
+      const px = sh.x + c * SH_PX, py = sh.y + r * SH_PX;
+      if (bx < px + SH_PX && bx + bw > px && by < py + SH_PX && by + bh > py) {
+        // Blast a 2x2 area
+        const cr = r, cc = c;
+        for (let dr = -1; dr <= 1; dr++) for (let dc = -1; dc <= 1; dc++) {
+          const ni = (cr+dr)*SH_COLS+(cc+dc);
+          if (ni >= 0 && ni < sh.pixels.length) sh.pixels[ni] = 0;
+        }
+        return true;
+      }
+    }
+  }
+  return false;
+}
+
+// ── EXPLOSIONS ───────────────────────────────────────────────
+let explosions = [];
+
+function addExplosion(x, y, color) {
+  explosions.push({
+    x, y, color,
+    particles: Array.from({length: 10}, () => ({
+      vx: (Math.random() - 0.5) * 120,
+      vy: (Math.random() - 0.5) * 120,
+      life: 1, size: Math.random() * 3 + 1
+    })),
+    life: 1
+  });
+}
+
+function updateExplosions(dt) {
+  explosions = explosions.filter(e => e.life > 0);
+  explosions.forEach(e => {
+    e.life -= dt * 2;
+    e.particles.forEach(p => {
+      p.x = (p.x||0) + p.vx * dt;
+      p.y = (p.y||0) + p.vy * dt;
+      p.life -= dt * 2;
+    });
+  });
+}
+
+function drawExplosions() {
+  explosions.forEach(e => {
+    e.particles.forEach(p => {
+      if (p.life <= 0) return;
+      ctx.save();
+      ctx.globalAlpha = Math.max(0, p.life);
+      ctx.fillStyle = e.color;
+      ctx.shadowColor = e.color;
+      ctx.shadowBlur = 6;
+      const px2 = e.x + (p.x||0), py2 = e.y + (p.y||0);
+      ctx.beginPath();
+      ctx.arc(px2, py2, p.size, 0, Math.PI*2);
+      ctx.fill();
+      ctx.restore();
+    });
+  });
+}
+
+// ── UFO (MYSTERY SHIP) ───────────────────────────────────────
+let ufo = null;
+let ufoTimer = 0;
+const UFO_INTERVAL = 20; // seconds
+
+function spawnUFO() {
+  ufo = { x: -60, y: 30, w: 50, h: 16, speed: 80, dir: 1, points: 150 };
+}
+
+function drawUFO() {
+  if (!ufo) return;
+  const x = ufo.x, y = ufo.y;
+  ctx.save();
+  ctx.shadowColor = '#ff40ff';
+  ctx.shadowBlur = 15;
+  // Body
+  ctx.fillStyle = '#cc44cc';
+  ctx.beginPath();
+  ctx.ellipse(x+25, y+10, 25, 8, 0, 0, Math.PI*2);
+  ctx.fill();
+  // Dome
+  ctx.fillStyle = '#ff88ff';
+  ctx.beginPath();
+  ctx.ellipse(x+25, y+8, 14, 8, 0, Math.PI, 0);
+  ctx.fill();
+  // Lights
+  const lightColors = ['#ff4040','#ffff40','#40ff40','#4040ff'];
+  for (let i = 0; i < 4; i++) {
+    ctx.fillStyle = lightColors[i];
+    ctx.shadowColor = lightColors[i];
+    ctx.shadowBlur = 8;
+    ctx.beginPath();
+    ctx.arc(x + 8 + i*10, y+11, 3, 0, Math.PI*2);
+    ctx.fill();
+  }
+  ctx.restore();
+}
+
+// ── GROUND LINE ──────────────────────────────────────────────
+function drawGround() {
+  ctx.save();
+  ctx.strokeStyle = '#c8952a';
+  ctx.lineWidth = 2;
+  ctx.shadowColor = 'rgba(200,149,42,0.5)';
+  ctx.shadowBlur = 6;
+  ctx.beginPath();
+  ctx.moveTo(0, BASE_H - 25);
+  ctx.lineTo(BASE_W, BASE_H - 25);
+  ctx.stroke();
+  ctx.restore();
+}
+
+// ── INPUT ────────────────────────────────────────────────────
+const keys = {};
+window.addEventListener('keydown', e => {
+  keys[e.key] = true;
+  if (gameState === 'playing') {
+    if (e.key === ' ' || e.key === 'ArrowUp') { e.preventDefault(); fireBullet(); }
+  }
+  if ((e.key === 'Enter' || e.key === ' ') && (gameState === 'start' || gameState === 'gameover')) {
+    startGame();
+  }
+});
+window.addEventListener('keyup', e => { keys[e.key] = false; });
+
+// Touch controls
+let touchStartX = null;
+canvas.addEventListener('touchstart', e => {
+  touchStartX = e.touches[0].clientX;
+  if (gameState === 'playing') fireBullet();
+}, {passive: true});
+canvas.addEventListener('touchmove', e => {
+  if (gameState !== 'playing' || touchStartX === null) return;
+  const dx = e.touches[0].clientX - touchStartX;
+  player.x += dx / scale;
+  touchStartX = e.touches[0].clientX;
+  player.x = Math.max(0, Math.min(BASE_W - player.w, player.x));
+}, {passive: true});
+
+// ── HUD UPDATE ───────────────────────────────────────────────
+function updateHUD() {
+  document.getElementById('scoreDisp').textContent = score;
+  document.getElementById('hiDisp').textContent = hiScore;
+  document.getElementById('waveDisp').textContent = wave;
+  const livesEl = document.getElementById('livesDisp');
+  livesEl.innerHTML = Array.from({length: Math.max(0,lives)}, () => '<span class="life-ship">🚀</span>').join('');
+}
+
+// ── CONFETTI ─────────────────────────────────────────────────
+function launchConfetti() {
+  const COLORS = ['#f0d080','#c8952a','#ff6060','#60c0f0','#80d080','#ff80ff','#ffffff'];
+  const wrap2 = document.getElementById('canvas-wrap');
+  const pieces = [];
+  for (let i = 0; i < 120; i++) {
+    const el = document.createElement('div');
+    el.className = 'confetti-piece';
+    el.style.backgroundColor = COLORS[Math.floor(Math.random()*COLORS.length)];
+    el.style.left = (Math.random()*100) + '%';
+    el.style.top = '-10px';
+    el.style.transform = 'rotate(' + Math.random()*360 + 'deg)';
+    wrap2.appendChild(el);
+    pieces.push({
+      el, x: parseFloat(el.style.left),
+      y: -10,
+      vx: (Math.random()-0.5)*4,
+      vy: Math.random()*4+2,
+      rot: Math.random()*360,
+      rotV: (Math.random()-0.5)*8,
+      life: 1
+    });
+  }
+  let start = null;
+  function animConf(ts) {
+    if (!start) start = ts;
+    const elapsed = (ts - start) / 1000;
+    let alive = false;
+    pieces.forEach(p => {
+      if (p.life <= 0) { p.el.style.display='none'; return; }
+      p.y += p.vy * 2;
+      p.x += p.vx;
+      p.rot += p.rotV;
+      p.vy += 0.1;
+      p.life = Math.max(0, 1 - elapsed / 4);
+      p.el.style.top = p.y + 'px';
+      p.el.style.left = p.x + '%';
+      p.el.style.transform = 'rotate(' + p.rot + 'deg)';
+      p.el.style.opacity = p.life;
+      if (p.life > 0) alive = true;
+    });
+    if (alive) requestAnimationFrame(animConf);
+    else pieces.forEach(p => p.el.remove());
+  }
+  requestAnimationFrame(animConf);
+}
+
+// ── VICTORY MESSAGE ──────────────────────────────────────────
+function showVictoryMsg(title, subtitle, onDone) {
+  const msg = document.getElementById('victoryMsg');
+  document.getElementById('victoryTitle').textContent = title;
+  document.getElementById('victorySubtitle').textContent = subtitle;
+  msg.classList.remove('hidden');
+  msg.style.transform = 'translate(-50%,-50%) scale(0)';
+
+  const canvasRect = canvas.getBoundingClientRect();
+  const wrapRect = wrap.getBoundingClientRect();
+  const relX = canvasRect.left - wrapRect.left + canvasRect.width/2;
+  const relY = canvasRect.top  - wrapRect.top  + canvasRect.height/2;
+  msg.style.left = relX + 'px';
+  msg.style.top  = relY + 'px';
+
+  // Scale up over 0.75s, hold 1s, disappear
+  let start2 = null;
+  function animMsg(ts) {
+    if (!start2) start2 = ts;
+    const elapsed = (ts - start2) / 1000;
+    if (elapsed < 0.75) {
+      const p = elapsed / 0.75;
+      const ease = 1 - Math.pow(1 - p, 3);
+      msg.style.transform = `translate(-50%,-50%) scale(\${ease})`;
+      requestAnimationFrame(animMsg);
+    } else if (elapsed < 1.75) {
+      msg.style.transform = 'translate(-50%,-50%) scale(1)';
+      requestAnimationFrame(animMsg);
+    } else {
+      msg.style.transform = 'translate(-50%,-50%) scale(0)';
+      msg.classList.add('hidden');
+      if (onDone) onDone();
+    }
+  }
+  requestAnimationFrame(animMsg);
+}
+
+// ── GAME INIT ────────────────────────────────────────────────
+function startGame() {
+  document.getElementById('startScreen').classList.add('hidden');
+  document.getElementById('gameOverScreen').classList.add('hidden');
+  score = 0; lives = 3; wave = 1;
+  invMoveInterval = 0.8;
+  invShootInterval = 1.2;
+  resetPlayer();
+  buildInvaders();
+  buildShields();
+  bullets = []; eBullets = []; explosions = [];
+  ufo = null; ufoTimer = 0;
+  gameState = 'playing';
+  updateHUD();
+  if (rafId) cancelAnimationFrame(rafId);
+  lastTime = 0;
+  rafId = requestAnimationFrame(gameLoop);
+}
+
+function nextWave() {
+  wave++;
+  invMoveInterval = Math.max(0.15, invMoveInterval * 0.85);
+  invShootInterval = Math.max(0.5, invShootInterval * 0.85);
+  resetPlayer();
+  buildInvaders();
+  buildShields();
+  bullets = []; eBullets = [];
+  ufo = null; ufoTimer = 0;
+  updateHUD();
+  gameState = 'playing';
+}
+
+function gameOver() {
+  gameState = 'gameover';
+  if (score > hiScore) { hiScore = score; localStorage.setItem('rpg_si_hi', hiScore); }
+  document.getElementById('goScore').textContent = `Score: \${score}  |  High Score: \${hiScore}`;
+  document.getElementById('gameOverScreen').classList.remove('hidden');
+}
+
+// ── MAIN LOOP ────────────────────────────────────────────────
+function gameLoop(ts) {
+  if (gameState !== 'playing' && gameState !== 'waveclear') {
+    rafId = null; return;
+  }
+  const dt = Math.min((ts - (lastTime || ts)) / 1000, 0.05);
+  lastTime = ts;
+
+  update(dt);
+  draw();
+  rafId = requestAnimationFrame(gameLoop);
+}
+
+function update(dt) {
+  if (gameState !== 'playing') return;
+
+  // Player movement
+  let moveDir = 0;
+  if (keys['ArrowLeft']  || keys['a'] || keys['A']) moveDir = -1;
+  if (keys['ArrowRight'] || keys['d'] || keys['D']) moveDir = 1;
+  player.x += moveDir * player.speed * dt;
+  player.x = Math.max(0, Math.min(BASE_W - player.w, player.x));
+
+  // Bullet cooldown
+  bulletCooldown = Math.max(0, bulletCooldown - dt);
+  if ((keys[' '] || keys['ArrowUp'] || keys['w'] || keys['W']) && bulletCooldown === 0) fireBullet();
+
+  // Player invincibility
+  if (player.invincible > 0) { player.invincible -= dt; player.flash += dt; }
+
+  // Move player bullets
+  bullets = bullets.filter(b => b.y > -b.h);
+  bullets.forEach(b => { b.y += b.speed * dt; });
+
+  // Move enemy bullets
+  eBullets = eBullets.filter(b => b.y < BASE_H);
+  eBullets.forEach(b => { b.y += E_BULLET_SPEED * dt; });
+
+  // Invader animation
+  invaders.forEach(inv => {
+    if (!inv.alive) return;
+    inv.animTimer += dt;
+    if (inv.animTimer >= 0.5) { inv.animTimer = 0; inv.animFrame = 1 - inv.animFrame; }
+  });
+
+  // Invader movement
+  const alive = invaders.filter(i => i.alive);
+  if (alive.length === 0) {
+    // Wave clear
+    gameState = 'waveclear';
+    launchConfetti();
+    const isLast = wave >= 5;
+    showVictoryMsg(
+      isLast ? '⚜ The Stars Are Safe ⚜' : `Wave \${wave} Cleared!`,
+      isLast ? 'The armada is vanquished. The phoenix reigns eternal.' : 'The skies grow quiet… but the next wave gathers.',
+      () => { if (isLast) { gameOver(); } else { nextWave(); } }
+    );
+    return;
+  }
+
+  invMoveTimer += dt;
+  // Speed up as fewer invaders remain
+  const speedMult = 1 + (1 - alive.length / (ROWS*COLS)) * 2;
+  if (invMoveTimer >= invMoveInterval / speedMult) {
+    invMoveTimer = 0;
+    let minX = Infinity, maxX = -Infinity;
+    alive.forEach(i => { minX = Math.min(minX, i.x); maxX = Math.max(maxX, i.x + INV_W); });
+    const shouldDrop = (invDirX > 0 && maxX >= BASE_W - 4) || (invDirX < 0 && minX <= 4);
+    invaders.forEach(i => {
+      if (!i.alive) return;
+      if (shouldDrop) { i.y += 20; }
+      else { i.x += invDirX * 16; }
+    });
+    if (shouldDrop) invDirX *= -1;
+  }
+
+  // Check invaders reached bottom
+  alive.forEach(inv => {
+    if (inv.y + inv.h >= BASE_H - 30) { lives = 0; gameOver(); }
+  });
+
+  // Enemy shooting
+  invShootTimer -= dt;
+  if (invShootTimer <= 0) {
+    invShootTimer = invShootInterval * (0.5 + Math.random() * 0.5);
+    // Pick random alive invader from bottom of each column
+    const cols = {};
+    alive.forEach(inv => {
+      if (!cols[inv.col] || inv.row > cols[inv.col].row) cols[inv.col] = inv;
+    });
+    const shooters = Object.values(cols);
+    if (shooters.length > 0) {
+      const shooter = shooters[Math.floor(Math.random() * shooters.length)];
+      eBullets.push({ x: shooter.x + INV_W/2, y: shooter.y + INV_H, w: 3, h: 10 });
+    }
+  }
+
+  // UFO
+  ufoTimer += dt;
+  if (ufoTimer >= UFO_INTERVAL && !ufo) { ufoTimer = 0; spawnUFO(); }
+  if (ufo) {
+    ufo.x += ufo.speed * ufo.dir * dt;
+    if (ufo.x > BASE_W + 60 || ufo.x < -70) ufo = null;
+  }
+
+  // Collision: player bullets vs invaders
+  for (let bi = bullets.length - 1; bi >= 0; bi--) {
+    const b = bullets[bi];
+    let hit = false;
+    // Check shield first
+    if (damageShield(b.x, b.y, b.w, b.h)) { bullets.splice(bi, 1); continue; }
+    // Check UFO
+    if (ufo && b.x < ufo.x+ufo.w && b.x+b.w > ufo.x && b.y < ufo.y+ufo.h && b.y+b.h > ufo.y) {
+      score += ufo.points; hiScore = Math.max(hiScore, score);
+      addExplosion(ufo.x+25, ufo.y+8, '#ff80ff');
+      ufo = null; bullets.splice(bi, 1); updateHUD(); continue;
+    }
+    for (let ii = 0; ii < invaders.length; ii++) {
+      const inv = invaders[ii];
+      if (!inv.alive) continue;
+      if (b.x < inv.x+INV_W && b.x+b.w > inv.x && b.y < inv.y+INV_H && b.y+b.h > inv.y) {
+        inv.alive = false;
+        score += inv.points; hiScore = Math.max(hiScore, score);
+        addExplosion(inv.x + INV_W/2, inv.y + INV_H/2, inv.color);
+        bullets.splice(bi, 1); updateHUD(); hit = true; break;
+      }
+    }
+    if (hit) continue;
+  }
+
+  // Collision: enemy bullets vs player
+  if (player.invincible <= 0) {
+    for (let bi = eBullets.length - 1; bi >= 0; bi--) {
+      const b = eBullets[bi];
+      if (damageShield(b.x, b.y, b.w, b.h)) { eBullets.splice(bi, 1); continue; }
+      if (b.x < player.x+player.w && b.x+b.w > player.x && b.y < player.y+player.h && b.y+b.h > player.y) {
+        lives--;
+        player.invincible = 2.5; player.flash = 0;
+        addExplosion(player.x+16, player.y+10, '#60aaff');
+        eBullets.splice(bi, 1); updateHUD();
+        if (lives <= 0) { gameOver(); return; }
+      }
+    }
+  }
+
+  updateExplosions(dt);
+}
+
+function draw() {
+  // Background
+  ctx.fillStyle = '#060812';
+  ctx.fillRect(0, 0, BASE_W, BASE_H);
+
+  // Scanline effect
+  ctx.save();
+  for (let y = 0; y < BASE_H; y += 2) {
+    ctx.fillStyle = 'rgba(0,0,0,0.06)';
+    ctx.fillRect(0, y, BASE_W, 1);
+  }
+  ctx.restore();
+
+  drawGround();
+  drawShields();
+  invaders.forEach(inv => drawInvader(inv));
+  drawUFO();
+  drawPlayer();
+  drawBullets();
+  drawEBullets();
+  drawExplosions();
+
+  // UFO score hint
+  if (Math.floor(Date.now()/500) % 2 === 0) {
+    ctx.save();
+    ctx.font = '9px "Cinzel", serif';
+    ctx.fillStyle = '#cc88cc';
+    ctx.textAlign = 'center';
+    ctx.fillText('??? UFO = MYSTERY POINTS', BASE_W/2, 22);
+    ctx.restore();
+  }
+
+  // Row point labels (top of screen)
+  for (let r = 0; r < ROWS; r++) {
+    const sampleInv = invaders.find(i => i.row === r && i.alive);
+    if (!sampleInv) continue;
+  }
+}
+
+// Start the starfield, show start screen
+document.getElementById('startHiScore').textContent = 'High Score: ' + hiScore;
+</script>
+
+</body>
+</html>
