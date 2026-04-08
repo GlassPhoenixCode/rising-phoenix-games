@@ -1467,14 +1467,48 @@ playModal.addEventListener('click', function(e) { if (e.target === playModal) cl
 // ── GIF EXPORT ────────────────────────────────────────────
 document.getElementById('btn-export-gif').addEventListener('click', function() {
   const fps = parseInt(document.getElementById('play-fps-select').value);
-  const delay = Math.round(100/fps);
-  // Build flattened frames for GIF
+  const delay = Math.round(100 / fps);
+
+  // Flatten each frame: draw bg first, then anim on top, using an offscreen canvas
+  // so compositing (including rgba() semi-transparent pixels) is handled correctly.
+  // Result is an array of flat hex-color arrays ready for palette quantization.
   const flatFrames = frames.map(function(f, fi) {
-    const flat = new Array(gridSize*gridSize).fill(null);
+    const ec = document.createElement('canvas');
+    ec.width = gridSize; ec.height = gridSize;
+    const ectx = ec.getContext('2d');
+
+    // Draw background layer
     const bg = getBg(fi);
-    for (let i=0;i<flat.length;i++) flat[i] = bg[i] || f[i] || null;
+    for (let r = 0; r < gridSize; r++) {
+      for (let c = 0; c < gridSize; c++) {
+        const p = bg[r * gridSize + c];
+        if (!p) continue;
+        ectx.fillStyle = p;
+        ectx.fillRect(c, r, 1, 1);
+      }
+    }
+    // Draw animation layer on top
+    for (let r = 0; r < gridSize; r++) {
+      for (let c = 0; c < gridSize; c++) {
+        const p = f[r * gridSize + c];
+        if (!p) continue;
+        ectx.fillStyle = p;
+        ectx.fillRect(c, r, 1, 1);
+      }
+    }
+
+    // Read back composited pixels and quantize to nearest hex
+    const imageData = ectx.getImageData(0, 0, gridSize, gridSize);
+    const data = imageData.data;
+    const flat = new Array(gridSize * gridSize);
+    for (let i = 0; i < gridSize * gridSize; i++) {
+      const r2 = data[i*4], g2 = data[i*4+1], b2 = data[i*4+2], a2 = data[i*4+3];
+      if (a2 < 16) { flat[i] = null; continue; } // treat near-transparent as transparent
+      flat[i] = '#' + [r2,g2,b2].map(function(x){ return x.toString(16).padStart(2,'0'); }).join('');
+    }
     return flat;
   });
+
   try {
     const gifBytes = buildGIF(flatFrames, gridSize, delay);
     const blob = new Blob([gifBytes], { type:'image/gif' });
@@ -1493,44 +1527,112 @@ function buildGIF(frameArr, size, delay) {
   function writeShort(s){ bytes.push(s&0xFF); bytes.push((s>>8)&0xFF); }
   function writeStr(s){ for(var i=0;i<s.length;i++) bytes.push(s.charCodeAt(i)); }
 
-  const colorSet = new Set(['#000000']);
-  frameArr.forEach(function(f){ f.forEach(function(p){ if(p&&p.startsWith('#')) colorSet.add(p); }); });
-  let palette = Array.from(colorSet).slice(0,255);
-  palette.unshift('#000000');
-  while(palette.length<256) palette.push('#000000');
-  const colorIndex={};
-  palette.forEach(function(c,i){ colorIndex[c]=i; });
-  const TRANS_IDX=0;
+  // Build palette from all colors across all frames.
+  // Index 0 is reserved as the transparency stand-in (a color unlikely to appear).
+  const TRANS_COLOR = '#010101'; // near-black sentinel for transparent pixels
+  const colorSet = new Set([TRANS_COLOR]);
+  frameArr.forEach(function(f) {
+    f.forEach(function(p) { if (p && p.startsWith('#')) colorSet.add(p); });
+  });
+  let palette = Array.from(colorSet);
+  // Ensure TRANS_COLOR is at index 0
+  palette = palette.filter(function(c){ return c !== TRANS_COLOR; });
+  palette.unshift(TRANS_COLOR);
+  // Pad to 256
+  while (palette.length < 256) palette.push('#000000');
+  palette = palette.slice(0, 256);
 
+  const colorIndex = {};
+  palette.forEach(function(c, i){ colorIndex[c] = i; });
+  const TRANS_IDX = 0; // index 0 = our sentinel transparent color
+
+  // GIF header
   writeStr('GIF89a');
   writeShort(W); writeShort(H);
-  writeByte(0xF7); writeByte(0); writeByte(0);
-  palette.forEach(function(c){
-    if(c.startsWith('#')&&c.length>=7){ writeByte(parseInt(c.slice(1,3),16)); writeByte(parseInt(c.slice(3,5),16)); writeByte(parseInt(c.slice(5,7),16)); }
-    else{ writeByte(0); writeByte(0); writeByte(0); }
+  writeByte(0xF7); // global color table, 256 colors
+  writeByte(TRANS_IDX); // background color index
+  writeByte(0);    // pixel aspect ratio
+
+  // Write global color table
+  palette.forEach(function(c) {
+    if (c && c.startsWith('#') && c.length >= 7) {
+      writeByte(parseInt(c.slice(1,3),16));
+      writeByte(parseInt(c.slice(3,5),16));
+      writeByte(parseInt(c.slice(5,7),16));
+    } else {
+      writeByte(0); writeByte(0); writeByte(0);
+    }
   });
+
+  // Netscape loop extension (loop forever)
   writeByte(0x21); writeByte(0xFF); writeByte(11);
   writeStr('NETSCAPE2.0');
   writeByte(3); writeByte(1); writeShort(0); writeByte(0);
 
-  frameArr.forEach(function(f){
+  // Write each frame
+  frameArr.forEach(function(f) {
+    // Graphic control extension
     writeByte(0x21); writeByte(0xF9); writeByte(4);
-    writeByte(0x05); writeShort(delay); writeByte(TRANS_IDX); writeByte(0);
-    writeByte(0x2C); writeShort(0); writeShort(0); writeShort(W); writeShort(H); writeByte(0);
-    const indices=new Uint8Array(W*H);
-    for(let i=0;i<W*H;i++){
-      const p=f[i];
-      if(!p||p==='transparent'){ indices[i]=TRANS_IDX; }
-      else{ const hex=p.startsWith('#')?p:'#000000'; indices[i]=colorIndex[hex]!==undefined?colorIndex[hex]:TRANS_IDX; }
+    // Disposal=2 (restore to background), user input=0, transparent flag=1
+    writeByte(0x09); // packed: disposal=2 (bits 5-3=010), transparent flag bit 0 = 1 → 0b00001001
+    writeShort(delay);
+    writeByte(TRANS_IDX); // transparent color index
+    writeByte(0); // block terminator
+
+    // Image descriptor
+    writeByte(0x2C);
+    writeShort(0); writeShort(0); writeShort(W); writeShort(H);
+    writeByte(0); // no local color table, not interlaced
+
+    // Map pixels to palette indices
+    const indices = new Uint8Array(W * H);
+    for (let i = 0; i < W * H; i++) {
+      const p = f[i];
+      if (!p) {
+        indices[i] = TRANS_IDX;
+      } else {
+        // Find closest color — exact match first, then nearest
+        if (colorIndex[p] !== undefined) {
+          indices[i] = colorIndex[p];
+        } else {
+          // Nearest neighbor fallback for any quantized colors not in palette
+          indices[i] = findNearestColor(p, palette, colorIndex);
+        }
+      }
     }
-    const lzwData=lzwEncode(indices,8);
-    writeByte(8);
-    let pos=0;
-    while(pos<lzwData.length){ const bl=Math.min(255,lzwData.length-pos); writeByte(bl); for(let j=0;j<bl;j++) writeByte(lzwData[pos++]); }
-    writeByte(0);
+
+    // LZW compress and write
+    const lzwData = lzwEncode(indices, 8);
+    writeByte(8); // LZW minimum code size
+    let pos = 0;
+    while (pos < lzwData.length) {
+      const bl = Math.min(255, lzwData.length - pos);
+      writeByte(bl);
+      for (let j = 0; j < bl; j++) writeByte(lzwData[pos++]);
+    }
+    writeByte(0); // block terminator
   });
-  writeByte(0x3B);
+
+  writeByte(0x3B); // GIF trailer
   return new Uint8Array(bytes);
+}
+
+function findNearestColor(hex, palette, colorIndex) {
+  // Parse target
+  const tr = parseInt(hex.slice(1,3),16);
+  const tg = parseInt(hex.slice(3,5),16);
+  const tb = parseInt(hex.slice(5,7),16);
+  let bestIdx = 1, bestDist = Infinity;
+  for (let i = 1; i < palette.length; i++) { // skip index 0 (transparent sentinel)
+    const c = palette[i];
+    if (!c || !c.startsWith('#') || c.length < 7) continue;
+    const dr = tr - parseInt(c.slice(1,3),16);
+    const dg = tg - parseInt(c.slice(3,5),16);
+    const db = tb - parseInt(c.slice(5,7),16);
+    const dist = dr*dr + dg*dg + db*db;
+    if (dist < bestDist) { bestDist = dist; bestIdx = i; }
+  }
+  return bestIdx;
 }
 
 function lzwEncode(indices, minCodeSize) {
