@@ -1,0 +1,1691 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Sand Simulator — Rising Phoenix Games</title>
+  <link rel="stylesheet" href="shared.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700;900&family=Cinzel+Decorative:wght@400;700&family=IM+Fell+English:ital@0;1&display=swap" rel="stylesheet" />
+  <style>
+    html, body {
+      margin:0; padding:0; height:100%;
+      background:
+        radial-gradient(ellipse 80% 55% at 20% 10%, rgba(80,40,10,0.55) 0%, transparent 60%),
+        radial-gradient(ellipse 60% 70% at 80% 85%, rgba(40,20,5,0.5) 0%, transparent 55%),
+        linear-gradient(160deg, #1a1005 0%, #0f0c07 40%, #100d08 100%);
+      overflow:hidden;
+    }
+    .game-header {
+      position:relative; display:flex; align-items:center; justify-content:space-between;
+      padding:10px 18px; background:linear-gradient(180deg,#1e1508 0%,#120e06 100%);
+      border-bottom:2px solid #c8952a; box-shadow:0 4px 24px rgba(0,0,0,0.7);
+      flex-shrink:0; z-index:10;
+    }
+    .header-left  { display:flex; align-items:center; gap:10px; min-width:100px; }
+    .header-center {
+      position:absolute; left:50%; transform:translateX(-50%);
+      display:flex; align-items:center; gap:12px; pointer-events:none;
+    }
+    .header-right { min-width:100px; display:flex; justify-content:flex-end; }
+    .phoenix-logo { width:44px; height:44px; filter:drop-shadow(0 0 8px rgba(200,149,42,0.5)); flex-shrink:0; }
+    h1.game-title {
+      font-family:'Cinzel Decorative',serif; font-size:clamp(14px,2.5vw,22px);
+      font-weight:700; letter-spacing:2px; text-transform:uppercase; margin:0;
+      background:linear-gradient(135deg,#f0d080 0%,#c8952a 45%,#a07020 80%,#f0d080 100%);
+      -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text;
+      line-height:1.1; white-space:nowrap;
+    }
+    #app { display:flex; flex-direction:column; height:100vh; }
+    .game-body { flex:1; display:flex; gap:12px; padding:12px; overflow:hidden; min-height:0; }
+    .canvas-wrap {
+      flex:1; position:relative; border:1px solid rgba(200,149,42,0.4); border-radius:10px;
+      overflow:hidden; background:#080604;
+      box-shadow:0 0 40px rgba(0,0,0,0.8), inset 0 0 60px rgba(0,0,0,0.5);
+      cursor:crosshair;
+    }
+    #sandCanvas { display:block; width:100%; height:100%; image-rendering:pixelated; image-rendering:crisp-edges; }
+    #cursorPreview {
+      position:absolute; pointer-events:none; border-radius:50%;
+      border:1px solid rgba(240,208,128,0.65); box-shadow:0 0 6px rgba(200,149,42,0.35);
+      transform:translate(-50%,-50%); display:none; z-index:5;
+    }
+    .side-panel { width:186px; flex-shrink:0; display:flex; flex-direction:column; gap:7px; overflow-y:auto; }
+    .rpg-panel {
+      background:linear-gradient(160deg,#1e1608 0%,#1a1005 100%);
+      border:1px solid rgba(200,149,42,0.25); border-radius:10px; padding:9px 11px;
+      flex-shrink:0;
+    }
+    .panel-title {
+      font-family:'Cinzel',serif; font-size:9px; letter-spacing:2.5px; text-transform:uppercase;
+      color:#c8952a; margin:0 0 7px 0; padding-bottom:5px; border-bottom:1px solid rgba(200,149,42,0.2);
+    }
+    /* Element grid */
+    .element-grid { display:grid; grid-template-columns:1fr 1fr; gap:4px; }
+    .el-btn {
+      font-family:'Cinzel',serif; font-size:8px; letter-spacing:0.8px; text-transform:uppercase;
+      padding:5px 3px; border-radius:5px; border:1px solid rgba(200,149,42,0.28);
+      background:rgba(0,0,0,0.35); color:#c8a878; cursor:pointer; transition:all 0.14s;
+      text-align:center; line-height:1.2; display:flex; flex-direction:column; align-items:center; gap:3px;
+      position:relative;
+    }
+    .el-btn:hover { border-color:rgba(200,149,42,0.65); color:#f0d080; background:rgba(200,149,42,0.1); }
+    .el-btn.active { border-color:#f0d080; background:rgba(200,149,42,0.18); color:#f0d080; box-shadow:0 0 10px rgba(200,149,42,0.25); }
+    .el-dot { width:12px; height:12px; border-radius:2px; display:block; flex-shrink:0; }
+    /* Tooltip */
+    .el-tip {
+      display:none; position:absolute; left:calc(100% + 8px); top:50%; transform:translateY(-50%);
+      width:168px; background:#1c1408; border:1px solid rgba(200,149,42,0.45);
+      border-radius:7px; padding:8px 10px; z-index:200; text-align:left;
+      font-family:'IM Fell English',serif; font-style:italic; font-size:11px;
+      color:#c8a878; line-height:1.5; pointer-events:none; white-space:normal;
+      box-shadow:0 4px 20px rgba(0,0,0,0.8);
+    }
+    .el-tip strong { font-family:'Cinzel',serif; font-style:normal; color:#f0d080; font-size:9px; letter-spacing:1px; text-transform:uppercase; display:block; margin-bottom:3px; }
+    .el-btn:hover .el-tip { display:block; }
+    /* Tool strip */
+    .tool-row { display:flex; gap:4px; }
+    .tool-btn {
+      flex:1; font-family:'Cinzel',serif; font-size:8px; letter-spacing:0.8px; text-transform:uppercase;
+      padding:5px 3px; border-radius:4px; border:1px solid rgba(200,149,42,0.25);
+      background:rgba(0,0,0,0.3); color:#a09070; cursor:pointer; transition:all 0.14s; text-align:center;
+    }
+    .tool-btn:hover { color:#f0d080; border-color:rgba(200,149,42,0.5); }
+    .tool-btn.active { border-color:#c8952a; color:#f0d080; background:rgba(200,149,42,0.15); }
+    /* Brush */
+    .brush-row { display:flex; gap:4px; justify-content:center; }
+    .brush-btn {
+      font-family:'Cinzel',serif; font-size:8px; letter-spacing:0.8px; padding:5px 8px;
+      border-radius:4px; border:1px solid rgba(200,149,42,0.25); background:rgba(0,0,0,0.3);
+      color:#a09070; cursor:pointer; transition:all 0.14s;
+    }
+    .brush-btn:hover { color:#f0d080; border-color:rgba(200,149,42,0.5); }
+    .brush-btn.active { border-color:#c8952a; color:#f0d080; background:rgba(200,149,42,0.15); }
+    /* Stats */
+    .stat-row { display:flex; justify-content:space-between; align-items:baseline; font-family:'Cinzel',serif; font-size:9px; letter-spacing:0.8px; margin-bottom:3px; }
+    .stat-label { color:#a09070; text-transform:uppercase; }
+    .stat-val { color:#f0d080; font-weight:600; }
+    /* Scenario buttons */
+    .scenario-btn {
+      width:100%; font-family:'Cinzel',serif; font-size:8px; letter-spacing:0.8px; text-transform:uppercase;
+      padding:5px 8px; border-radius:5px; border:1px solid rgba(200,149,42,0.28);
+      background:rgba(0,0,0,0.3); color:#c8a878; cursor:pointer; transition:all 0.14s;
+      margin-bottom:3px; text-align:left; display:flex; align-items:center; gap:6px;
+    }
+    .scenario-btn:hover { border-color:rgba(200,149,42,0.65); color:#f0d080; background:rgba(200,149,42,0.1); }
+    .scenario-btn span { font-size:12px; }
+    /* Action buttons */
+    .action-btn {
+      width:100%; font-family:'Cinzel',serif; font-size:8px; letter-spacing:1.2px; text-transform:uppercase;
+      padding:6px 10px; border-radius:5px; border:1px solid #c8952a;
+      background:linear-gradient(180deg,#2a2010 0%,#1a1508 100%);
+      color:#f0d080; cursor:pointer; transition:all 0.14s; margin-bottom:3px;
+    }
+    .action-btn:hover { background:linear-gradient(180deg,#3a2c14 0%,#241a09 100%); border-color:#f0d080; box-shadow:0 0 12px rgba(200,149,42,0.3); }
+    .action-btn.danger { border-color:#c04040; color:#ffb0b0; background:linear-gradient(180deg,#2a1010 0%,#1a0808 100%); }
+    .action-btn.danger:hover { background:linear-gradient(180deg,#401818 0%,#280c0c 100%); border-color:#e06060; box-shadow:0 0 12px rgba(180,40,40,0.3); }
+    .action-btn.subtle { border-color:rgba(200,149,42,0.3); color:#a09070; background:rgba(0,0,0,0.2); }
+    .action-btn.subtle:hover { color:#f0d080; border-color:rgba(200,149,42,0.65); }
+    .undo-row { display:flex; gap:4px; margin-bottom:3px; }
+    .undo-row .action-btn { margin-bottom:0; }
+    /* Chronicle */
+    .chronicle { overflow-y:auto; font-family:'IM Fell English',serif; font-style:italic; font-size:11px; color:#a09070; line-height:1.5; max-height:100px; }
+    .chronicle p { margin:0 0 2px 0; padding:1px 0; border-bottom:1px solid rgba(200,149,42,0.05); }
+    .chronicle p.highlight { color:#f0d080; }
+    /* Confetti */
+    #confetti-layer { position:fixed; inset:0; pointer-events:none; z-index:1000; overflow:hidden; }
+    /* Victory */
+    #victory-msg {
+      position:fixed; top:50%; left:50%; transform:translate(-50%,-50%) scale(0.05);
+      background:linear-gradient(160deg,#261c0a 0%,#1a1005 100%);
+      border:2px solid #c8952a; border-radius:14px; padding:24px 36px;
+      text-align:center; z-index:1100; display:none;
+      box-shadow:0 0 60px rgba(200,149,42,0.5),0 0 120px rgba(200,149,42,0.25);
+      width:min(90vw,480px);
+    }
+    #victory-msg h2 { font-family:'Cinzel Decorative',serif; font-size:clamp(18px,3vw,28px); margin:0 0 8px 0; background:linear-gradient(135deg,#f0d080 0%,#c8952a 50%,#f0d080 100%); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; }
+    #victory-msg p { font-family:'IM Fell English',serif; font-style:italic; color:#c8a878; margin:0; font-size:14px; }
+    #victory-msg.show { display:block; animation:victoryGrow 0.75s cubic-bezier(0.34,1.56,0.64,1) forwards; }
+    @keyframes victoryGrow {
+      from { transform:translate(-50%,-50%) scale(0.05); opacity:0; }
+      to   { transform:translate(-50%,-50%) scale(1);    opacity:1; }
+    }
+    .game-footer { padding:5px 18px 7px; border-top:1px solid rgba(200,149,42,0.1); font-family:'IM Fell English',serif; font-style:italic; font-size:10px; color:rgba(200,170,100,0.45); display:flex; justify-content:space-between; flex-shrink:0; }
+    @media (max-width:600px) {
+      .side-panel { width:125px; }
+      .game-body { gap:7px; padding:7px; }
+      .el-btn { font-size:7px; padding:4px 2px; }
+      .el-tip { display:none !important; }
+    }
+  </style>
+</head>
+<body>
+<div id="app">
+
+  <header class="game-header">
+    <div class="header-left">
+      <a href="index.html" style="font-family:'Cinzel',serif;font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:#a09070;text-decoration:none;display:inline-flex;align-items:center;gap:4px;transition:color 0.15s;" onmouseover="this.style.color='#f0d080'" onmouseout="this.style.color='#a09070'">← Hub</a>
+    </div>
+    <div class="header-center">
+      <img class="phoenix-logo" src="data:image/png;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/4gHYSUNDX1BST0ZJTEUAAQEAAAHIAAAAAAQwAABtbnRyUkdCIFhZWiAH4AABAAEAAAAAAABhY3NwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQAA9tYAAQAAAADTLQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAlkZXNjAAAA8AAAACRyWFlaAAABFAAAABRnWFlaAAABKAAAABRiWFlaAAABPAAAABR3dHB0AAABUAAAABRyVFJDAAABZAAAAChnVFJDAAABZAAAAChiVFJDAAABZAAAAChjcHJ0AAABjAAAADxtbHVjAAAAAAAAAAEAAAAMZW5VUwAAAAgAAAAcAHMAUgBHAEJYWVogAAAAAAAAb6IAADj1AAADkFhZWiAAAAAAAABimQAAt4UAABjaWFlaIAAAAAAAACSgAAAPhAAAts9YWVogAAAAAAAA9tYAAQAAAADTLXBhcmEAAAAAAAQAAAACZmYAAPKnAAANWQAAE9AAAApbAAAAAAAAAABtbHVjAAAAAAAAAAEAAAAMZW5VUwAAACAAAAAcAEcAbwBvAGcAbABlACAASQBuAGMALgAgADIAMAAxADb/2wBDAAUDBAQEAwUEBAQFBQUGBwwIBwcHBw8LCwkMEQ8SEhEPERETFhwXExQaFRERGCEYGh0dHx8fExciJCIeJBweHx7/2wBDAQUFBQcGBw4ICA4eFBEUHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh7/wAARCABAAEADASIAAhEBAxEB/8QAHAAAAwEAAgMAAAAAAAAAAAAABQYHCAAEAQID/8QAMBAAAQMDAwIFAwMFAQAAAAAAAQIDBAUGEQAhMQcSExQiQVEIFXEyQpEjUmGBobH/xAAZAQEBAQEBAQAAAAAAAAAAAAAGBQADBwH/xAAvEQABAwMDAgQFBAMAAAAAAAABAgMRAAQFITFBElEGYXGBFCORobETIlLBYtHw/9oADAMBAAIRAxEAPwDGWiFFpE2qyA1FbJGd1Hga9aHTX6rUW4rKSe4+o/A1fLLthmNHbYZaAAA3xzqRlcqixR3VTLwr4VVmFF989LKdzyT2H9nik23enUZISuWC+vkg/p05QrLjNMBtENCUfHbtojb1Sk3JdjluWo22mPE3nVNae4JA2w2njOdsnVfboDUWG2JDivDCkoCnDkqUogD/AGSeNef5bO3TK0pdVCjrHIB2kcT23p9ZZPDWsosmEhCdCogGfQmSfx2qHzLMiuslC4aFJ+O3SZcXTmOoKXD7o6+QP261G5QW5MNwMOK8MqUgqbOClSTg/wCwRxqQ3DUpFt3Y3bl1ttqYl7wqmhPaFA+zieM52yNbEZ26eWQ0qVDWOSBvA5jtvX29yeGuoResJKFaBQA09xBH4rOVZpM2lSCzLaKfhWNjroa0XedsMyWHWH2gQQfbjUEr9MepNRciug4B9J+Rr0DFZVF8j/KgHirwqrDqD7B6mVbHkHsf6PNPvTWG1Tqb591yEl945SiT3J7kfCV8An43/GqlTL3o9v1GHBuVlNP8xBMkqSlSwhRVhLe2+cA7/J0mW8l0vQAxAfMdp1KWyHyUpCiAT2EEe5/jVorFjUe8LbfiTorRlIYV5aTjC2lAZG/xn20Nzt1bB8fFg9KiZIIkcD6edW2RfMY4oYUUhEQDMKnUnXv5ACvr9JtCgOWbPrEVnsRPqLqkZ5DaThIP43/nTf8AUHVk2tYUWY00FynKpFTGQVBKVOJcCwFH2HpOkr6H6/GkWxU7VdcT5yBKLyEk7qbVtkfgg/zqm/VFApS+iVYnVNJKoPZIiKGMpfCsI55GTuPjURzDqfz7i35ICxA8tI+0UQN0RaBKTxQj6fKqm6bCkzHWgiU3VJSZKQoKSlxThWQk+49Q0nfVlQoDdnU+syme9ECpNKXjktqOFAfnb+NUj6XoFKR0So86mpIVO75EtRxlT5Vhew4GRsPjUy+uCvxo9s0y1WnEmZOlB5aAd0tp2yfyT/zWbw6mM+2tiQCsz6az9prC6JtClR4pNm3nRbmq0um24pEgMwhJD62VYKgfUjt2PBGpb1HifcaV5s+T80yCtTcX1eGn3C1ZO/8AjWhaRYtGtC2mYcGK2JK2EiTJxlbqiMnf4z7ailWajsGbEVT6ke0qQ4XioN+GkqwRgAHAA3OedXMDdWxfPwgPSkiCYk8E+9LX/jHscE3CuoLBkfugbEQBpI8/9GiNp3CiL5BqPT/MB3t7Vl72yB+kA777ZI4OjNydaXqHAqtBRSXG6y2Vxg/3ANgcBwDnON8amFgVXxaV5AqfW4gkIaQohKjjbuCdyM/O2rDatBtW5JyKlWaZDnVFj+k6pBUG1dv6SRnCjjGedd8pa2Vs8XLtoqSNdO86c7cGuLtxkMo0n9J7ccxtGo23FQqw7urNmXPGuGiSfDlMq9QO6XEnlKh7g6vXWjr/AEHqH0UdoTUaRT606+0Xo6k9yFJSckpUPbIHOvHX60bBidPXqrFgw6VVmVIEUR8I8YkgFJSOdsnP+NZo1exlxa5xAvUIKVJMa8xr6EUHvLd2xcLCyDWmOjHX+g9POijNCcjSKhWmn3SzHSO1CUqOQVKPtknjUEvy7qzedzybhrcnxJTyvSBsltI4SkewGgOtMdAbRsGX09ZqsqDDqtWeUsShIwvwSCcJCTxtg51sncWuDQb1SCpSjGnE6+gFazt3b5wMIIFCrb60PV2DSaAukuOVlwojF/uBbI4LhHOcb40G6iyWluOqlTakpAWr+gtgNpb53z27j/fvpqumhWfbVQ+40+htsSZSvLhSHShLQWCCoeydttRu9qg3Cpr0KNIfUHllAbcV6kJGxSoA4PHI1DxNtZvvh6zbKEng9+eTAHFM1Ku7BhTd0oK0+g441k6UmUWoOU2al9BJQfS4n+5PuNVS0a28Kl5+IlDzbjaWAjIAUknJaA4SPk87fOo7rt06oSILmWlZQT6kH9KtMb2yTcpI5otjsiGPluz07iODt9O4/wCN7pdjW5Xam3V6pKnmOSSYK5PiIH4c57f+6YLw6YWZUqA+mi0/7dUW2yphbbilBagNkqBJ2PzqQwb3YmUxFNdV5HKkhSgMpCQcn/zGmGn1ypMELp9THk/SAsqKR+pSjjBwBvjGONEH7DJhwLDyk9J0GsR5xofeTTU2eJcb6bZAcBAlQICuoj+J1AHsKfbQ6X2ZTaAwmtU77jUnGwp9bjikhCiN0pAI2HzpZqtp2db9b+4QanPDCjkQWHvRscHucH7ASAeSNA51eedaacemy3mWVocdTJdC+5eFBeMkjt3GM/Glir3NTY0t52n+IrvcUsNA5b9QwQfnfPxrpaY/IKdUtx5R6txx6a7ewqfcNWLTSUltKYjUnXmTGk7bHuOKea5dyRTZjdWa8FTLikNtelSCj9qQRzj8ai1ZnrqM1b6gEp4QgDASNcqtTlVJ7xJCyQNkpzsBrpaT4/Gt2YJA1NRczn3b5pFqk/LRtMSfWO3Ff//Z" alt="RPG Logo" />
+      <h1 class="game-title">The Sand Sanctum</h1>
+    </div>
+    <div class="header-right"></div>
+  </header>
+
+  <div class="game-body">
+    <div class="canvas-wrap" id="canvasWrap">
+      <canvas id="sandCanvas"></canvas>
+      <div id="cursorPreview"></div>
+    </div>
+
+    <div class="side-panel">
+
+      <!-- Elements -->
+      <div class="rpg-panel">
+        <p class="panel-title">⚗ Element</p>
+        <div class="element-grid">
+          <button class="el-btn active" data-el="sand" onclick="selectElement('sand')">
+            <span class="el-dot" style="background:linear-gradient(135deg,#d4a843,#8b6914)"></span>Sand
+            <span class="el-tip"><strong>Sand</strong>Falls and piles with depth-darkening colour. Slides off slopes. Displaced by water.</span>
+          </button>
+          <button class="el-btn" data-el="water" onclick="selectElement('water')">
+            <span class="el-dot" style="background:linear-gradient(135deg,#4090d0,#1a5090)"></span>Water
+            <span class="el-tip"><strong>Water</strong>Flows and fills. Evaporates near Fire or Lava into Steam. Dissolves Salt. Neutralises Acid.</span>
+          </button>
+          <button class="el-btn" data-el="stone" onclick="selectElement('stone')">
+            <span class="el-dot" style="background:linear-gradient(135deg,#888,#444)"></span>Stone
+            <span class="el-tip"><strong>Stone</strong>Permanent solid. Builds walls, dams, and chambers. Acid will dissolve it over time.</span>
+          </button>
+          <button class="el-btn" data-el="salt" onclick="selectElement('salt')">
+            <span class="el-dot" style="background:linear-gradient(135deg,#e8e0d0,#b8b0a0)"></span>Salt
+            <span class="el-tip"><strong>Salt</strong>Falls like Sand. Disappears instantly on contact with Water — leaving no trace.</span>
+          </button>
+          <button class="el-btn" data-el="fire" onclick="selectElement('fire')">
+            <span class="el-dot" style="background:linear-gradient(135deg,#ff6020,#cc2000)"></span>Fire
+            <span class="el-tip"><strong>Fire</strong>Rises and flickers. Burns Wood. Turns nearby Water to Steam. Ignites Oil explosively.</span>
+          </button>
+          <button class="el-btn" data-el="smoke" onclick="selectElement('smoke')">
+            <span class="el-dot" style="background:linear-gradient(135deg,#707070,#404040)"></span>Smoke
+            <span class="el-tip"><strong>Smoke</strong>Drifts upward and fades. Produced by Fire and burning Wood.</span>
+          </button>
+          <button class="el-btn" data-el="oil" onclick="selectElement('oil')">
+            <span class="el-dot" style="background:linear-gradient(135deg,#604020,#301808)"></span>Oil
+            <span class="el-tip"><strong>Oil</strong>Flows and floats on Water. Ignites explosively when touched by Fire or Lava.</span>
+          </button>
+          <button class="el-btn" data-el="lava" onclick="selectElement('lava')">
+            <span class="el-dot" style="background:linear-gradient(135deg,#ff4000,#800000)"></span>Lava
+            <span class="el-tip"><strong>Lava</strong>Slow-flowing. Solidifies with Water or Ice into Stone. Ignites Oil and Wood. Cools over time.</span>
+          </button>
+          <button class="el-btn" data-el="wood" onclick="selectElement('wood')">
+            <span class="el-dot" style="background:linear-gradient(135deg,#8b5e2a,#4a2e10)"></span>Wood
+            <span class="el-tip"><strong>Wood</strong>Static solid. Burns slowly when Fire or Lava is adjacent, releasing Smoke.</span>
+          </button>
+          <button class="el-btn" data-el="ice" onclick="selectElement('ice')">
+            <span class="el-dot" style="background:linear-gradient(135deg,#a0d8f0,#6090b0)"></span>Ice
+            <span class="el-tip"><strong>Ice</strong>Solid. Melts to Water when Fire or Lava is nearby. Also melts slowly on its own.</span>
+          </button>
+          <button class="el-btn" data-el="steam" onclick="selectElement('steam')">
+            <span class="el-dot" style="background:linear-gradient(135deg,#c0d8e8,#8090a0)"></span>Steam
+            <span class="el-tip"><strong>Steam</strong>Rises quickly. Condenses back into Water after a short lifetime.</span>
+          </button>
+          <button class="el-btn" data-el="acid" onclick="selectElement('acid')">
+            <span class="el-dot" style="background:linear-gradient(135deg,#80e040,#3a8010)"></span>Acid
+            <span class="el-tip"><strong>Acid</strong>Flows like Water. Slowly dissolves Sand, Stone, and Wood. Neutralised by Water.</span>
+          </button>
+          <button class="el-btn" data-el="gunpowder" onclick="selectElement('gunpowder')">
+            <span class="el-dot" style="background:linear-gradient(135deg,#6a6858,#38362a)"></span>Powder
+            <span class="el-tip"><strong>Gunpowder</strong>Falls like Sand. Explodes in a chain reaction when touched by Fire or Lava — igniting adjacent powder instantly.</span>
+          </button>
+          <button class="el-btn" data-el="mud" onclick="selectElement('mud')">
+            <span class="el-dot" style="background:linear-gradient(135deg,#7a6040,#4a3020)"></span>Mud
+            <span class="el-tip"><strong>Mud</strong>Formed when Water soaks Sand. Falls slowly. Dries into Stone over time if no Water is nearby.</span>
+          </button>
+          <button class="el-btn" data-el="vine" onclick="selectElement('vine')">
+            <span class="el-dot" style="background:linear-gradient(135deg,#1e9014,#0d4a0a)"></span>Vine
+            <span class="el-tip"><strong>Vine</strong>Grows slowly upward into empty space. Burns instantly from Fire. Absorbs Water — slowing its spread nearby.</span>
+          </button>
+          <button class="el-btn" data-el="wax" onclick="selectElement('wax')">
+            <span class="el-dot" style="background:linear-gradient(135deg,#f0dca0,#c0a860)"></span>Wax
+            <span class="el-tip"><strong>Wax</strong>Solid. Melts into slow-flowing liquid Wax when Fire or Lava is adjacent. Re-solidifies when all heat is gone.</span>
+          </button>
+          <button class="el-btn" data-el="virus" onclick="selectElement('virus')">
+            <span class="el-dot" style="background:linear-gradient(135deg,#e028e0,#801880)"></span>Virus
+            <span class="el-tip"><strong>Virus</strong>Spreads by converting adjacent Sand, Salt, Wood, and Mud into more Virus. Destroyed by Fire, Lava, and Acid.</span>
+          </button>
+          <button class="el-btn" data-el="honey" onclick="selectElement('honey')">
+            <span class="el-dot" style="background:linear-gradient(135deg,#e8a820,#a06010)"></span>Honey
+            <span class="el-tip"><strong>Honey</strong>Ultra-viscous liquid. Falls and spreads very slowly. Traps Sand, Salt, and Water that fall into it. Fire dissolves it to Smoke.</span>
+          </button>
+          <button class="el-btn" data-el="ash" onclick="selectElement('ash')">
+            <span class="el-dot" style="background:linear-gradient(135deg,#b0ac9e,#7a7870)"></span>Ash
+            <span class="el-tip"><strong>Ash</strong>Left behind when Wood or Vine finishes burning. Floats on Water as a film. Blown upward by Fire beneath it. Dissolves slowly in Acid.</span>
+          </button>
+          <button class="el-btn" data-el="glass" onclick="selectElement('glass')">
+            <span class="el-dot" style="background:linear-gradient(135deg,#c8e8f0,#88b8d0)"></span>Glass
+            <span class="el-tip"><strong>Glass</strong>Created when Sand meets Lava. Permanent solid but Acid dissolves it twice as fast as Stone. Shatters to Sand from a Blast.</span>
+          </button>
+          <button class="el-btn" data-el="alcohol" onclick="selectElement('alcohol')">
+            <span class="el-dot" style="background:linear-gradient(135deg,#e0d880,#a0a030)"></span>Alcohol
+            <span class="el-tip"><strong>Alcohol</strong>Flows like Water. Ignites from Fire into fast blue flame. Mixes with Water (dilutes). Dissolves Wax. Evaporates to Steam over time.</span>
+          </button>
+          <button class="el-btn" data-el="quicksand" onclick="selectElement('quicksand')">
+            <span class="el-dot" style="background:linear-gradient(135deg,#c8a840,#907020)"></span>Quicksand
+            <span class="el-tip"><strong>Quicksand</strong>Looks like sand but acts as a slow liquid — particles that fall in sink gradually. Water converts it back to Sand. Vine can grow through it.</span>
+          </button>
+          <button class="el-btn" data-el="fog" onclick="selectElement('fog')">
+            <span class="el-dot" style="background:linear-gradient(135deg,#d8e4ee,#a0b8cc)"></span>Fog
+            <span class="el-tip"><strong>Fog</strong>Drifts slowly and dims the cells behind it. Condenses on Ice into Water. Dispersed by Fire. Feeds Vine — it grows faster when surrounded.</span>
+          </button>
+          <button class="el-btn" data-el="methane" onclick="selectElement('methane')">
+            <span class="el-dot" style="background:linear-gradient(135deg,#303828,#181e10)"></span>Methane
+            <span class="el-tip"><strong>Methane</strong>Dark, near-invisible gas that rises. Ignites explosively from Fire or Lava — detonating in a pressure burst that blasts nearby particles outward.</span>
+          </button>
+          <button class="el-btn" data-el="soap" onclick="selectElement('soap')">
+            <span class="el-dot" style="background:linear-gradient(135deg,#f0f4ff,#c8d8f0)"></span>Soap
+            <span class="el-tip"><strong>Soap</strong>In Water it generates rising foam bubbles. Neutralises Acid safely on contact. Makes Oil temporarily mix with Water. Burns from Fire.</span>
+          </button>
+          <button class="el-btn" data-el="seed" onclick="selectElement('seed')">
+            <span class="el-dot" style="background:linear-gradient(135deg,#608040,#304018)"></span>Seed
+            <span class="el-tip"><strong>Seed</strong>Falls like Sand. If it lands on Mud or Sand adjacent to Water it sprouts into Vine. Cooked to Ash by Fire. Dissolved by Acid.</span>
+          </button>
+          <button class="el-btn" data-el="slime" onclick="selectElement('slime')">
+            <span class="el-dot" style="background:linear-gradient(135deg,#30d898,#108050)"></span>Slime
+            <span class="el-tip"><strong>Slime</strong>Viscous and alive — crawls slowly upward against gravity. Absorbs Water and grows faster. Splits from Blasts. Acid kills it. Fire turns it to Smoke.</span>
+          </button>
+          <button class="el-btn" data-el="source" onclick="selectElement('source')" style="grid-column:span 2;">
+            <span class="el-dot" style="background:rgba(200,149,42,0.25);border:1px solid #c8952a;width:20px;height:12px;border-radius:2px;display:inline-block;"></span>Dropper ∞
+            <span class="el-tip"><strong>Dropper</strong>A permanent emitter. Select your element first, then place a Dropper — it will endlessly spawn that element. Right-click any cell to erase it.</span>
+          </button>
+          <button class="el-btn" data-el="erase" onclick="selectElement('erase')" style="grid-column:span 2;">
+            <span class="el-dot" style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.18);width:20px;height:12px;border-radius:2px;display:inline-block;"></span>Erase
+            <span class="el-tip"><strong>Erase</strong>Removes all particles under your brush. Drag to wipe large areas.</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Tool -->
+      <div class="rpg-panel">
+        <p class="panel-title">🔧 Tool</p>
+        <div class="tool-row">
+          <button class="tool-btn active" data-tool="draw"    onclick="selectTool('draw')">Draw</button>
+          <button class="tool-btn"         data-tool="dropper" onclick="selectTool('dropper')">Dropper</button>
+          <button class="tool-btn"         data-tool="explode" onclick="selectTool('explode')">Blast</button>
+        </div>
+      </div>
+
+      <!-- Brush -->
+      <div class="rpg-panel">
+        <p class="panel-title">✦ Brush</p>
+        <div class="brush-row">
+          <button class="brush-btn active" data-sz="1"  onclick="selectBrush(1)">S</button>
+          <button class="brush-btn"         data-sz="3"  onclick="selectBrush(3)">M</button>
+          <button class="brush-btn"         data-sz="6"  onclick="selectBrush(6)">L</button>
+          <button class="brush-btn"         data-sz="10" onclick="selectBrush(10)">XL</button>
+        </div>
+      </div>
+
+      <!-- Stats -->
+      <div class="rpg-panel">
+        <p class="panel-title">⚜ Sanctum</p>
+        <div class="stat-row"><span class="stat-label">Grains</span><span class="stat-val" id="statGrains">0</span></div>
+        <div class="stat-row"><span class="stat-label">Liquid</span><span class="stat-val" id="statDrops">0</span></div>
+        <div class="stat-row"><span class="stat-label">Flames</span><span class="stat-val" id="statFire">0</span></div>
+        <div class="stat-row"><span class="stat-label">Solid</span><span class="stat-val" id="statStone">0</span></div>
+        <div class="stat-row"><span class="stat-label">Active</span><span class="stat-val" id="statActive">0</span></div>
+      </div>
+
+      <!-- Undo/Redo -->
+      <div class="rpg-panel">
+        <p class="panel-title">↩ History</p>
+        <div class="undo-row">
+          <button class="action-btn subtle" id="btnUndo" onclick="undo()" style="flex:1">↩ Undo</button>
+          <button class="action-btn subtle" id="btnRedo" onclick="redo()" style="flex:1">↪ Redo</button>
+        </div>
+      </div>
+
+      <!-- Scenarios -->
+      <div class="rpg-panel">
+        <p class="panel-title">🎭 Scenarios</p>
+        <button class="scenario-btn" onclick="loadScenario('dam')">       <span>🏛</span>The Great Dam</button>
+        <button class="scenario-btn" onclick="loadScenario('volcano')">   <span>🌋</span>Volcano</button>
+        <button class="scenario-btn" onclick="loadScenario('hourglass')"> <span>⌛</span>Hourglass</button>
+        <button class="scenario-btn" onclick="loadScenario('glacier')">   <span>🧊</span>Glacier Melt</button>
+        <button class="scenario-btn" onclick="loadScenario('maze')">      <span>🌀</span>Labyrinth</button>
+      </div>
+
+      <!-- Actions -->
+      <div class="rpg-panel">
+        <p class="panel-title">⚡ Actions</p>
+        <button class="action-btn" onclick="fillWater()">≋ Fill Water</button>
+        <button class="action-btn" onclick="dropSandRain()">⋮ Sand Rain</button>
+        <button class="action-btn danger" onclick="clearAll(false)">✕ Clear All</button>
+      </div>
+
+      <!-- Chronicle -->
+      <div class="rpg-panel" style="flex:1;display:flex;flex-direction:column;min-height:0;overflow:hidden;">
+        <p class="panel-title">📜 Chronicle</p>
+        <div class="chronicle" id="chronicle"></div>
+      </div>
+
+    </div>
+  </div>
+
+  <footer class="game-footer">
+    <span>© <span id="year"></span> Rising Phoenix Gallery · Michigan City, IN</span>
+    <span>Crafted by John Ryszka II</span>
+  </footer>
+</div>
+
+<div id="confetti-layer"></div>
+<div id="victory-msg">
+  <h2>⚜ The Sanctum is Complete ⚜</h2>
+  <p>The sands have settled into perfect harmony.<br>A masterwork of ancient patience.</p>
+</div>
+
+<script>
+  document.getElementById('year').textContent = new Date().getFullYear();
+
+  // ═══════════════════════════════════════════════════
+  // CONSTANTS
+  // ═══════════════════════════════════════════════════
+  var EMPTY=0,SAND=1,WATER=2,STONE=3,FIRE=4,SMOKE=5,OIL=6,LAVA=7,SALT=8,WOOD=9,ICE=10,STEAM=11,ACID=12,SOURCE=13;
+  var GUNPOWDER=14,MUD=15,VINE=16,WAX=17,VIRUS=18,HONEY=19;
+  var ASH=20,GLASS=21,ALCOHOL=22,QUICKSAND=23,FOG=24,METHANE=25,SOAP=26,SEED=27,SLIME=28;
+  var CELL=3;
+  var COLS=0,ROWS=0;
+
+  var BASE_COLOR=[
+    [8,6,4],       // EMPTY
+    [212,168,67],  // SAND
+    [64,144,208],  // WATER
+    [120,112,100], // STONE
+    [255,90,10],   // FIRE
+    [100,96,90],   // SMOKE
+    [90,60,30],    // OIL
+    [255,70,0],    // LAVA
+    [230,224,210], // SALT
+    [139,94,42],   // WOOD
+    [160,216,240], // ICE
+    [192,216,232], // STEAM
+    [128,224,64],  // ACID  — sharp yellow-lime
+    [200,149,42],  // SOURCE
+    [60,58,48],    // GUNPOWDER
+    [100,80,50],   // MUD
+    [30,140,20],   // VINE  — deep forest green
+    [240,220,180], // WAX
+    [220,40,220],  // VIRUS — hot magenta/purple
+    [220,160,30],  // HONEY
+    [180,176,168], // ASH
+    [200,230,240], // GLASS
+    [220,200,120], // ALCOHOL
+    [190,155,60],  // QUICKSAND
+    [210,220,230], // FOG
+    [40,50,30],    // METHANE
+    [240,245,255], // SOAP
+    [80,160,60],   // SEED
+    [60,200,120],  // SLIME — cyan-teal
+  ];
+
+  // ═══════════════════════════════════════════════════
+  // GRID STATE
+  // ═══════════════════════════════════════════════════
+  var grid, colorGrid, lifeGrid, dirtyGrid, sourceType;
+  var initialized=false;
+  var canvas=document.getElementById('sandCanvas');
+  var ctx=canvas.getContext('2d');
+  var imageData, pixels;
+  var wrap=document.getElementById('canvasWrap');
+
+  function initGrid(keepState) {
+    var rect=wrap.getBoundingClientRect();
+    var w=Math.floor(rect.width/CELL)*CELL;
+    var h=Math.floor(rect.height/CELL)*CELL;
+    if(!w||!h) return;
+    var newCOLS=Math.floor(w/CELL), newROWS=Math.floor(h/CELL);
+    var size=newCOLS*newROWS;
+    var ng=new Uint8Array(size), nc=new Uint8Array(size*3), nl=new Uint16Array(size);
+    var nd=new Uint8Array(size), ns=new Uint8Array(size);
+    if(keepState&&grid&&COLS&&ROWS){
+      var minC=Math.min(COLS,newCOLS), minR=Math.min(ROWS,newROWS);
+      for(var r=0;r<minR;r++) for(var c=0;c<minC;c++){
+        var oi=r*COLS+c, ni=r*newCOLS+c;
+        ng[ni]=grid[oi]; nl[ni]=lifeGrid[oi]; ns[ni]=sourceType[oi];
+        nc[ni*3]=colorGrid[oi*3]; nc[ni*3+1]=colorGrid[oi*3+1]; nc[ni*3+2]=colorGrid[oi*3+2];
+      }
+    }
+    COLS=newCOLS; ROWS=newROWS;
+    canvas.width=w; canvas.height=h;
+    grid=ng; colorGrid=nc; lifeGrid=nl; dirtyGrid=nd; sourceType=ns;
+    imageData=ctx.createImageData(w,h);
+    pixels=imageData.data;
+    for(var i=3;i<pixels.length;i+=4) pixels[i]=255;
+    dirtyGrid.fill(1);
+    initialized=true;
+    if(!keepState){ chronicle('The Sanctum awakens…'); chronicle('Hover an element for lore.'); }
+  }
+
+  function idx(c,r){ return r*COLS+c; }
+  function inBounds(c,r){ return c>=0&&c<COLS&&r>=0&&r<ROWS; }
+
+  function setCell(c,r,type,life){
+    if(!inBounds(c,r)) return;
+    var i=idx(c,r);
+    grid[i]=type;
+    lifeGrid[i]=(life!==undefined)?life:0;
+    var base=BASE_COLOR[type]||BASE_COLOR[0];
+    var v=(type===EMPTY)?0:Math.round((Math.random()-0.5)*22);
+    colorGrid[i*3]=Math.max(0,Math.min(255,base[0]+v));
+    colorGrid[i*3+1]=Math.max(0,Math.min(255,base[1]+v));
+    colorGrid[i*3+2]=Math.max(0,Math.min(255,base[2]+v));
+    dirtyGrid[i]=1;
+  }
+
+  function getCell(c,r){
+    if(!inBounds(c,r)) return -1;
+    return grid[idx(c,r)];
+  }
+
+  function swapCells(c1,r1,c2,r2){
+    var i1=idx(c1,r1),i2=idx(c2,r2),t;
+    t=grid[i1];      grid[i1]=grid[i2];           grid[i2]=t;
+    t=lifeGrid[i1];  lifeGrid[i1]=lifeGrid[i2];   lifeGrid[i2]=t;
+    t=sourceType[i1];sourceType[i1]=sourceType[i2];sourceType[i2]=t;
+    t=colorGrid[i1*3];   colorGrid[i1*3]=colorGrid[i2*3];     colorGrid[i2*3]=t;
+    t=colorGrid[i1*3+1]; colorGrid[i1*3+1]=colorGrid[i2*3+1]; colorGrid[i2*3+1]=t;
+    t=colorGrid[i1*3+2]; colorGrid[i1*3+2]=colorGrid[i2*3+2]; colorGrid[i2*3+2]=t;
+    dirtyGrid[i1]=1; dirtyGrid[i2]=1;
+  }
+
+  // ═══════════════════════════════════════════════════
+  // UNDO / REDO
+  // ═══════════════════════════════════════════════════
+  var UNDO_LIMIT=20, undoStack=[], redoStack=[];
+
+  function snapshot(){
+    if(!initialized) return;
+    if(undoStack.length>=UNDO_LIMIT) undoStack.shift();
+    undoStack.push({g:grid.slice(),c:colorGrid.slice(),l:lifeGrid.slice(),s:sourceType.slice()});
+    redoStack=[];
+    updateUndoButtons();
+  }
+
+  function undo(){
+    if(!undoStack.length) return;
+    redoStack.push({g:grid.slice(),c:colorGrid.slice(),l:lifeGrid.slice(),s:sourceType.slice()});
+    var snap=undoStack.pop();
+    grid.set(snap.g); colorGrid.set(snap.c); lifeGrid.set(snap.l); sourceType.set(snap.s);
+    dirtyGrid.fill(1); updateUndoButtons(); chronicle('History unravelled…');
+  }
+
+  function redo(){
+    if(!redoStack.length) return;
+    undoStack.push({g:grid.slice(),c:colorGrid.slice(),l:lifeGrid.slice(),s:sourceType.slice()});
+    var snap=redoStack.pop();
+    grid.set(snap.g); colorGrid.set(snap.c); lifeGrid.set(snap.l); sourceType.set(snap.s);
+    dirtyGrid.fill(1); updateUndoButtons(); chronicle('History restored…');
+  }
+
+  function updateUndoButtons(){
+    document.getElementById('btnUndo').style.opacity=undoStack.length?'1':'0.4';
+    document.getElementById('btnRedo').style.opacity=redoStack.length?'1':'0.4';
+  }
+
+  // ═══════════════════════════════════════════════════
+  // SIMULATION
+  // ═══════════════════════════════════════════════════
+  var scanDir=1, activeCount=0;
+
+  function step(){
+    if(!initialized) return;
+    scanDir=-scanDir;
+    activeCount=0;
+    // Tick sources — emit element into any adjacent empty cell
+    var srcNbs=[0,1,1,0,-1,0,0,-1]; // down, right, left, up
+    for(var si=0;si<grid.length;si++){
+      if(grid[si]!==SOURCE) continue;
+      var sc=si%COLS, sr=Math.floor(si/COLS);
+      var elType=sourceType[si]||SAND;
+      // Try each neighbor direction; emit once per tick into first empty found
+      for(var sn=0;sn<8;sn+=2){
+        var tc=sc+srcNbs[sn], tr=sr+srcNbs[sn+1];
+        if(inBounds(tc,tr)&&grid[idx(tc,tr)]===EMPTY){
+          setCell(tc,tr,elType);
+          break; // one emission per source cell per tick
+        }
+      }
+      // Keep source cell visually pulsing in its element color
+      var bc=BASE_COLOR[elType]||BASE_COLOR[1];
+      var pulse=Math.round(Math.sin(Date.now()/200+si)*15);
+      colorGrid[si*3]  =Math.max(0,Math.min(255,bc[0]+pulse));
+      colorGrid[si*3+1]=Math.max(0,Math.min(255,bc[1]+pulse));
+      colorGrid[si*3+2]=Math.max(0,Math.min(255,bc[2]+pulse));
+      dirtyGrid[si]=1;
+    }
+    for(var r=ROWS-1;r>=0;r--){
+      var start=scanDir>0?0:COLS-1, end=scanDir>0?COLS:-1;
+      for(var c=start;c!==end;c+=scanDir){
+        var type=grid[idx(c,r)];
+        if(type===EMPTY||type===STONE||type===SOURCE) continue;
+        activeCount++;
+        if(type===SAND)       stepSand(c,r);
+        else if(type===WATER) stepWater(c,r);
+        else if(type===FIRE)  stepFire(c,r);
+        else if(type===SMOKE) stepSmoke(c,r);
+        else if(type===OIL)   stepOil(c,r);
+        else if(type===LAVA)  stepLava(c,r);
+        else if(type===SALT)  stepSalt(c,r);
+        else if(type===WOOD)  stepWood(c,r);
+        else if(type===ICE)   stepIce(c,r);
+        else if(type===STEAM) stepSteam(c,r);
+        else if(type===ACID)  stepAcid(c,r);
+        else if(type===GUNPOWDER) stepGunpowder(c,r);
+        else if(type===MUD)   stepMud(c,r);
+        else if(type===VINE)  stepVine(c,r);
+        else if(type===WAX)   stepWax(c,r);
+        else if(type===VIRUS) stepVirus(c,r);
+        else if(type===HONEY) stepHoney(c,r);
+        else if(type===ASH)       stepAsh(c,r);
+        else if(type===GLASS)     stepGlass(c,r);
+        else if(type===ALCOHOL)   stepAlcohol(c,r);
+        else if(type===QUICKSAND) stepQuicksand(c,r);
+        else if(type===FOG)       stepFog(c,r);
+        else if(type===METHANE)   stepMethane(c,r);
+        else if(type===SOAP)      stepSoap(c,r);
+        else if(type===SEED)      stepSeed(c,r);
+        else if(type===SLIME)     stepSlime(c,r);
+      }
+    }
+  }
+
+  function stepSand(c,r){
+    var below=getCell(c,r+1);
+    if(below===EMPTY||below===WATER||below===FIRE||below===OIL||below===ACID||below===QUICKSAND){swapCells(c,r,c,r+1);return;}
+    // Sink slowly into honey, get trapped
+    if(below===HONEY&&Math.random()<0.03){swapCells(c,r,c,r+1);return;}
+    var dl=Math.random()<0.5, c1=dl?c-1:c+1, c2=dl?c+1:c-1;
+    var b1=getCell(c1,r+1), b2=getCell(c2,r+1);
+    if(b1===EMPTY||b1===WATER||b1===FIRE||b1===OIL||b1===ACID||b1===QUICKSAND){swapCells(c,r,c1,r+1);return;}
+    if(b2===EMPTY||b2===WATER||b2===FIRE||b2===OIL||b2===ACID||b2===QUICKSAND){swapCells(c,r,c2,r+1);return;}
+    // Adjacent water turns sand to mud
+    var nbs=[0,-1,1,0,-1,0,0,1];
+    for(var n=0;n<8;n+=2){
+      if(getCell(c+nbs[n],r+nbs[n+1])===WATER&&Math.random()<0.003){setCell(c,r,MUD,0);return;}
+    }
+    // Depth-darken settled sand (#4)
+    var i=idx(c,r);
+    colorGrid[i*3]  =Math.max(80, colorGrid[i*3]  -(colorGrid[i*3]  >90?1:0));
+    colorGrid[i*3+1]=Math.max(50, colorGrid[i*3+1]-(colorGrid[i*3+1]>55?1:0));
+    colorGrid[i*3+2]=Math.max(0,  0);
+    dirtyGrid[i]=1;
+  }
+
+  function stepSalt(c,r){
+    var i=idx(c,r);
+    var below=getCell(c,r+1);
+    if(below===WATER){grid[i]=EMPTY;dirtyGrid[i]=1;return;}
+    if(below===EMPTY||below===FIRE||below===OIL){swapCells(c,r,c,r+1);return;}
+    var dl=Math.random()<0.5,c1=dl?c-1:c+1,c2=dl?c+1:c-1;
+    var b1=getCell(c1,r+1),b2=getCell(c2,r+1);
+    if(b1===EMPTY||b1===FIRE){swapCells(c,r,c1,r+1);return;}
+    if(b2===EMPTY||b2===FIRE){swapCells(c,r,c2,r+1);}
+  }
+
+  function stepWater(c,r){
+    // Evaporate near heat
+    var nbs=[0,-1, 1,0, -1,0, 0,1];
+    for(var n=0;n<8;n+=2){
+      var t=getCell(c+nbs[n],r+nbs[n+1]);
+      if((t===FIRE||t===LAVA)&&Math.random()<0.04){setCell(c,r,STEAM,0);return;}
+      // Vine absorbs water slowly
+      if(t===VINE&&Math.random()<0.008){grid[idx(c,r)]=EMPTY;dirtyGrid[idx(c,r)]=1;return;}
+      // Soap in water generates foam (soap bubble = treated as FOG cell rising)
+      if(t===SOAP&&Math.random()<0.02){setCell(c,r,FOG,0);return;}
+      // Acid neutralised by water
+      if(t===ACID&&Math.random()<0.01){grid[idx(c+nbs[n],r+nbs[n+1])]=EMPTY;dirtyGrid[idx(c+nbs[n],r+nbs[n+1])]=1;}
+    }
+    var below=getCell(c,r+1);
+    if(below===EMPTY||below===FIRE||below===SMOKE){swapCells(c,r,c,r+1);return;}
+    // Water sinks very slowly into honey (then trapped)
+    if(below===HONEY&&Math.random()<0.015){swapCells(c,r,c,r+1);return;}
+    // Water converts quicksand back to sand
+    var nbs2=[0,1,-1,0,1,0];
+    for(var n2=0;n2<6;n2+=2){
+      if(getCell(c+nbs2[n2],r+nbs2[n2+1])===QUICKSAND&&Math.random()<0.005){
+        setCell(c+nbs2[n2],r+nbs2[n2+1],SAND);
+      }
+    }
+    var dl=Math.random()<0.5;
+    for(var a=0;a<2;a++){
+      var dc=(a===0)?(dl?-1:1):(dl?1:-1);
+      var s=getCell(c+dc,r);
+      if(s===EMPTY||s===FIRE){swapCells(c,r,c+dc,r);return;}
+    }
+  }
+
+  function stepOil(c,r){
+    var below=getCell(c,r+1);
+    if(below===EMPTY||below===FIRE){swapCells(c,r,c,r+1);return;}
+    if(below===WATER){swapCells(c,r,c,r+1);return;}
+    var dl=Math.random()<0.5;
+    for(var a=0;a<2;a++){
+      var dc=(a===0)?(dl?-1:1):(dl?1:-1);
+      if(getCell(c+dc,r)===EMPTY){swapCells(c,r,c+dc,r);return;}
+    }
+  }
+
+  function stepFire(c,r){
+    var i=idx(c,r);
+    lifeGrid[i]++;
+    if(lifeGrid[i]>100+Math.round(Math.random()*80)){setCell(c,r,SMOKE,0);return;}
+    if(Math.random()<0.012){grid[i]=EMPTY;dirtyGrid[i]=1;return;}
+    var nbs=[0,-1,1,0,-1,0,0,1];
+    for(var n=0;n<8;n+=2){
+      var nc=c+nbs[n],nr=r+nbs[n+1],t=getCell(nc,nr);
+      if(t===OIL      &&Math.random()<0.18){setCell(nc,nr,FIRE,0);}
+      if(t===WOOD     &&Math.random()<0.04){setCell(nc,nr,FIRE,0);}
+      if(t===ICE      &&Math.random()<0.08){setCell(nc,nr,WATER,0);}
+      if(t===WATER    &&Math.random()<0.025){setCell(nc,nr,STEAM,0);}
+      if(t===GUNPOWDER&&Math.random()<0.9) {igniteGunpowder(nc,nr);}
+      if(t===VINE     &&Math.random()<0.4) {setCell(nc,nr,FIRE,0);}
+      if(t===HONEY    &&Math.random()<0.05){setCell(nc,nr,SMOKE,0);}
+      if(t===WAX      &&Math.random()<0.06){setCell(nc,nr,WAX,0); lifeGrid[idx(nc,nr)]=500;}// mark as molten via life flag
+      if(t===VIRUS    &&Math.random()<0.8) {grid[idx(nc,nr)]=EMPTY;dirtyGrid[idx(nc,nr)]=1;}
+      if(t===ALCOHOL  &&Math.random()<0.5) {setCell(nc,nr,FIRE,0);}
+      if(t===METHANE  &&Math.random()<0.8) {igniteMethane(nc,nr);}
+      if(t===SOAP     &&Math.random()<0.1) {setCell(nc,nr,SMOKE,0);}
+      if(t===SLIME    &&Math.random()<0.3) {setCell(nc,nr,SMOKE,0);}
+      if(t===SEED     &&Math.random()<0.2) {setCell(nc,nr,ASH,0);}
+      if(t===ASH      &&Math.random()<0.25){setCell(nc,nr,SMOKE,0);} // fire below blows ash up
+      if(t===GLASS    &&Math.random()<0.001){setCell(nc,nr,SMOKE,0);}// barely affected
+    }
+    if(getCell(c,r-1)===EMPTY&&Math.random()<0.4){swapCells(c,r,c,r-1);}
+    colorGrid[i*3]=215+Math.round(Math.random()*40);
+    colorGrid[i*3+1]=Math.round(Math.random()*115);
+    colorGrid[i*3+2]=0; dirtyGrid[i]=1;
+  }
+
+  function stepSmoke(c,r){
+    var i=idx(c,r);
+    lifeGrid[i]++;
+    if(lifeGrid[i]>80+Math.round(Math.random()*60)||Math.random()<0.004){grid[i]=EMPTY;dirtyGrid[i]=1;return;}
+    var dl=Math.random()<0.5;
+    if(getCell(c,r-1)===EMPTY&&Math.random()<0.5){swapCells(c,r,c,r-1);return;}
+    var dc=dl?-1:1;
+    if(getCell(c+dc,r)===EMPTY)swapCells(c,r,c+dc,r);
+    var fade=1+Math.round(Math.random()*2);
+    colorGrid[i*3]=Math.max(18,colorGrid[i*3]-fade);
+    colorGrid[i*3+1]=Math.max(16,colorGrid[i*3+1]-fade);
+    colorGrid[i*3+2]=Math.max(14,colorGrid[i*3+2]-fade);
+    dirtyGrid[i]=1;
+  }
+
+  function stepLava(c,r){
+    var i=idx(c,r);
+    lifeGrid[i]++;
+    if(lifeGrid[i]>400+Math.round(Math.random()*200)){setCell(c,r,STONE);return;}
+    var below=getCell(c,r+1);
+    if(below===EMPTY&&Math.random()<0.28){swapCells(c,r,c,r+1);return;}
+    if(below===WATER||below===ICE){setCell(c,r,STONE);setCell(c,r+1,STONE);return;}
+    if(Math.random()<0.1){
+      var dc=Math.random()<0.5?-1:1;
+      if(getCell(c+dc,r)===EMPTY)swapCells(c,r,c+dc,r);
+    }
+    var nbs=[1,0,-1,0,0,1,0,-1];
+    for(var n=0;n<8;n+=2){
+      var nc=c+nbs[n],nr=r+nbs[n+1],t=getCell(nc,nr);
+      if(t===OIL      &&Math.random()<0.08){setCell(nc,nr,FIRE,0);}
+      if(t===WOOD     &&Math.random()<0.05){setCell(nc,nr,FIRE,0);}
+      if(t===ICE      &&Math.random()<0.12){setCell(nc,nr,WATER,0);}
+      if(t===WATER    &&Math.random()<0.06){setCell(nc,nr,STEAM,0);}
+      if(t===GUNPOWDER&&Math.random()<0.8) {igniteGunpowder(nc,nr);}
+      if(t===VINE     &&Math.random()<0.3) {setCell(nc,nr,FIRE,0);}
+      if(t===HONEY    &&Math.random()<0.04){setCell(nc,nr,SMOKE,0);}
+      if(t===VIRUS    &&Math.random()<0.9) {grid[idx(nc,nr)]=EMPTY;dirtyGrid[idx(nc,nr)]=1;}
+      if(t===SAND     &&Math.random()<0.06){setCell(nc,nr,GLASS);}
+      if(t===ALCOHOL  &&Math.random()<0.4) {setCell(nc,nr,FIRE,0);}
+      if(t===METHANE  &&Math.random()<0.7) {igniteMethane(nc,nr);}
+      if(t===SLIME    &&Math.random()<0.5) {setCell(nc,nr,SMOKE,0);}
+      if(t===SEED     &&Math.random()<0.3) {setCell(nc,nr,ASH,0);}
+    }
+    colorGrid[i*3]=210+Math.round(Math.random()*45);
+    colorGrid[i*3+1]=40+Math.round(Math.random()*70);
+    colorGrid[i*3+2]=0; dirtyGrid[i]=1;
+  }
+
+  function stepWood(c,r){
+    var nbs=[0,-1,1,0,-1,0,0,1];
+    for(var n=0;n<8;n+=2){
+      var t=getCell(c+nbs[n],r+nbs[n+1]);
+      if((t===FIRE||t===LAVA||t===ALCOHOL)&&Math.random()<0.003){
+        // Small chance to leave ash instead of pure fire
+        if(Math.random()<0.3) setCell(c,r,ASH,0);
+        else setCell(c,r,FIRE,0);
+        return;
+      }
+    }
+  }
+
+  function stepIce(c,r){
+    var nbs=[0,-1,1,0,-1,0,0,1],heatNear=false;
+    for(var n=0;n<8;n+=2){
+      var t=getCell(c+nbs[n],r+nbs[n+1]);
+      if(t===FIRE||t===LAVA){heatNear=true;break;}
+    }
+    if(heatNear&&Math.random()<0.04){setCell(c,r,WATER);return;}
+    if(Math.random()<0.0002)setCell(c,r,WATER);
+  }
+
+  function stepSteam(c,r){
+    var i=idx(c,r);
+    lifeGrid[i]++;
+    if(lifeGrid[i]>90+Math.round(Math.random()*70)){setCell(c,r,WATER);return;}
+    var dl=Math.random()<0.5;
+    if(getCell(c,r-1)===EMPTY&&Math.random()<0.6){swapCells(c,r,c,r-1);return;}
+    var dc=dl?-1:1;
+    if(getCell(c+dc,r)===EMPTY&&Math.random()<0.45)swapCells(c,r,c+dc,r);
+    colorGrid[i*3]=Math.min(220,colorGrid[i*3]+1);
+    colorGrid[i*3+1]=Math.min(228,colorGrid[i*3+1]+1);
+    colorGrid[i*3+2]=Math.min(238,colorGrid[i*3+2]+1);
+    dirtyGrid[i]=1;
+  }
+
+  function stepAcid(c,r){
+    var targets=[[c,r+1],[c,r-1],[c-1,r],[c+1,r],[c-1,r+1],[c+1,r+1]];
+    for(var ti=0;ti<targets.length;ti++){
+      var tc=targets[ti][0],tr=targets[ti][1];
+      if(!inBounds(tc,tr)) continue;
+      var t=grid[idx(tc,tr)];
+      if((t===SAND||t===STONE||t===WOOD||t===SALT||t===GUNPOWDER||t===MUD||t===WAX||t===VINE||t===VIRUS||t===ASH||t===SLIME||t===SEED)&&Math.random()<0.04){
+        grid[idx(tc,tr)]=EMPTY; dirtyGrid[idx(tc,tr)]=1;
+        if(Math.random()<0.25){grid[idx(c,r)]=EMPTY;dirtyGrid[idx(c,r)]=1;return;}
+      }
+      // Glass dissolves 2x faster than stone
+      if(t===GLASS&&Math.random()<0.08){
+        grid[idx(tc,tr)]=EMPTY; dirtyGrid[idx(tc,tr)]=1;
+        if(Math.random()<0.2){grid[idx(c,r)]=EMPTY;dirtyGrid[idx(c,r)]=1;return;}
+      }
+      if(t===WATER&&Math.random()<0.035){grid[idx(c,r)]=EMPTY;dirtyGrid[idx(c,r)]=1;return;}
+      // Soap neutralises acid
+      if(t===SOAP&&Math.random()<0.06){grid[idx(c,r)]=EMPTY;dirtyGrid[idx(c,r)]=1;return;}
+    }
+    var below=getCell(c,r+1);
+    if(below===EMPTY||below===FIRE||below===SMOKE){swapCells(c,r,c,r+1);return;}
+    var dl=Math.random()<0.5;
+    for(var a=0;a<2;a++){
+      var dc=(a===0)?(dl?-1:1):(dl?1:-1);
+      if(getCell(c+dc,r)===EMPTY){swapCells(c,r,c+dc,r);return;}
+    }
+  }
+
+  // ── GUNPOWDER ─────────────────────────────────────────────
+  function stepGunpowder(c,r){
+    var below=getCell(c,r+1);
+    if(below===EMPTY||below===WATER||below===OIL||below===ACID){swapCells(c,r,c,r+1);return;}
+    if(below===HONEY&&Math.random()<0.02){swapCells(c,r,c,r+1);return;}
+    var dl=Math.random()<0.5, c1=dl?c-1:c+1, c2=dl?c+1:c-1;
+    var b1=getCell(c1,r+1), b2=getCell(c2,r+1);
+    if(b1===EMPTY||b1===WATER){swapCells(c,r,c1,r+1);return;}
+    if(b2===EMPTY||b2===WATER){swapCells(c,r,c2,r+1);return;}
+    // Check neighbors for ignition sources
+    var nbs=[0,-1,1,0,-1,0,0,1];
+    for(var n=0;n<8;n+=2){
+      var t=getCell(c+nbs[n],r+nbs[n+1]);
+      if((t===FIRE||t===LAVA)&&Math.random()<0.9){igniteGunpowder(c,r);return;}
+    }
+  }
+
+  function igniteGunpowder(c,r){
+    // Chain explosion: convert to fire, spread to all adjacent gunpowder in a flood
+    if(!inBounds(c,r)||grid[idx(c,r)]!==GUNPOWDER) return;
+    setCell(c,r,FIRE,0);
+    // Immediate ring
+    var nbs=[0,-1,1,0,-1,0,0,1,-1,-1,1,-1,-1,1,1,1];
+    for(var n=0;n<16;n+=2){
+      var nc=c+nbs[n],nr=r+nbs[n+1];
+      if(inBounds(nc,nr)&&grid[idx(nc,nr)]===GUNPOWDER&&Math.random()<0.92){
+        // Schedule cascade via timeout-free micro-defer using lifeGrid as a flag
+        setCell(nc,nr,FIRE,0);
+      }
+    }
+    // Smoke burst
+    if(getCell(c,r-1)===EMPTY) setCell(c,r-1,SMOKE,0);
+  }
+
+  // ── MUD ───────────────────────────────────────────────────
+  function stepMud(c,r){
+    var i=idx(c,r);
+    // Falls slower than sand — only move every other tick using lifeGrid as phase
+    lifeGrid[i]++;
+    var below=getCell(c,r+1);
+    if(lifeGrid[i]%2===0){
+      if(below===EMPTY||below===WATER){swapCells(c,r,c,r+1);return;}
+      var dl=Math.random()<0.5, c1=dl?c-1:c+1, c2=dl?c+1:c-1;
+      if(getCell(c1,r+1)===EMPTY){swapCells(c,r,c1,r+1);return;}
+      if(getCell(c2,r+1)===EMPTY){swapCells(c,r,c2,r+1);return;}
+    }
+    // Dry out if no water adjacent → becomes stone
+    var nbs=[0,-1,1,0,-1,0,0,1],waterNear=false;
+    for(var n=0;n<8;n+=2){ if(getCell(c+nbs[n],r+nbs[n+1])===WATER){waterNear=true;break;} }
+    if(!waterNear&&lifeGrid[i]>180+Math.round(Math.random()*120)){setCell(c,r,STONE);return;}
+    // Color: shift toward grey as it dries
+    if(!waterNear){
+      colorGrid[i*3]  =Math.min(120,colorGrid[i*3]  +1);
+      colorGrid[i*3+1]=Math.min(112,colorGrid[i*3+1]+1);
+      colorGrid[i*3+2]=Math.min(100,colorGrid[i*3+2]+1);
+      dirtyGrid[i]=1;
+    }
+  }
+
+  // ── VINE ──────────────────────────────────────────────────
+  function stepVine(c,r){
+    var i=idx(c,r);
+    lifeGrid[i]++;
+    // Fog accelerates growth — tick faster when fog is adjacent
+    var fogNear=false;
+    var nbs4=[0,-1,1,0,-1,0,0,1];
+    for(var fn=0;fn<8;fn+=2){ if(getCell(c+nbs4[fn],r+nbs4[fn+1])===FOG){fogNear=true;break;} }
+    var growRate = fogNear ? 3 : 8;
+    if(lifeGrid[i]%growRate!==0) return;
+    // Grow into empty cells or quicksand
+    var growTargets=[[0,-1],[-1,0],[1,0],[0,1]];
+    for(var g=0;g<growTargets.length;g++){
+      var gc=c+growTargets[g][0], gr=r+growTargets[g][1];
+      var gt=getCell(gc,gr);
+      if(inBounds(gc,gr)&&(gt===EMPTY||gt===QUICKSAND)&&Math.random()<0.04){
+        setCell(gc,gr,VINE,0); return;
+      }
+    }
+    if(lifeGrid[i]>800+Math.round(Math.random()*400)){grid[i]=EMPTY;dirtyGrid[i]=1;}
+    // Flicker green
+    colorGrid[i*3]  =20+Math.round(Math.random()*30);
+    colorGrid[i*3+1]=130+Math.round(Math.random()*50);
+    colorGrid[i*3+2]=20+Math.round(Math.random()*20);
+    dirtyGrid[i]=1;
+  }
+
+  // ── WAX ───────────────────────────────────────────────────
+  // lifeGrid: 0 = solid, >400 = molten (set by fire/lava contact in stepFire/stepLava)
+  function stepWax(c,r){
+    var i=idx(c,r);
+    var molten=lifeGrid[i]>400;
+    if(molten){
+      // Cool down tick
+      lifeGrid[i]--;
+      // Re-solidify when life drops to 400
+      if(lifeGrid[i]<=400){
+        // Solidify in place — done, no movement
+        colorGrid[i*3]=240; colorGrid[i*3+1]=220; colorGrid[i*3+2]=180;
+        dirtyGrid[i]=1; return;
+      }
+      // Molten wax flows like very slow lava
+      if(Math.random()<0.25){
+        var below=getCell(c,r+1);
+        if(below===EMPTY){swapCells(c,r,c,r+1);return;}
+        if(Math.random()<0.15){
+          var dc=Math.random()<0.5?-1:1;
+          if(getCell(c+dc,r)===EMPTY)swapCells(c,r,c+dc,r);
+        }
+      }
+      // Check neighbors for fire/lava to stay molten
+      var nbs=[0,-1,1,0,-1,0,0,1];
+      for(var n=0;n<8;n+=2){
+        var t=getCell(c+nbs[n],r+nbs[n+1]);
+        if((t===FIRE||t===LAVA)&&Math.random()<0.3){lifeGrid[i]=Math.min(1000,lifeGrid[i]+2);}
+      }
+      // Orange-amber molten color
+      colorGrid[i*3]=230+Math.round(Math.random()*20);
+      colorGrid[i*3+1]=120+Math.round(Math.random()*40);
+      colorGrid[i*3+2]=20; dirtyGrid[i]=1;
+    } else {
+      // Solid: check for adjacent heat to start melting
+      var nbs2=[0,-1,1,0,-1,0,0,1];
+      for(var n2=0;n2<8;n2+=2){
+        var t2=getCell(c+nbs2[n2],r+nbs2[n2+1]);
+        if((t2===FIRE||t2===LAVA)&&Math.random()<0.04){lifeGrid[i]=600;dirtyGrid[i]=1;return;}
+        // Ice near wax re-solidifies any molten neighbours (not self — already solid)
+      }
+    }
+  }
+
+  // ── VIRUS ─────────────────────────────────────────────────
+  var VIRUS_HOSTS=[SAND,SALT,WOOD,MUD]; // types it converts
+  function stepVirus(c,r){
+    var i=idx(c,r);
+    lifeGrid[i]++;
+    if(lifeGrid[i]%3!==0) return; // slower spread tick
+    var nbs=[0,-1,1,0,-1,0,0,1,-1,-1,1,-1,-1,1,1,1];
+    for(var n=0;n<16;n+=2){
+      var nc=c+nbs[n],nr=r+nbs[n+1];
+      if(!inBounds(nc,nr)) continue;
+      var t=grid[idx(nc,nr)];
+      // Spread to hosts
+      for(var h=0;h<VIRUS_HOSTS.length;h++){
+        if(t===VIRUS_HOSTS[h]&&Math.random()<0.02){setCell(nc,nr,VIRUS,0);break;}
+      }
+    }
+    // Pulse color — bright animated magenta/purple
+    colorGrid[i*3]  =200+Math.round(Math.random()*40);
+    colorGrid[i*3+1]=20+Math.round(Math.random()*30);
+    colorGrid[i*3+2]=200+Math.round(Math.random()*40);
+    dirtyGrid[i]=1;
+  }
+
+  // ── HONEY ─────────────────────────────────────────────────
+  function stepHoney(c,r){
+    var i=idx(c,r);
+    lifeGrid[i]++;
+    if(lifeGrid[i]%6!==0) return; // very slow tick
+    // Fire dissolves honey to smoke
+    var nbs=[0,-1,1,0,-1,0,0,1];
+    for(var n=0;n<8;n+=2){
+      var t=getCell(c+nbs[n],r+nbs[n+1]);
+      if((t===FIRE||t===LAVA)&&Math.random()<0.08){setCell(c,r,SMOKE,0);return;}
+    }
+    var below=getCell(c,r+1);
+    if(below===EMPTY){swapCells(c,r,c,r+1);return;}
+    if(Math.random()<0.08){
+      var dl=Math.random()<0.5;
+      for(var a=0;a<2;a++){
+        var dc=(a===0)?(dl?-1:1):(dl?1:-1);
+        var side=getCell(c+dc,r);
+        if(side===EMPTY){swapCells(c,r,c+dc,r);return;}
+      }
+    }
+    // Amber shimmer
+    colorGrid[i*3]  =210+Math.round(Math.random()*20);
+    colorGrid[i*3+1]=148+Math.round(Math.random()*24);
+    colorGrid[i*3+2]=20+Math.round(Math.random()*16);
+    dirtyGrid[i]=1;
+  }
+
+  // ── ASH ───────────────────────────────────────────────────
+  function stepAsh(c,r){
+    var i=idx(c,r);
+    // Blown upward if fire is directly below
+    if(getCell(c,r+1)===FIRE&&Math.random()<0.4){
+      if(getCell(c,r-1)===EMPTY){swapCells(c,r,c,r-1);return;}
+    }
+    var below=getCell(c,r+1);
+    // Falls, but floats on water
+    if(below===EMPTY){swapCells(c,r,c,r+1);return;}
+    if(below===WATER&&Math.random()<0.02){swapCells(c,r,c,r+1);return;} // sinks very slowly
+    // Slides sideways
+    var dl=Math.random()<0.5, c1=dl?c-1:c+1, c2=dl?c+1:c-1;
+    if(getCell(c1,r+1)===EMPTY){swapCells(c,r,c1,r+1);return;}
+    if(getCell(c2,r+1)===EMPTY){swapCells(c,r,c2,r+1);return;}
+    // Drift sideways on water surface
+    if(below===WATER){
+      var ds=Math.random()<0.5?-1:1;
+      if(getCell(c+ds,r)===EMPTY){swapCells(c,r,c+ds,r);return;}
+    }
+    // Fade color slightly over time
+    colorGrid[i*3]  =Math.max(120,colorGrid[i*3]  -1);
+    colorGrid[i*3+1]=Math.max(116,colorGrid[i*3+1]-1);
+    colorGrid[i*3+2]=Math.max(110,colorGrid[i*3+2]-1);
+    dirtyGrid[i]=1;
+  }
+
+  // ── GLASS ─────────────────────────────────────────────────
+  function stepGlass(c,r){
+    // Glass is a permanent solid — no movement
+    // It can shatter to sand from explosions (handled in explode())
+    // Subtle sparkle color flicker
+    var i=idx(c,r);
+    if(Math.random()<0.02){
+      var v=Math.round(Math.random()*20);
+      colorGrid[i*3]  =Math.min(255,195+v);
+      colorGrid[i*3+1]=Math.min(255,225+v);
+      colorGrid[i*3+2]=Math.min(255,238+v);
+      dirtyGrid[i]=1;
+    }
+  }
+
+  // ── ALCOHOL ───────────────────────────────────────────────
+  function stepAlcohol(c,r){
+    var i=idx(c,r);
+    lifeGrid[i]++;
+    // Evaporate slowly to steam
+    if(lifeGrid[i]>300+Math.round(Math.random()*200)){setCell(c,r,STEAM,0);return;}
+    // Ignite from fire/lava into blue-white alcohol flame
+    var nbs=[0,-1,1,0,-1,0,0,1];
+    for(var n=0;n<8;n+=2){
+      var t=getCell(c+nbs[n],r+nbs[n+1]);
+      if((t===FIRE||t===LAVA)&&Math.random()<0.3){setCell(c,r,FIRE,0);return;}
+      // Dissolves wax
+      if(t===WAX&&Math.random()<0.005){lifeGrid[idx(c+nbs[n],r+nbs[n+1])]=600;}
+      // Dilutes when mixed with water — resets evaporation timer
+      if(t===WATER&&Math.random()<0.01){lifeGrid[i]=0;}
+    }
+    // Flow like water
+    var below=getCell(c,r+1);
+    if(below===EMPTY||below===FIRE||below===SMOKE){swapCells(c,r,c,r+1);return;}
+    var dl=Math.random()<0.5;
+    for(var a=0;a<2;a++){
+      var dc=(a===0)?(dl?-1:1):(dl?1:-1);
+      if(getCell(c+dc,r)===EMPTY){swapCells(c,r,c+dc,r);return;}
+    }
+    // Pale yellow shimmer
+    colorGrid[i*3]  =215+Math.round(Math.random()*15);
+    colorGrid[i*3+1]=205+Math.round(Math.random()*15);
+    colorGrid[i*3+2]=100+Math.round(Math.random()*30);
+    dirtyGrid[i]=1;
+  }
+
+  // ── QUICKSAND ─────────────────────────────────────────────
+  function stepQuicksand(c,r){
+    var i=idx(c,r);
+    lifeGrid[i]++;
+    // Flows very slowly like a thick liquid — tick every 4 frames
+    if(lifeGrid[i]%4!==0) return;
+    var below=getCell(c,r+1);
+    if(below===EMPTY){swapCells(c,r,c,r+1);return;}
+    // Spread sideways slowly
+    if(Math.random()<0.3){
+      var dl=Math.random()<0.5;
+      for(var a=0;a<2;a++){
+        var dc=(a===0)?(dl?-1:1):(dl?1:-1);
+        if(getCell(c+dc,r)===EMPTY){swapCells(c,r,c+dc,r);return;}
+      }
+    }
+    // Subtle shifting color
+    colorGrid[i*3]  =180+Math.round(Math.random()*20);
+    colorGrid[i*3+1]=148+Math.round(Math.random()*16);
+    colorGrid[i*3+2]=50+Math.round(Math.random()*20);
+    dirtyGrid[i]=1;
+  }
+
+  // ── FOG ───────────────────────────────────────────────────
+  function stepFog(c,r){
+    var i=idx(c,r);
+    lifeGrid[i]++;
+    // Dissipate from fire
+    var nbs=[0,-1,1,0,-1,0,0,1];
+    for(var n=0;n<8;n+=2){
+      var t=getCell(c+nbs[n],r+nbs[n+1]);
+      if((t===FIRE||t===LAVA)&&Math.random()<0.15){grid[i]=EMPTY;dirtyGrid[i]=1;return;}
+      // Condense on ice → water drop
+      if(t===ICE&&Math.random()<0.03){setCell(c,r,WATER,0);return;}
+    }
+    // Naturally dissipate over time
+    if(lifeGrid[i]>200+Math.round(Math.random()*150)){grid[i]=EMPTY;dirtyGrid[i]=1;return;}
+    // Drift slowly in all directions
+    var dirs=[[-1,0],[1,0],[0,-1],[0,1]];
+    var d=dirs[Math.floor(Math.random()*4)];
+    if(getCell(c+d[0],r+d[1])===EMPTY&&Math.random()<0.3){swapCells(c,r,c+d[0],r+d[1]);return;}
+    // Translucent blueish-white shimmer
+    var v=Math.round(Math.random()*12);
+    colorGrid[i*3]  =200+v;
+    colorGrid[i*3+1]=212+v;
+    colorGrid[i*3+2]=225+v;
+    dirtyGrid[i]=1;
+  }
+
+  // ── METHANE ───────────────────────────────────────────────
+  function stepMethane(c,r){
+    var i=idx(c,r);
+    lifeGrid[i]++;
+    // Dissipate over time
+    if(lifeGrid[i]>180+Math.round(Math.random()*120)){grid[i]=EMPTY;dirtyGrid[i]=1;return;}
+    // Ignite from fire/lava
+    var nbs=[0,-1,1,0,-1,0,0,1];
+    for(var n=0;n<8;n+=2){
+      var t=getCell(c+nbs[n],r+nbs[n+1]);
+      if((t===FIRE||t===LAVA)&&Math.random()<0.5){igniteMethane(c,r);return;}
+    }
+    // Rise and drift
+    if(getCell(c,r-1)===EMPTY&&Math.random()<0.55){swapCells(c,r,c,r-1);return;}
+    var dl=Math.random()<0.5;
+    if(getCell(c+(dl?-1:1),r)===EMPTY&&Math.random()<0.3){swapCells(c,r,c+(dl?-1:1),r);return;}
+    // Very dark, near-invisible — almost black
+    colorGrid[i*3]  =28+Math.round(Math.random()*16);
+    colorGrid[i*3+1]=35+Math.round(Math.random()*16);
+    colorGrid[i*3+2]=20+Math.round(Math.random()*12);
+    dirtyGrid[i]=1;
+  }
+
+  function igniteMethane(c,r){
+    if(!inBounds(c,r)||grid[idx(c,r)]!==METHANE) return;
+    // Convert to fire and blast neighbors outward
+    setCell(c,r,FIRE,0);
+    var blastNbs=[0,-1,1,0,-1,0,0,1,-1,-1,1,-1,-1,1,1,1];
+    for(var n=0;n<16;n+=2){
+      var nc=c+blastNbs[n],nr=r+blastNbs[n+1];
+      if(!inBounds(nc,nr)) continue;
+      var t=grid[idx(nc,nr)];
+      if(t===METHANE){igniteMethane(nc,nr);} // chain react
+      else if(t!==STONE&&t!==SOURCE&&Math.random()<0.5){
+        // Blast pushes particles: move them away from centre
+        var tc=nc+blastNbs[n], tr2=nr+blastNbs[n+1];
+        if(inBounds(tc,tr2)&&grid[idx(tc,tr2)]===EMPTY){swapCells(nc,nr,tc,tr2);}
+        else{grid[idx(nc,nr)]=EMPTY;dirtyGrid[idx(nc,nr)]=1;}
+      }
+    }
+  }
+
+  // ── SOAP ──────────────────────────────────────────────────
+  function stepSoap(c,r){
+    var i=idx(c,r);
+    lifeGrid[i]++;
+    // Burns from fire/lava
+    var nbs=[0,-1,1,0,-1,0,0,1];
+    for(var n=0;n<8;n+=2){
+      var t=getCell(c+nbs[n],r+nbs[n+1]);
+      if((t===FIRE||t===LAVA)&&Math.random()<0.08){setCell(c,r,SMOKE,0);return;}
+      // Neutralise acid on contact — soap consumed
+      if(t===ACID&&Math.random()<0.1){
+        grid[idx(c+nbs[n],r+nbs[n+1])]=EMPTY; dirtyGrid[idx(c+nbs[n],r+nbs[n+1])]=1;
+        if(Math.random()<0.5){grid[i]=EMPTY;dirtyGrid[i]=1;return;}
+      }
+      // In water: generate rising foam (FOG cell) periodically
+      if(t===WATER&&Math.random()<0.015){
+        var fc=c+nbs[n], fr=r+nbs[n+1]-1;
+        if(inBounds(fc,fr)&&getCell(fc,fr)===EMPTY){setCell(fc,fr,FOG,0);}
+      }
+    }
+    // Soap flows like water but slightly more slowly
+    var below=getCell(c,r+1);
+    if(below===EMPTY||below===FIRE){swapCells(c,r,c,r+1);return;}
+    if(lifeGrid[i]%2===0){
+      var dl=Math.random()<0.5;
+      for(var a=0;a<2;a++){
+        var dc=(a===0)?(dl?-1:1):(dl?1:-1);
+        if(getCell(c+dc,r)===EMPTY){swapCells(c,r,c+dc,r);return;}
+      }
+    }
+    // Pearlescent shimmer
+    colorGrid[i*3]  =235+Math.round(Math.random()*10);
+    colorGrid[i*3+1]=240+Math.round(Math.random()*10);
+    colorGrid[i*3+2]=248+Math.round(Math.random()*7);
+    dirtyGrid[i]=1;
+  }
+
+  // ── SEED ──────────────────────────────────────────────────
+  function stepSeed(c,r){
+    var i=idx(c,r);
+    // Falls like sand
+    var below=getCell(c,r+1);
+    if(below===EMPTY||below===WATER){swapCells(c,r,c,r+1);return;}
+    var dl=Math.random()<0.5,c1=dl?c-1:c+1,c2=dl?c+1:c-1;
+    if(getCell(c1,r+1)===EMPTY){swapCells(c,r,c1,r+1);return;}
+    if(getCell(c2,r+1)===EMPTY){swapCells(c,r,c2,r+1);return;}
+    // Sprout into vine if resting on mud, or on sand adjacent to water
+    var nbs=[0,-1,1,0,-1,0,0,1];
+    var waterNear=false;
+    for(var n=0;n<8;n+=2){
+      var t=getCell(c+nbs[n],r+nbs[n+1]);
+      if(t===WATER||t===MUD){waterNear=true;break;}
+    }
+    if((below===MUD||(below===SAND&&waterNear))&&Math.random()<0.005){
+      setCell(c,r,VINE,0); return;
+    }
+    // Slight color variation — olive green speck
+    colorGrid[i*3]  =70+Math.round(Math.random()*20);
+    colorGrid[i*3+1]=150+Math.round(Math.random()*20);
+    colorGrid[i*3+2]=50+Math.round(Math.random()*15);
+    dirtyGrid[i]=1;
+  }
+
+  // ── SLIME ─────────────────────────────────────────────────
+  function stepSlime(c,r){
+    var i=idx(c,r);
+    lifeGrid[i]++;
+    if(lifeGrid[i]%3!==0) return; // slow tick
+    var nbs=[0,-1,1,0,-1,0,0,1];
+    for(var n=0;n<8;n+=2){
+      var t=getCell(c+nbs[n],r+nbs[n+1]);
+      // Killed by acid
+      if(t===ACID&&Math.random()<0.2){grid[i]=EMPTY;dirtyGrid[i]=1;return;}
+      // Fire turns slime to smoke
+      if((t===FIRE||t===LAVA)&&Math.random()<0.15){setCell(c,r,SMOKE,0);return;}
+      // Absorbs water — speeds up movement (done via lifeGrid phase)
+      if(t===WATER&&Math.random()<0.05){
+        grid[idx(c+nbs[n],r+nbs[n+1])]=EMPTY;
+        dirtyGrid[idx(c+nbs[n],r+nbs[n+1])]=1;
+        lifeGrid[i]=Math.max(0,lifeGrid[i]-30); // reset phase faster
+      }
+    }
+    // Crawl upward against gravity (unique trait)
+    if(getCell(c,r-1)===EMPTY&&Math.random()<0.15){swapCells(c,r,c,r-1);return;}
+    // Also spread sideways and fall
+    var below=getCell(c,r+1);
+    if(below===EMPTY&&Math.random()<0.4){swapCells(c,r,c,r+1);return;}
+    var dl=Math.random()<0.5;
+    for(var a=0;a<2;a++){
+      var dc=(a===0)?(dl?-1:1):(dl?1:-1);
+      if(getCell(c+dc,r)===EMPTY&&Math.random()<0.3){swapCells(c,r,c+dc,r);return;}
+    }
+    // Animated sickly green pulse
+    colorGrid[i*3]  =30+Math.round(Math.random()*30);
+    colorGrid[i*3+1]=180+Math.round(Math.random()*40);
+    colorGrid[i*3+2]=90+Math.round(Math.random()*40);
+    dirtyGrid[i]=1;
+  }
+
+  // ═══════════════════════════════════════════════════
+  // RENDER — dirty-region optimised
+  // ═══════════════════════════════════════════════════
+  function render(){
+    if(!initialized) return;
+    var anyDirty=false;
+    for(var r=0;r<ROWS;r++){
+      for(var c=0;c<COLS;c++){
+        var gi=idx(c,r);
+        if(!dirtyGrid[gi]) continue;
+        dirtyGrid[gi]=0; anyDirty=true;
+        var type=grid[gi];
+        var R,G,B;
+        if(type===EMPTY){R=8;G=6;B=4;}
+        else{R=colorGrid[gi*3];G=colorGrid[gi*3+1];B=colorGrid[gi*3+2];}
+        // Shadow pass: darken cells that have a solid above them (#14)
+        if(type!==EMPTY&&type!==FIRE&&type!==LAVA&&type!==SMOKE&&type!==STEAM&&r>0){
+          var above=grid[gi-COLS];
+          if(above&&above!==EMPTY&&above!==FIRE&&above!==LAVA&&above!==STEAM&&above!==SMOKE){
+            R=Math.max(0,R-16); G=Math.max(0,G-16); B=Math.max(0,B-16);
+          }
+        }
+        for(var py=0;py<CELL;py++){
+          for(var px=0;px<CELL;px++){
+            var pi=((r*CELL+py)*canvas.width+(c*CELL+px))*4;
+            pixels[pi]=R; pixels[pi+1]=G; pixels[pi+2]=B;
+          }
+        }
+      }
+    }
+    if(anyDirty) ctx.putImageData(imageData,0,0);
+  }
+
+  // ═══════════════════════════════════════════════════
+  // STATS
+  // ═══════════════════════════════════════════════════
+  var frameCount=0;
+  function updateStats(){
+    if(!initialized) return;
+    if(++frameCount%30!==0) return;
+    var grains=0,drops=0,flames=0,solids=0;
+    for(var i=0;i<grid.length;i++){
+      var t=grid[i];
+      if(t===SAND||t===SALT||t===GUNPOWDER||t===ASH||t===SEED)grains++;
+      else if(t===WATER||t===OIL||t===ACID||t===STEAM||t===HONEY||t===MUD||t===ALCOHOL||t===QUICKSAND||t===SOAP)drops++;
+      else if(t===FIRE||t===LAVA||t===METHANE)flames++;
+      else if(t===STONE||t===WOOD||t===ICE||t===WAX||t===VINE||t===GLASS)solids++;
+    }
+    document.getElementById('statGrains').textContent=grains.toLocaleString();
+    document.getElementById('statDrops').textContent=drops.toLocaleString();
+    document.getElementById('statFire').textContent=flames.toLocaleString();
+    document.getElementById('statStone').textContent=solids.toLocaleString();
+    document.getElementById('statActive').textContent=activeCount.toLocaleString();
+  }
+
+  // ═══════════════════════════════════════════════════
+  // GAME LOOP
+  // ═══════════════════════════════════════════════════
+  var lastTime=0, SIM_RATE=28;
+  function loop(ts){
+    if(ts-lastTime>=SIM_RATE){step();lastTime=ts;}
+    render(); updateStats();
+    requestAnimationFrame(loop);
+  }
+
+  // ═══════════════════════════════════════════════════
+  // INPUT
+  // ═══════════════════════════════════════════════════
+  var currentElement=SAND, currentTool='draw', brushSize=1;
+  var isDrawing=false, strokeStarted=false, lastSourceEl=SAND;
+
+  var EL_MAP={
+    sand:SAND,water:WATER,stone:STONE,fire:FIRE,smoke:SMOKE,oil:OIL,
+    lava:LAVA,salt:SALT,wood:WOOD,ice:ICE,steam:STEAM,acid:ACID,
+    source:SOURCE,gunpowder:GUNPOWDER,mud:MUD,vine:VINE,wax:WAX,
+    virus:VIRUS,honey:HONEY,ash:ASH,glass:GLASS,alcohol:ALCOHOL,
+    quicksand:QUICKSAND,fog:FOG,methane:METHANE,soap:SOAP,seed:SEED,
+    slime:SLIME,erase:EMPTY
+  };
+
+  function selectElement(name){
+    currentElement=EL_MAP[name];
+    if(currentElement!==SOURCE&&currentElement!==EMPTY) lastSourceEl=currentElement;
+    document.querySelectorAll('.el-btn').forEach(function(b){b.classList.toggle('active',b.dataset.el===name);});
+    updateCursorColor();
+  }
+
+  function selectTool(name){
+    currentTool=name;
+    document.querySelectorAll('.tool-btn').forEach(function(b){b.classList.toggle('active',b.dataset.tool===name);});
+  }
+
+  function selectBrush(sz){
+    brushSize=sz;
+    document.querySelectorAll('.brush-btn').forEach(function(b){b.classList.toggle('active',parseInt(b.dataset.sz)===sz);});
+    updateCursorSize();
+  }
+
+  // Cursor preview (#17)
+  var cursorEl=document.getElementById('cursorPreview');
+  function updateCursorSize(){
+    var sz=(brushSize*2+1)*CELL;
+    cursorEl.style.width=sz+'px'; cursorEl.style.height=sz+'px';
+  }
+  function updateCursorColor(){
+    var base=BASE_COLOR[currentElement]||[200,149,42];
+    cursorEl.style.borderColor='rgba('+base[0]+','+base[1]+','+base[2]+',0.7)';
+    cursorEl.style.boxShadow='0 0 8px rgba('+base[0]+','+base[1]+','+base[2]+',0.4)';
+  }
+
+  function canvasXY(e){
+    var rect=canvas.getBoundingClientRect();
+    var scaleX=canvas.width/rect.width, scaleY=canvas.height/rect.height;
+    var cx,cy;
+    if(e.touches){cx=(e.touches[0].clientX-rect.left)*scaleX;cy=(e.touches[0].clientY-rect.top)*scaleY;}
+    else{cx=(e.clientX-rect.left)*scaleX;cy=(e.clientY-rect.top)*scaleY;}
+    return[Math.floor(cx/CELL),Math.floor(cy/CELL)];
+  }
+
+  function paintAt(c,r){
+    if(currentTool==='explode'){explode(c,r);isDrawing=false;return;}
+    if(currentTool==='dropper'){
+      // Place SOURCE cells emitting the currently selected element
+      var halfB=Math.floor(brushSize/2);
+      for(var dc=-halfB;dc<=halfB;dc++){
+        for(var dr=-halfB;dr<=halfB;dr++){
+          if(dc*dc+dr*dr<=halfB*halfB+brushSize*0.6){
+            var cc=c+dc,rr=r+dr;
+            if(!inBounds(cc,rr)) continue;
+            if(currentElement===EMPTY){grid[idx(cc,rr)]=0;dirtyGrid[idx(cc,rr)]=1;}
+            else{
+              var gi=idx(cc,rr);
+              grid[gi]=SOURCE; dirtyGrid[gi]=1;
+              sourceType[gi]=currentElement;
+              // Color the SOURCE cell with the element's own base color
+              var bc=BASE_COLOR[currentElement]||BASE_COLOR[1];
+              colorGrid[gi*3]=bc[0];colorGrid[gi*3+1]=bc[1];colorGrid[gi*3+2]=bc[2];
+            }
+          }
+        }
+      }
+      return;
+    }
+    var halfB=Math.floor(brushSize/2);
+    for(var dc=-halfB;dc<=halfB;dc++){
+      for(var dr=-halfB;dr<=halfB;dr++){
+        if(dc*dc+dr*dr<=halfB*halfB+brushSize*0.6){
+          var cc=c+dc,rr=r+dr;
+          if(!inBounds(cc,rr)) continue;
+          if(currentElement===EMPTY){grid[idx(cc,rr)]=0;dirtyGrid[idx(cc,rr)]=1;}
+          else if(currentElement===SOURCE){
+            var gi=idx(cc,rr);
+            grid[gi]=SOURCE; dirtyGrid[gi]=1; sourceType[gi]=lastSourceEl;
+            var bc=BASE_COLOR[lastSourceEl]||BASE_COLOR[1];
+            colorGrid[gi*3]=bc[0];colorGrid[gi*3+1]=bc[1];colorGrid[gi*3+2]=bc[2];
+          }
+          else setCell(cc,rr,currentElement);
+        }
+      }
+    }
+  }
+
+  function paint(e){
+    e.preventDefault();
+    if(!isDrawing) return;
+    var xy=canvasXY(e);
+    paintAt(xy[0],xy[1]);
+  }
+
+  canvas.addEventListener('mouseenter',function(){cursorEl.style.display='block';});
+  canvas.addEventListener('mouseleave',function(){cursorEl.style.display='none';isDrawing=false;});
+  canvas.addEventListener('mousemove',function(e){
+    var rect=wrap.getBoundingClientRect();
+    cursorEl.style.left=(e.clientX-rect.left)+'px';
+    cursorEl.style.top=(e.clientY-rect.top)+'px';
+    if(isDrawing){var xy=canvasXY(e);paintAt(xy[0],xy[1]);}
+  });
+  canvas.addEventListener('mousedown',function(e){
+    if(!strokeStarted){snapshot();strokeStarted=true;}
+    isDrawing=true;
+    var xy=canvasXY(e); paintAt(xy[0],xy[1]);
+  });
+  canvas.addEventListener('mouseup',function(){isDrawing=false;strokeStarted=false;});
+  canvas.addEventListener('contextmenu',function(e){
+    e.preventDefault();
+    var xy=canvasXY(e),i=idx(xy[0],xy[1]);
+    if(inBounds(xy[0],xy[1])){grid[i]=EMPTY;dirtyGrid[i]=1;}
+  });
+  canvas.addEventListener('touchstart',function(e){
+    if(!strokeStarted){snapshot();strokeStarted=true;}
+    isDrawing=true;paint(e);
+  },{passive:false});
+  canvas.addEventListener('touchmove',paint,{passive:false});
+  canvas.addEventListener('touchend',function(){isDrawing=false;strokeStarted=false;});
+
+  // ═══════════════════════════════════════════════════
+  // EXPLOSION (#8)
+  // ═══════════════════════════════════════════════════
+  function explode(c,r){
+    snapshot();
+    var radius=10+brushSize*2;
+    chronicle('⚡ The Blast rends the Sanctum!',true);
+    for(var dc=-radius;dc<=radius;dc++){
+      for(var dr=-radius;dr<=radius;dr++){
+        var dist=Math.sqrt(dc*dc+dr*dr);
+        if(dist>radius) continue;
+        var cc=c+dc,rr=r+dr;
+        if(!inBounds(cc,rr)) continue;
+        var gi=idx(cc,rr),t=grid[gi];
+        if(t===STONE||t===SOURCE) continue;
+        if(t===GLASS){setCell(cc,rr,SAND);continue;} // glass shatters to sand
+        if(dist<radius*0.4){setCell(cc,rr,FIRE,0);}
+        else if(dist<radius*0.7){
+          if(Math.random()<0.35)setCell(cc,rr,SMOKE,0);
+          else{grid[gi]=EMPTY;dirtyGrid[gi]=1;}
+        }else{
+          if(Math.random()<0.4){grid[gi]=EMPTY;dirtyGrid[gi]=1;}
+        }
+      }
+    }
+  }
+
+  // ═══════════════════════════════════════════════════
+  // SCENARIOS (#18)
+  // ═══════════════════════════════════════════════════
+  function loadScenario(name){
+    snapshot(); clearAll(true);
+    setTimeout(function(){
+      if(name==='dam')       scenarioDam();
+      else if(name==='volcano')  scenarioVolcano();
+      else if(name==='hourglass')scenarioHourglass();
+      else if(name==='glacier')  scenarioGlacier();
+      else if(name==='maze')     scenarioMaze();
+    },60);
+  }
+
+  function placeSource(c,r,type){
+    if(!inBounds(c,r)) return;
+    var gi=idx(c,r);
+    grid[gi]=SOURCE; dirtyGrid[gi]=1; sourceType[gi]=type;
+    var b=BASE_COLOR[type]||BASE_COLOR[SOURCE];
+    colorGrid[gi*3]=b[0];colorGrid[gi*3+1]=b[1];colorGrid[gi*3+2]=b[2];
+  }
+
+  function scenarioDam(){
+    var midC=Math.floor(COLS/2);
+    for(var r=Math.floor(ROWS*0.28);r<ROWS;r++){setCell(midC,r,STONE);setCell(midC-1,r,STONE);}
+    for(var r2=Math.floor(ROWS*0.32);r2<ROWS;r2++)
+      for(var c=2;c<midC-2;c++) if(getCell(c,r2)===EMPTY) setCell(c,r2,WATER);
+    placeSource(Math.floor(COLS*0.75),1,SAND);
+    chronicle('⚜ The Great Dam holds. Sand piles on the right, water waits on the left…',true);
+  }
+
+  function scenarioVolcano(){
+    var midC=Math.floor(COLS/2), base=ROWS-2, height=Math.floor(ROWS*0.55), top=base-height;
+    for(var r=top;r<=base;r++){
+      var half=Math.round((r-top)/(base-top)*Math.floor(COLS*0.22));
+      setCell(midC-half,r,STONE); setCell(midC+half,r,STONE);
+      if(r===base) for(var c=midC-half;c<=midC+half;c++) setCell(c,r,STONE);
+    }
+    placeSource(midC,top+2,LAVA);
+    chronicle('🌋 The volcano stirs. Lava flows from the summit…',true);
+  }
+
+  function scenarioHourglass(){
+    var midR=Math.floor(ROWS/2), midC=Math.floor(COLS/2), w=Math.floor(COLS*0.32);
+    for(var r=2;r<midR-2;r++){setCell(midC-w,r,STONE);setCell(midC+w,r,STONE);}
+    for(var r2=midR+2;r2<ROWS-2;r2++){setCell(midC-w,r2,STONE);setCell(midC+w,r2,STONE);}
+    for(var c=midC-w;c<=midC+w;c++){
+      if(Math.abs(c-midC)>2)setCell(c,midR-2,STONE);
+      if(Math.abs(c-midC)>2)setCell(c,midR+2,STONE);
+      setCell(c,2,STONE); setCell(c,ROWS-3,STONE);
+    }
+    for(var fr=4;fr<midR-4;fr++)
+      for(var fc=midC-w+2;fc<midC+w;fc++)
+        if(Math.random()<0.82) setCell(fc,fr,SAND);
+    chronicle('⌛ The Hourglass of the Sanctum — watch the sands flow…',true);
+  }
+
+  function scenarioGlacier(){
+    for(var r=Math.floor(ROWS*0.08);r<Math.floor(ROWS*0.38);r++)
+      for(var c=Math.floor(COLS*0.08);c<Math.floor(COLS*0.92);c++)
+        if(Math.random()<0.92) setCell(c,r,ICE);
+    placeSource(2,Math.floor(ROWS*0.22),FIRE);
+    placeSource(COLS-3,Math.floor(ROWS*0.22),FIRE);
+    chronicle('🧊 The glacier meets its fate. Fire awakens at the margins…',true);
+  }
+
+  function scenarioMaze(){
+    var sR=Math.floor(ROWS*0.18), sC=Math.floor(COLS*0.12);
+    var wH=Math.floor(ROWS*0.65), wW=Math.floor(COLS*0.76);
+    for(var seg=0;seg<9;seg++){
+      var mr=sR+Math.floor(Math.random()*wH), mc=sC+Math.floor(Math.random()*wW);
+      var len=6+Math.floor(Math.random()*16);
+      for(var i=0;i<len;i++) setCell(mc+i,mr,STONE);
+    }
+    for(var seg2=0;seg2<7;seg2++){
+      var mr2=sR+Math.floor(Math.random()*wH), mc2=sC+Math.floor(Math.random()*wW);
+      var len2=5+Math.floor(Math.random()*13);
+      for(var i2=0;i2<len2;i2++) setCell(mc2,mr2+i2,STONE);
+    }
+    placeSource(Math.floor(COLS/2),1,WATER);
+    chronicle('🌀 The Labyrinth fills. Water finds every path…',true);
+  }
+
+  // ═══════════════════════════════════════════════════
+  // ACTIONS
+  // ═══════════════════════════════════════════════════
+  function fillWater(){
+    snapshot();
+    var wl=Math.floor(ROWS*0.75);
+    for(var r=wl;r<ROWS;r++) for(var c=0;c<COLS;c++) if(getCell(c,r)===EMPTY) setCell(c,r,WATER);
+    chronicle('≋ Waters rise in the Sanctum…',true);
+  }
+
+  function dropSandRain(){
+    snapshot();
+    var count=Math.floor(COLS*0.4);
+    for(var i=0;i<count;i++) setCell(Math.floor(Math.random()*COLS),0,SAND);
+    chronicle('⋮ A rain of sand descends…');
+  }
+
+  function clearAll(silent){
+    if(!silent) snapshot();
+    grid.fill(0); colorGrid.fill(0); lifeGrid.fill(0); sourceType.fill(0); dirtyGrid.fill(1);
+    if(!silent) chronicle('✕ The Sanctum is purified.',true);
+  }
+
+  // ═══════════════════════════════════════════════════
+  // CHRONICLE
+  // ═══════════════════════════════════════════════════
+  var chronicleEl=document.getElementById('chronicle');
+  var LOG_PHRASES=['The grains settle…','Elements dance in silence…','The sand remembers old shores…',
+    'Patterns emerge from chaos…','Flow seeks its level…','Ancient forces stir below…',
+    'The sanctum breathes…','Chaos slowly resolves…','Water always finds a way…',
+    'Fire consumes; smoke endures…','The elements hold counsel…','Stillness between each grain…'];
+  var idleTimer=null;
+
+  function chronicle(msg,highlight){
+    var p=document.createElement('p');
+    p.textContent=msg;
+    if(highlight)p.classList.add('highlight');
+    chronicleEl.appendChild(p);
+    if(chronicleEl.children.length>50)chronicleEl.removeChild(chronicleEl.firstChild);
+    chronicleEl.scrollTop=chronicleEl.scrollHeight;
+    clearTimeout(idleTimer);
+    idleTimer=setTimeout(function(){chronicle(LOG_PHRASES[Math.floor(Math.random()*LOG_PHRASES.length)]);},10000+Math.random()*8000);
+  }
+
+  // ═══════════════════════════════════════════════════
+  // VICTORY
+  // ═══════════════════════════════════════════════════
+  var victoryFired=false;
+  function checkVictory(){
+    if(!initialized) return;
+    if(victoryFired) return;
+    var filled=0;
+    for(var i=0;i<grid.length;i++) if(grid[i]!==EMPTY) filled++;
+    if(filled/grid.length>0.80){victoryFired=true;launchConfetti();showVictory();}
+  }
+  setInterval(checkVictory,4000);
+
+  function showVictory(){
+    var vm=document.getElementById('victory-msg');
+    vm.style.display='block'; vm.classList.add('show');
+    chronicle('⚜ The Sanctum has been filled! ⚜',true);
+    setTimeout(function(){
+      vm.style.animation='none'; vm.style.transform='translate(-50%,-50%) scale(1)';
+      setTimeout(function(){
+        vm.style.transition='opacity 0.5s'; vm.style.opacity='0';
+        setTimeout(function(){vm.style.display='none';vm.style.opacity='1';victoryFired=false;},500);
+      },1000);
+    },750);
+  }
+
+  function launchConfetti(){
+    var layer=document.getElementById('confetti-layer');
+    var CC=['#f0d080','#c8952a','#ff6b35','#e8dfc8','#7aaa5a','#c04040','#4090d0','#d080d0'];
+    for(var burst=0;burst<10;burst++){
+      (function(b){setTimeout(function(){
+        var bx=0.1+Math.random()*0.8, by=0.1+Math.random()*0.5;
+        for(var i=0;i<20;i++){
+          var el=document.createElement('div');
+          var color=CC[Math.floor(Math.random()*CC.length)];
+          var size=6+Math.random()*8, angle=Math.random()*360;
+          var vx=(Math.random()-0.5)*320, vy=-90-Math.random()*220;
+          el.style.cssText='position:absolute;left:'+bx*100+'%;top:'+by*100+'%;width:'+size+'px;height:'+(size*(Math.random()<0.5?1:0.4))+'px;background:'+color+';border-radius:'+(Math.random()<0.4?'50%':'2px')+';transform:rotate('+angle+'deg);opacity:1;pointer-events:none;';
+          layer.appendChild(el);
+          var t=0;
+          (function(elm,vx2,vy2,ang){
+            function tick(){
+              t+=0.016;
+              var x=vx2*t,y=vy2*t+0.5*400*t*t;
+              var rot=ang+t*200*(Math.random()<0.5?1:-1);
+              elm.style.transform='translate('+x+'px,'+y+'px) rotate('+rot+'deg)';
+              elm.style.opacity=Math.max(0,1-t/2.5);
+              if(t<2.5)requestAnimationFrame(tick);
+              else if(layer.contains(elm))layer.removeChild(elm);
+            }
+            requestAnimationFrame(tick);
+          })(el,vx,vy,angle);
+        }
+      },b*180);})(burst);
+    }
+  }
+
+  // ═══════════════════════════════════════════════════
+  // INIT
+  // ═══════════════════════════════════════════════════
+  var resizeTimer=null;
+  window.addEventListener('resize',function(){
+    clearTimeout(resizeTimer);
+    resizeTimer=setTimeout(function(){initGrid(true);},120);
+  });
+
+  updateCursorSize(); updateCursorColor(); updateUndoButtons();
+
+  requestAnimationFrame(function(){
+    requestAnimationFrame(function(){
+      initGrid(false);
+      requestAnimationFrame(loop);
+    });
+  });
+</script>
+</body>
+</html>

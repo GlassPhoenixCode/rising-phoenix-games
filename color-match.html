@@ -1,0 +1,1347 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Color Match — Rising Phoenix Games</title>
+  <link rel="stylesheet" href="shared.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700;900&family=Cinzel+Decorative:wght@400;700&family=IM+Fell+English:ital@0;1&display=swap" rel="stylesheet" />
+  <style>
+    /* ── PAGE SHELL ───────────────────────────────────────────── */
+    html, body { height: 100%; margin: 0; padding: 0; }
+    body {
+      display: flex;
+      flex-direction: column;
+      background:
+        radial-gradient(ellipse 90% 55% at 15% 8%,  rgba(90,48,12,0.55) 0%, transparent 58%),
+        radial-gradient(ellipse 70% 65% at 85% 90%, rgba(50,25,6,0.6)   0%, transparent 55%),
+        radial-gradient(ellipse 60% 40% at 50% 50%, rgba(30,18,5,0.4)   0%, transparent 70%),
+        linear-gradient(160deg, #1c1106 0%, #0f0c07 45%, #13100a 100%);
+      background-attachment: fixed;
+    }
+
+    /* ── HEADER ───────────────────────────────────────────────── */
+    .game-header {
+      background: linear-gradient(180deg, #1e1508 0%, #120e06 100%);
+      border-bottom: 2px solid var(--gold);
+      box-shadow: 0 4px 24px rgba(0,0,0,0.7), 0 1px 0 rgba(200,149,42,0.12) inset;
+      flex-shrink: 0;
+      position: relative;
+      overflow: hidden;
+    }
+    .game-header::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: repeating-linear-gradient(
+        90deg, transparent 0px, transparent 56px,
+        rgba(200,149,42,0.03) 56px, rgba(200,149,42,0.03) 57px
+      );
+      pointer-events: none;
+    }
+
+    .header-inner {
+      display: grid;
+      grid-template-columns: 1fr auto 1fr;
+      align-items: center;
+      padding: 14px 20px;
+      position: relative;
+    }
+
+    .header-left { display: flex; align-items: center; }
+    .header-center {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 2px;
+    }
+    .header-right {
+      display: flex;
+      justify-content: flex-end;
+      align-items: center;
+    }
+
+    .header-logo {
+      width: 44px;
+      height: 44px;
+      filter: drop-shadow(0 0 8px rgba(200,149,42,0.45));
+    }
+    .header-logo-mirror {
+      width: 44px;
+      height: 44px;
+      opacity: 0; /* invisible spacer */
+    }
+
+    h1.game-title {
+      font-family: 'Cinzel Decorative', serif;
+      font-size: clamp(16px, 3.5vw, 26px);
+      font-weight: 700;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      margin: 0;
+      background: linear-gradient(135deg, #f0d080 0%, #c8952a 45%, #a07020 80%, #f0d080 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      line-height: 1.1;
+      text-align: center;
+    }
+    .game-subtitle {
+      font-family: 'IM Fell English', serif;
+      font-style: italic;
+      font-size: 12px;
+      color: #c4a46a;
+      letter-spacing: 1px;
+      margin: 0;
+    }
+
+    /* ── MAIN LAYOUT ──────────────────────────────────────────── */
+    #app {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 24px 16px;
+      gap: 20px;
+    }
+
+    /* ── SCOREBOARD ───────────────────────────────────────────── */
+    .scoreboard {
+      display: flex;
+      gap: 20px;
+      align-items: center;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+    .score-block {
+      text-align: center;
+      background: linear-gradient(160deg, #1e1608 0%, #130e05 100%);
+      border: 1px solid rgba(200,149,42,0.28);
+      border-radius: 10px;
+      padding: 10px 22px;
+      min-width: 90px;
+    }
+    .score-label {
+      font-family: 'Cinzel', serif;
+      font-size: 9px;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: #c8952a;
+      margin-bottom: 4px;
+    }
+    .score-value {
+      font-family: 'Cinzel Decorative', serif;
+      font-size: 28px;
+      font-weight: 700;
+      color: #f0d080;
+      line-height: 1;
+    }
+    .score-value.streak { color: #ff9040; }
+    .score-value.best   { color: #88d870; }
+
+    /* ── DIFFICULTY ───────────────────────────────────────────── */
+    .difficulty-row {
+      display: flex;
+      gap: 8px;
+      justify-content: center;
+    }
+    .diff-btn {
+      font-family: 'Cinzel', serif;
+      font-size: 10px;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      padding: 6px 16px;
+      border-radius: 999px;
+      border: 1px solid rgba(200,149,42,0.3);
+      background: rgba(200,149,42,0.07);
+      color: #a09070;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .diff-btn.active, .diff-btn:hover {
+      background: rgba(200,149,42,0.18);
+      border-color: rgba(200,149,42,0.6);
+      color: #f0d080;
+    }
+    .diff-btn.active { box-shadow: 0 0 10px rgba(200,149,42,0.25); }
+
+    /* ── GAME ARENA ───────────────────────────────────────────── */
+    .arena {
+      width: 100%;
+      max-width: 520px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 24px;
+      position: relative;
+    }
+
+    /* ── WORD DISPLAY ─────────────────────────────────────────── */
+    .word-panel {
+      width: 100%;
+      background: linear-gradient(160deg, #1e1608 0%, #130e05 100%);
+      border: 1px solid var(--border-bright);
+      border-radius: 14px;
+      padding: 20px 24px;
+      text-align: center;
+      position: relative;
+      box-shadow: inset 0 0 30px rgba(0,0,0,0.4), 0 4px 20px rgba(0,0,0,0.5);
+    }
+    .word-instruction {
+      font-family: 'IM Fell English', serif;
+      font-style: italic;
+      font-size: 13px;
+      color: #b8986a;
+      margin-bottom: 12px;
+      letter-spacing: 0.5px;
+    }
+    .color-word {
+      font-family: 'Cinzel Decorative', serif;
+      font-size: clamp(32px, 8vw, 52px);
+      font-weight: 700;
+      letter-spacing: 4px;
+      text-transform: uppercase;
+      line-height: 1;
+      transition: all 0.2s;
+      /* color set inline by JS */
+    }
+    .word-panel .timer-bar {
+      margin-top: 16px;
+      height: 4px;
+      background: rgba(200,149,42,0.12);
+      border-radius: 2px;
+      overflow: hidden;
+    }
+    .timer-bar-fill {
+      height: 100%;
+      border-radius: 2px;
+      background: linear-gradient(90deg, #c8952a, #f0d080);
+      transition: width 0.1s linear;
+      box-shadow: 0 0 8px rgba(200,149,42,0.5);
+    }
+
+    /* ── COLOR BUTTONS ────────────────────────────────────────── */
+    .color-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 14px;
+      width: 100%;
+    }
+    .color-grid.hard { grid-template-columns: repeat(3, 1fr); }
+
+    .color-btn {
+      position: relative;
+      border: 2px solid transparent;
+      border-radius: 12px;
+      padding: 0;
+      cursor: pointer;
+      overflow: hidden;
+      aspect-ratio: 2.2 / 1;
+      transition: transform 0.12s, box-shadow 0.15s, border-color 0.15s;
+      font-family: 'Cinzel', serif;
+      font-size: clamp(10px, 2.5vw, 13px);
+      font-weight: 600;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      outline: none;
+    }
+    .color-btn:hover {
+      transform: translateY(-2px) scale(1.02);
+      border-color: rgba(255,255,255,0.3);
+      box-shadow: 0 6px 20px rgba(0,0,0,0.5), 0 0 20px rgba(255,255,255,0.1);
+    }
+    .color-btn:active { transform: scale(0.97); }
+
+    /* Button inner swatch + label */
+    .btn-swatch {
+      position: absolute;
+      inset: 0;
+      /* background set by JS */
+    }
+    .btn-label {
+      position: relative;
+      z-index: 2;
+      color: rgba(255,255,255,0.92);
+      text-shadow: 0 1px 4px rgba(0,0,0,0.8), 0 0 12px rgba(0,0,0,0.6);
+      pointer-events: none;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 100%;
+      width: 100%;
+    }
+
+    /* Result flash states */
+    .color-btn.correct {
+      border-color: #88d870 !important;
+      box-shadow: 0 0 0 3px rgba(136,216,112,0.4), 0 0 28px rgba(136,216,112,0.35) !important;
+      animation: btn-correct 0.35s ease;
+    }
+    .color-btn.wrong {
+      border-color: #e05050 !important;
+      box-shadow: 0 0 0 3px rgba(220,60,60,0.4), 0 0 20px rgba(220,60,60,0.3) !important;
+      animation: btn-wrong 0.35s ease;
+    }
+
+    @keyframes btn-correct {
+      0%   { transform: scale(1); }
+      30%  { transform: scale(1.07); }
+      100% { transform: scale(1); }
+    }
+    @keyframes btn-wrong {
+      0%,100% { transform: translateX(0); }
+      20%     { transform: translateX(-6px); }
+      60%     { transform: translateX(6px); }
+    }
+
+    /* Breathing idle for buttons */
+    @keyframes btn-breathe {
+      0%, 100% { transform: translateY(0) scale(1); }
+      50%       { transform: translateY(-2px) scale(1.015); }
+    }
+
+    /* ── ROUND STATUS ─────────────────────────────────────────── */
+    .round-status {
+      font-family: 'Cinzel', serif;
+      font-size: 11px;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: #a09070;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .round-dots {
+      display: flex;
+      gap: 5px;
+    }
+    .round-dot {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      background: rgba(200,149,42,0.2);
+      border: 1px solid rgba(200,149,42,0.3);
+      transition: all 0.3s;
+    }
+    .round-dot.done { background: #c8952a; box-shadow: 0 0 6px rgba(200,149,42,0.5); }
+    .round-dot.correct { background: #88d870; border-color: #88d870; }
+    .round-dot.wrong   { background: #e05050; border-color: #e05050; }
+
+    /* ── CONTROLS ─────────────────────────────────────────────── */
+    .controls {
+      display: flex;
+      gap: 12px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
+    /* ── CHRONICLE ────────────────────────────────────────────── */
+    .chronicle-wrap {
+      width: 100%;
+      max-width: 520px;
+    }
+    .chronicle-label {
+      font-family: 'Cinzel', serif;
+      font-size: 9px;
+      letter-spacing: 2.5px;
+      text-transform: uppercase;
+      color: var(--gold);
+      margin-bottom: 8px;
+    }
+    .chronicle {
+      display: flex;
+      gap: 6px;
+      overflow-x: auto;
+      padding-bottom: 4px;
+      height: 40px;
+      align-items: center;
+    }
+    .chronicle::-webkit-scrollbar { height: 3px; }
+    .chronicle-entry {
+      flex-shrink: 0;
+      font-family: 'Cinzel', serif;
+      font-size: 9px;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      padding: 4px 10px;
+      border-radius: 999px;
+      border: 1px solid transparent;
+      white-space: nowrap;
+    }
+    .chronicle-entry.hit  { background: rgba(136,216,112,0.1); border-color: rgba(136,216,112,0.3); color: #88d870; }
+    .chronicle-entry.miss { background: rgba(220,80,80,0.1);   border-color: rgba(220,80,80,0.3);   color: #e08080; }
+    .chronicle-entry.time { background: rgba(220,160,40,0.1);  border-color: rgba(220,160,40,0.3);  color: #e0a830; }
+
+    /* ── VICTORY OVERLAY ──────────────────────────────────────── */
+    .victory-overlay {
+      position: fixed;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 9999;
+      pointer-events: none;
+    }
+    .victory-msg {
+      font-family: 'Cinzel Decorative', serif;
+      font-weight: 700;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      text-align: center;
+      color: #f0d080;
+      text-shadow: 0 0 30px rgba(200,149,42,0.8), 0 2px 8px rgba(0,0,0,0.9);
+      background: linear-gradient(160deg, rgba(30,22,8,0.95) 0%, rgba(15,12,7,0.98) 100%);
+      border: 2px solid var(--gold);
+      border-radius: 16px;
+      padding: 24px 32px;
+      box-shadow: 0 0 40px rgba(200,149,42,0.4), 0 8px 40px rgba(0,0,0,0.8);
+      transform: scale(0);
+      width: 0;
+      overflow: hidden;
+      white-space: nowrap;
+    }
+    .victory-msg.animating {
+      animation: victory-pop 0.75s cubic-bezier(0.34,1.56,0.64,1) forwards,
+                 victory-hold 1s 0.75s forwards;
+    }
+
+    @keyframes victory-pop {
+      0%   { transform: scale(0.05); width: 30px; opacity: 0; }
+      100% { transform: scale(1);    width: min(90vw, 420px); opacity: 1; }
+    }
+    @keyframes victory-hold {
+      0%   { opacity: 1; transform: scale(1); }
+      85%  { opacity: 1; transform: scale(1); }
+      100% { opacity: 0; transform: scale(0.95); }
+    }
+
+    /* ── CONFETTI ─────────────────────────────────────────────── */
+    .confetti-piece {
+      position: fixed;
+      width: 10px;
+      height: 10px;
+      border-radius: 2px;
+      pointer-events: none;
+      z-index: 9998;
+      animation: confetti-fall var(--dur, 2.5s) var(--delay, 0s) ease-in forwards;
+    }
+    @keyframes confetti-fall {
+      0%   { transform: translateY(0) rotate(0deg) scale(1); opacity: 1; }
+      80%  { opacity: 1; }
+      100% { transform: translateY(calc(100vh + 60px)) rotate(calc(var(--spin, 1) * 720deg)) scale(0.5); opacity: 0; }
+    }
+
+    /* ── GAME OVER PANEL ──────────────────────────────────────── */
+    .game-over-panel {
+      display: none;
+      width: 100%;
+      max-width: 520px;
+      background: linear-gradient(160deg, #1e1608 0%, #0f0c07 100%);
+      border: 1px solid var(--border-bright);
+      border-radius: 16px;
+      padding: 28px 24px;
+      text-align: center;
+      box-shadow: inset 0 0 30px rgba(0,0,0,0.5), 0 8px 32px rgba(0,0,0,0.7);
+    }
+    .game-over-panel.visible { display: block; }
+    .game-over-title {
+      font-family: 'Cinzel Decorative', serif;
+      font-size: 22px;
+      color: #f0d080;
+      margin-bottom: 8px;
+    }
+    .game-over-stats {
+      font-family: 'IM Fell English', serif;
+      font-style: italic;
+      font-size: 14px;
+      color: #b8986a;
+      margin-bottom: 20px;
+      line-height: 1.8;
+    }
+
+    /* ── FOOTER ───────────────────────────────────────────────── */
+    .game-footer {
+      padding: 10px 24px 14px;
+      border-top: 1px solid rgba(200,149,42,0.1);
+      font-family: 'IM Fell English', serif;
+      font-style: italic;
+      font-size: 11px;
+      color: rgba(180,150,90,0.55);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 8px;
+      flex-shrink: 0;
+    }
+
+    /* ── SCORE POP FLOAT ──────────────────────────────────────── */
+    .score-pop {
+      position: fixed;
+      font-family: 'Cinzel Decorative', serif;
+      font-size: 22px;
+      font-weight: 700;
+      pointer-events: none;
+      z-index: 8000;
+      animation: score-float 1s ease-out forwards;
+      text-shadow: 0 2px 8px rgba(0,0,0,0.8);
+    }
+    .score-pop.positive { color: #f0d080; }
+    .score-pop.negative { color: #e05050; }
+    @keyframes score-float {
+      0%   { opacity: 1; transform: translateY(0) scale(1); }
+      20%  { opacity: 1; transform: translateY(-10px) scale(1.15); }
+      100% { opacity: 0; transform: translateY(-60px) scale(0.8); }
+    }
+
+    /* ── STREAK BADGE ─────────────────────────────────────────── */
+    .streak-badge {
+      display: none;
+      font-family: 'Cinzel', serif;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      padding: 4px 14px;
+      border-radius: 999px;
+      background: linear-gradient(135deg, rgba(255,144,64,0.2), rgba(200,149,42,0.15));
+      border: 1px solid rgba(255,144,64,0.5);
+      color: #ff9040;
+      box-shadow: 0 0 12px rgba(255,144,64,0.25);
+      animation: badge-pulse 1.2s ease-in-out infinite alternate;
+    }
+    .streak-badge.visible { display: inline-block; }
+    @keyframes badge-pulse {
+      from { box-shadow: 0 0 8px rgba(255,144,64,0.2); }
+      to   { box-shadow: 0 0 18px rgba(255,144,64,0.5); }
+    }
+
+    /* ── MODE SELECTOR ────────────────────────────────────────── */
+    .mode-row {
+      display: flex;
+      gap: 8px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+    .mode-btn {
+      font-family: 'Cinzel', serif;
+      font-size: 10px;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      padding: 6px 16px;
+      border-radius: 999px;
+      border: 1px solid rgba(200,149,42,0.3);
+      background: rgba(200,149,42,0.07);
+      color: #a09070;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .mode-btn.active, .mode-btn:hover {
+      background: rgba(200,149,42,0.18);
+      border-color: rgba(200,149,42,0.6);
+      color: #f0d080;
+    }
+    .mode-btn.active { box-shadow: 0 0 10px rgba(200,149,42,0.25); }
+
+    /* ── LIVES (SURVIVAL MODE) ────────────────────────────────── */
+    .lives-row {
+      display: flex;
+      gap: 6px;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      min-height: 28px;
+    }
+    .life-icon { transition: all 0.3s; }
+    .life-icon.lost {
+      filter: grayscale(1) opacity(0.3);
+      transform: scale(0.8);
+    }
+
+    /* ── HIGH SCORE TABLE ─────────────────────────────────────── */
+    .highscore-wrap {
+      width: 100%;
+      max-width: 520px;
+    }
+    .highscore-label {
+      font-family: 'Cinzel', serif;
+      font-size: 9px;
+      letter-spacing: 2.5px;
+      text-transform: uppercase;
+      color: var(--gold);
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .highscore-label::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: linear-gradient(90deg, rgba(200,149,42,0.3), transparent);
+    }
+    .highscore-table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    .highscore-table tr {
+      border-bottom: 1px solid rgba(200,149,42,0.1);
+    }
+    .highscore-table td {
+      font-family: 'Cinzel', serif;
+      font-size: 10px;
+      letter-spacing: 1px;
+      padding: 6px 8px;
+      color: #b8986a;
+    }
+    .highscore-table td:first-child { color: #c8952a; font-size: 9px; width: 24px; text-align: center; }
+    .highscore-table td.hs-score  { color: #f0d080; font-size: 13px; font-family: 'Cinzel Decorative', serif; }
+    .highscore-table td.hs-new    { color: #88d870; }
+    .highscore-table tr.hs-top td { color: #f0d080; }
+    .hs-empty {
+      font-family: 'IM Fell English', serif;
+      font-style: italic;
+      font-size: 12px;
+      color: rgba(160,144,112,0.5);
+      text-align: center;
+      padding: 10px;
+    }
+
+    /* ── RESPONSIVE ───────────────────────────────────────────── */
+    @media (max-width: 480px) {
+      .color-grid { gap: 10px; }
+      .color-grid.hard { grid-template-columns: repeat(2, 1fr); }
+      .scoreboard { gap: 10px; }
+      .score-block { padding: 8px 14px; min-width: 70px; }
+      .score-value { font-size: 22px; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ── HEADER ───────────────────────────────────────────────── -->
+<header class="game-header">
+  <div class="header-inner">
+    <div class="header-left">
+      <a href="index.html" class="rpg-back">Hub</a>
+    </div>
+    <div class="header-center">
+      <h1 class="game-title">Color Match</h1>
+      <p class="game-subtitle">Name the ink, not the meaning</p>
+    </div>
+    <div class="header-right">
+      <img class="header-logo"
+        src="data:image/png;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/4gHYSUNDX1BST0ZJTEUAAQEAAAHIAAAAAAQwAABtbnRyUkdCIFhZWiAH4AABAAEAAAAAAABhY3NwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQAA9tYAAQAAAADTLQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAlkZXNjAAAA8AAAACRyWFlaAAABFAAAABRnWFlaAAABKAAAABRiWFlaAAABPAAAABR3dHB0AAABUAAAABRyVFJDAAABZAAAAChnVFJDAAABZAAAAChiVFJDAAABZAAAAChjcHJ0AAABjAAAADxtbHVjAAAAAAAAAAEAAAAMZW5VUwAAAAgAAAAcAHMAUgBHAEJYWVogAAAAAAAAb6IAADj1AAADkFhZWiAAAAAAAABimQAAt4UAABjaWFlaIAAAAAAAACSgAAAPhAAAts9YWVogAAAAAAAA9tYAAQAAAADTLXBhcmEAAAAAAAQAAAACZmYAAPKnAAANWQAAE9AAAApbAAAAAAAAAABtbHVjAAAAAAAAAAEAAAAMZW5VUwAAACAAAAAcAEcAbwBvAGcAbABlACAASQBuAGMALgAgADIAMAAxADb/2wBDAAUDBAQEAwUEBAQFBQUGBwwIBwcHBw8LCwkMEQ8SEhEPERETFhwXExQaFRERGCEYGh0dHx8fExciJCIeJBweHx7/2wBDAQUFBQcGBw4ICA4eFBEUHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh7/wAARCABAAEADASIAAhEBAxEB/8QAHAAAAwEAAgMAAAAAAAAAAAAABQYHCAAEAQID/8QAMBAAAQMDAwIFAwMFAQAAAAAAAQIDBAUGEQAhMQcSExQiQVEIFXEyQpEjUmGBobH/xAAZAQEBAQEBAQAAAAAAAAAAAAAGBQADBwH/xAAvEQABAwMDAgQFBAMAAAAAAAABAgMRAAQFITFBElEGYXGBFCORobETIlLBYtHw/9oADAMBAAIRAxEAPwDGWiFFpE2qyA1FbJGd1Hga9aHTX6rUW4rKSe4+o/A1fLLthmNHbYZaAAA3xzqRlcqixR3VTLwr4VVmFF989LKdzyT2H9nik23enUZISuWC+vkg/p05QrLjNMBtENCUfHbtojb1Sk3JdjluWo22mPE3nVNae4JA2w2njOdsnVfboDUWG2JDivDCkoCnDkqUogD/AGSeNef5bO3TK0pdVCjrHIB2kcT23p9ZZPDWsosmEhCdCogGfQmSfx2qHzLMiuslC4aFJ+O3SZcXTmOoKXD7o6+QP261G5QW5MNwMOK8MqUgqbOClSTg/wCwRxqQ3DUpFt3Y3bl1ttqYl7wqmhPaFA+zieM52yNbEZ26eWQ0qVDWOSBvA5jtvX29yeGuoResJKFaBQA09xBH4rOVZpM2lSCzLaKfhWNjroa0XedsMyWHWH2gQQfbjUEr9MepNRciug4B9J+Rr0DFZVF8j/KgHirwqrDqD7B6mVbHkHsf6PNPvTWG1Tqb591yEl945SiT3J7kfCV8An43/GqlTL3o9v1GHBuVlNP8xBMkqSlSwhRVhLe2+cA7/J0mW8l0vQAxAfMdp1KWyHyUpCiAT2EEe5/jVorFjUe8LbfiTorRlIYV5aTjC2lAZG/xn20Nzt1bB8fFg9KiZIIkcD6edW2RfMY4oYUUhEQDMKnUnXv5ACvr9JtCgOWbPrEVnsRPqLqkZ5DaThIP43/nTf8AUHVk2tYUWY00FynKpFTGQVBKVOJcCwFH2HpOkr6H6/GkWxU7VdcT5yBKLyEk7qbVtkfgg/zqm/VFApS+iVYnVNJKoPZIiKGMpfCsI55GTuPjURzDqfz7i35ICxA8tI+0UQN0RaBKTxQj6fKqm6bCkzHWgiU3VJSZKQoKSlxThWQk+49Q0nfVlQoDdnU+syme9ECpNKXjktqOFAfnb+NUj6XoFKR0So86mpIVO75EtRxlT5Vhew4GRsPjUy+uCvxo9s0y1WnEmZOlB5aAd0tp2yfyT/zWbw6mM+2tiQCsz6az9prC6JtClR4pNm3nRbmq0um24pEgMwhJD62VYKgfUjt2PBGpb1HifcaV5s+T80yCtTcX1eGn3C1ZO/8AjWhaRYtGtC2mYcGK2JK2EiTJxlbqiMnf4z7ailWajsGbEVT6ke0qQ4XioN+GkqwRgAHAA3OedXMDdWxfPwgPSkiCYk8E+9LX/jHscE3CuoLBkfugbEQBpI8/9GiNp3CiL5BqPT/MB3t7Vl72yB+kA777ZI4OjNydaXqHAqtBRSXG6y2Vxg/3ANgcBwDnON8amFgVXxaV5AqfW4gkIaQohKjjbuCdyM/O2rDatBtW5JyKlWaZDnVFj+k6pBUG1dv6SRnCjjGedd8pa2Vs8XLtoqSNdO86c7cGuLtxkMo0n9J7ccxtGo23FQqw7urNmXPGuGiSfDlMq9QO6XEnlKh7g6vXWjr/AEHqH0UdoTUaRT606+0Xo6k9yFJSckpUPbIHOvHX60bBidPXqrFgw6VVmVIEUR8I8YkgFJSOdsnP+NZo1exlxa5xAvUIKVJMa8xr6EUHvLd2xcLCyDWmOjHX+g9POijNCcjSKhWmn3SzHSO1CUqOQVKPtknjUEvy7qzedzybhrcnxJTyvSBsltI4SkewGgOtMdAbRsGX09ZqsqDDqtWeUsShIwvwSCcJCTxtg51sncWuDQb1SCpSjGnE6+gFazt3b5wMIIFCrb60PV2DSaAukuOVlwojF/uBbI4LhHOcb40G6iyWluOqlTakpAWr+gtgNpb53z27j/fvpqumhWfbVQ+40+htsSZSvLhSHShLQWCCoeydttRu9qg3Cpr0KNIfUHllAbcV6kJGxSoA4PHI1DxNtZvvh6zbKEng9+eTAHFM1Ku7BhTd0oK0+g441k6UmUWoOU2al9BJQfS4n+5PuNVS0a28Kl5+IlDzbjaWAjIAUknJaA4SPk87fOo7rt06oSILmWlZQT6kH9KtMb2yTcpI5otjsiGPluz07iODt9O4/wCN7pdjW5Xam3V6pKnmOSSYK5PiIH4c57f+6YLw6YWZUqA+mi0/7dUW2yphbbilBagNkqBJ2PzqQwb3YmUxFNdV5HKkhSgMpCQcn/zGmGn1ypMELp9THk/SAsqKR+pSjjBwBvjGONEH7DJhwLDyk9J0GsR5xofeTTU2eJcb6bZAcBAlQICuoj+J1AHsKfbQ6X2ZTaAwmtU77jUnGwp9bjikhCiN0pAI2HzpZqtp2db9b+4QanPDCjkQWHvRscHucH7ASAeSNA51eedaacemy3mWVocdTJdC+5eFBeMkjt3GM/Glir3NTY0t52n+IrvcUsNA5b9QwQfnfPxrpaY/IKdUtx5R6txx6a7ewqfcNWLTSUltKYjUnXmTGk7bHuOKea5dyRTZjdWa8FTLikNtelSCj9qQRzj8ai1ZnrqM1b6gEp4QgDASNcqtTlVJ7xJCyQNkpzsBrpaT4/Gt2YJA1NRczn3b5pFqk/LRtMSfWO3Ff//Z"
+        alt="Rising Phoenix Games" />
+    </div>
+  </div>
+</header>
+
+<!-- ── GAME ──────────────────────────────────────────────────── -->
+<main id="app">
+
+  <!-- Scoreboard -->
+  <div class="scoreboard">
+    <div class="score-block">
+      <div class="score-label">Score</div>
+      <div class="score-value" id="score">0</div>
+    </div>
+    <div class="score-block">
+      <div class="score-label">Streak</div>
+      <div class="score-value streak" id="streak">0</div>
+    </div>
+    <div class="score-block">
+      <div class="score-label">Best</div>
+      <div class="score-value best" id="best">0</div>
+    </div>
+    <div class="score-block">
+      <div class="score-label">Round</div>
+      <div class="score-value" id="round-display">1</div>
+    </div>
+  </div>
+
+  <!-- Streak badge -->
+  <div style="text-align:center;">
+    <span class="streak-badge" id="streak-badge">✦ ×<span id="streak-mult">1</span> Streak</span>
+  </div>
+
+  <!-- Mode selector -->
+  <div class="mode-row" id="mode-row">
+    <button class="mode-btn active" data-mode="rounds">10 Rounds</button>
+    <button class="mode-btn" data-mode="survival">Survival</button>
+  </div>
+
+  <!-- Difficulty -->
+  <div class="difficulty-row" id="diff-row">
+    <button class="diff-btn active" data-diff="easy">Easy</button>
+    <button class="diff-btn" data-diff="normal">Normal</button>
+    <button class="diff-btn" data-diff="hard">Hard</button>
+  </div>
+
+  <!-- Lives (survival mode only) -->
+  <div class="lives-row" id="lives-row" style="display:none;"></div>
+
+  <!-- Round dots -->
+  <div class="round-status" id="round-status-row">
+    <span id="round-label" style="color:#f0d080;font-size:10px;letter-spacing:2px;">ROUND 1 OF 10</span>
+    <div class="round-dots" id="round-dots"></div>
+  </div>
+
+  <!-- Word display panel -->
+  <div class="arena" id="arena">
+    <div class="word-panel">
+      <div class="word-instruction">Tap the button whose colour matches the <em>ink colour</em> of the word below</div>
+      <div class="color-word" id="color-word">CRIMSON</div>
+      <div class="timer-bar"><div class="timer-bar-fill" id="timer-bar"></div></div>
+    </div>
+
+    <!-- Color buttons grid -->
+    <div class="color-grid" id="color-grid"></div>
+
+    <!-- Game over panel -->
+    <div class="game-over-panel" id="game-over">
+      <div class="game-over-title" id="game-over-title">⚜ Round Complete ⚜</div>
+      <div class="game-over-stats" id="game-over-stats"></div>
+      <div class="controls">
+        <button class="rpg-btn rpg-btn-sage" id="play-again-btn">Play Again</button>
+        <button class="rpg-btn rpg-btn-crimson" id="change-diff-btn">Change Options</button>
+      </div>
+    </div>
+
+    <!-- Main controls (start) -->
+    <div class="controls" id="main-controls">
+      <button class="rpg-btn rpg-btn-sage" id="start-btn">Begin the Trial</button>
+    </div>
+  </div>
+
+  <!-- Chronicle -->
+  <div class="chronicle-wrap">
+    <div class="chronicle-label">Chronicle of Answers</div>
+    <div class="chronicle" id="chronicle"></div>
+  </div>
+
+  <!-- High Score Table -->
+  <div class="highscore-wrap">
+    <div class="highscore-label">Hall of Records</div>
+    <div id="highscore-table-wrap"></div>
+  </div>
+
+</main>
+
+<!-- ── VICTORY OVERLAY ───────────────────────────────────────── -->
+<div class="victory-overlay" id="victory-overlay">
+  <div class="victory-msg" id="victory-msg"></div>
+</div>
+
+<!-- ── FOOTER ────────────────────────────────────────────────── -->
+<footer class="game-footer">
+  <span>© <span id="year"></span> Rising Phoenix Gallery · Michigan City, IN</span>
+  <span>Crafted by John Ryszka II</span>
+</footer>
+
+<script>
+document.getElementById('year').textContent = new Date().getFullYear();
+
+/* ════════════════════════════════════════════════════════════
+   DATA
+═══════════════════════════════════════════════════════════════ */
+const COLORS = [
+  { name: 'Red',     hex: '#e03030' },
+  { name: 'Blue',    hex: '#3060e0' },
+  { name: 'Green',   hex: '#30b050' },
+  { name: 'Yellow',  hex: '#d4c020' },
+  { name: 'Purple',  hex: '#9030c0' },
+  { name: 'Orange',  hex: '#e07020' },
+  { name: 'Pink',    hex: '#d04090' },
+  { name: 'Teal',    hex: '#20a0a0' },
+  { name: 'Crimson', hex: '#cc1818' },
+  { name: 'Amber',   hex: '#c88020' },
+  { name: 'Indigo',  hex: '#4040c0' },
+  { name: 'Lime',    hex: '#70c020' },
+];
+
+const VICTORY_MSGS = [
+  '⚜ Flawless Sight ⚜',
+  '✦ True of Eye ✦',
+  '⚜ The Phoenix Sees All ⚜',
+  '✦ Colour-Blessed ✦',
+  '⚜ Perfect Perception ⚜',
+];
+
+const DIFF = {
+  easy:   { choices: 2, timeMs: 0,    rounds: 10, label: 'Easy'   },
+  normal: { choices: 4, timeMs: 4000, rounds: 10, label: 'Normal' },
+  hard:   { choices: 6, timeMs: 2500, rounds: 10, label: 'Hard'   },
+};
+
+const MAX_LIVES = 3;
+
+/* ════════════════════════════════════════════════════════════
+   STATE
+═══════════════════════════════════════════════════════════════ */
+let state = {
+  diff:    'normal',
+  mode:    'rounds',   // 'rounds' | 'survival'
+  running: false,
+  round:   0,
+  totalRounds: 10,
+  score:   0,
+  streak:  0,
+  lives:   MAX_LIVES,
+  best:    parseInt(localStorage.getItem('cm_best') || '0'),
+  history: [],
+  timerInterval: null,
+  timerStart: 0,
+  answered: false,
+  wordColor: null,
+  inkColor:  null,
+};
+
+/* ════════════════════════════════════════════════════════════
+   HIGH SCORES — localStorage: cm_scores = JSON array of {score, diff, mode, accuracy, date}
+═══════════════════════════════════════════════════════════════ */
+function loadScores() {
+  try { return JSON.parse(localStorage.getItem('cm_scores') || '[]'); }
+  catch(e) { return []; }
+}
+function saveScore(entry) {
+  const scores = loadScores();
+  scores.push(entry);
+  scores.sort((a,b) => b.score - a.score);
+  localStorage.setItem('cm_scores', JSON.stringify(scores.slice(0, 5)));
+}
+function renderHighScores(newestScore) {
+  const wrap  = document.getElementById('highscore-table-wrap');
+  const scores = loadScores();
+  if (!scores.length) {
+    wrap.innerHTML = '<div class="hs-empty">No records yet — play your first game!</div>';
+    return;
+  }
+  const medals = ['🥇','🥈','🥉','④','⑤'];
+  let html = '<table class="highscore-table">';
+  scores.forEach((s, i) => {
+    const isNew  = newestScore && s.score === newestScore.score && s.date === newestScore.date;
+    const topCls = i === 0 ? ' hs-top' : '';
+    const newBadge = isNew ? ' <span style="color:#88d870;font-size:8px;">NEW</span>' : '';
+    html += `<tr class="${topCls}">
+      <td>${medals[i]}</td>
+      <td class="hs-score">${s.score}${newBadge}</td>
+      <td>${s.diff} · ${s.mode}</td>
+      <td>${s.accuracy}% acc</td>
+      <td style="color:#7a6040;font-size:9px;">${s.date}</td>
+    </tr>`;
+  });
+  html += '</table>';
+  wrap.innerHTML = html;
+}
+
+/* ════════════════════════════════════════════════════════════
+   DOM REFS
+═══════════════════════════════════════════════════════════════ */
+const scoreEl        = document.getElementById('score');
+const streakEl       = document.getElementById('streak');
+const bestEl         = document.getElementById('best');
+const roundDispEl    = document.getElementById('round-display');
+const roundLabel     = document.getElementById('round-label');
+const roundDots      = document.getElementById('round-dots');
+const roundStatusRow = document.getElementById('round-status-row');
+const colorWordEl    = document.getElementById('color-word');
+const colorGrid      = document.getElementById('color-grid');
+const timerBar       = document.getElementById('timer-bar');
+const gameOverPanel  = document.getElementById('game-over');
+const gameOverTitle  = document.getElementById('game-over-title');
+const gameOverStats  = document.getElementById('game-over-stats');
+const mainControls   = document.getElementById('main-controls');
+const startBtn       = document.getElementById('start-btn');
+const playAgainBtn   = document.getElementById('play-again-btn');
+const changeDiffBtn  = document.getElementById('change-diff-btn');
+const chronicle      = document.getElementById('chronicle');
+const diffRow        = document.getElementById('diff-row');
+const modeRow        = document.getElementById('mode-row');
+const livesRow       = document.getElementById('lives-row');
+const streakBadge    = document.getElementById('streak-badge');
+const streakMult     = document.getElementById('streak-mult');
+const victoryOverlay = document.getElementById('victory-overlay');
+const victoryMsg     = document.getElementById('victory-msg');
+
+/* ════════════════════════════════════════════════════════════
+   INIT
+═══════════════════════════════════════════════════════════════ */
+bestEl.textContent = state.best;
+buildRoundDots();
+showStartScreen();
+renderHighScores(null);
+
+document.querySelectorAll('.diff-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.diff-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    state.diff = btn.dataset.diff;
+  });
+});
+
+document.querySelectorAll('.mode-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    state.mode = btn.dataset.mode;
+    // Show/hide lives preview
+    livesRow.style.display = state.mode === 'survival' ? 'flex' : 'none';
+    roundStatusRow.style.display = state.mode === 'survival' ? 'none' : '';
+    if (state.mode === 'survival') renderLives(MAX_LIVES);
+  });
+});
+
+startBtn.addEventListener('click', startGame);
+playAgainBtn.addEventListener('click', startGame);
+changeDiffBtn.addEventListener('click', () => {
+  gameOverPanel.classList.remove('visible');
+  mainControls.style.display = '';
+  diffRow.style.display      = '';
+  modeRow.style.display      = '';
+  state.running = false;
+});
+
+/* ════════════════════════════════════════════════════════════
+   CORE GAME
+═══════════════════════════════════════════════════════════════ */
+function showStartScreen() {
+  colorWordEl.textContent = 'READY';
+  colorWordEl.style.color = '#c8952a';
+  colorWordEl.style.textShadow = '';
+  timerBar.style.width = '100%';
+  colorGrid.innerHTML  = '';
+  gameOverPanel.classList.remove('visible');
+  mainControls.style.display = '';
+  streakBadge.classList.remove('visible');
+}
+
+function startGame() {
+  clearInterval(state.timerInterval);
+  state.running  = true;
+  state.round    = 0;
+  state.score    = 0;
+  state.streak   = 0;
+  state.lives    = MAX_LIVES;
+  state.history  = [];
+  state.answered = false;
+  gameOverPanel.classList.remove('visible');
+  mainControls.style.display = 'none';
+  diffRow.style.display      = 'none';
+  modeRow.style.display      = 'none';
+  chronicle.innerHTML = '';
+  streakBadge.classList.remove('visible');
+
+  if (state.mode === 'survival') {
+    livesRow.style.display    = 'flex';
+    roundStatusRow.style.display = 'none';
+    renderLives(state.lives);
+    roundLabel.textContent = 'SURVIVAL';
+  } else {
+    livesRow.style.display    = 'none';
+    roundStatusRow.style.display = '';
+  }
+
+  updateScoreDisplay();
+  buildRoundDots();
+  nextRound();
+}
+
+function nextRound() {
+  if (state.mode === 'rounds' && state.round >= DIFF[state.diff].rounds) {
+    endGame(false);
+    return;
+  }
+  state.round++;
+  state.answered = false;
+  roundDispEl.textContent = state.round;
+
+  if (state.mode === 'rounds') {
+    roundLabel.textContent = `ROUND ${state.round} OF ${DIFF[state.diff].rounds}`;
+  } else {
+    roundLabel.textContent = `ROUND ${state.round}`;
+  }
+
+  // ── IMPROVEMENT #1: Ink always differs from word label ──
+  const wordColor = pick(COLORS);
+  let inkColor;
+  let tries = 0;
+  do {
+    inkColor = pick(COLORS);
+    tries++;
+  } while (inkColor.name === wordColor.name && tries < 20);
+
+  state.wordColor = wordColor;
+  state.inkColor  = inkColor;
+
+  colorWordEl.textContent  = wordColor.name.toUpperCase();
+  colorWordEl.style.color  = inkColor.hex;
+  colorWordEl.style.textShadow = `0 0 24px ${inkColor.hex}88`;
+
+  const cfg    = DIFF[state.diff];
+  const wrong  = COLORS.filter(c => c.name !== inkColor.name);
+  shuffle(wrong);
+  const choices = [inkColor, ...wrong.slice(0, cfg.choices - 1)];
+  shuffle(choices);
+
+  buildButtons(choices, inkColor);
+  startTimer();
+}
+
+function buildButtons(choices, correct) {
+  const cfg = DIFF[state.diff];
+  colorGrid.className = 'color-grid' + (cfg.choices >= 6 ? ' hard' : '');
+  colorGrid.innerHTML = '';
+
+  choices.forEach(color => {
+    const btn = document.createElement('button');
+    btn.className = 'color-btn';
+    // ── IMPROVEMENT #10: kill 300ms tap delay ──
+    btn.style.touchAction = 'manipulation';
+
+    const period = (3.6 + Math.random() * 2.2).toFixed(2);
+    const delay  = -(Math.random() * parseFloat(period)).toFixed(2);
+    btn.style.animation = `btn-breathe ${period}s ${delay}s ease-in-out infinite`;
+
+    const swatch = document.createElement('div');
+    swatch.className = 'btn-swatch';
+    swatch.style.background = `radial-gradient(ellipse at 30% 30%, ${lighten(color.hex, 25)}, ${color.hex} 60%, ${darken(color.hex, 20)})`;
+
+    const label = document.createElement('div');
+    label.className = 'btn-label';
+    label.textContent = color.name.toUpperCase();
+
+    btn.appendChild(swatch);
+    btn.appendChild(label);
+
+    btn.addEventListener('click', () => handleAnswer(btn, color, correct));
+    colorGrid.appendChild(btn);
+  });
+}
+
+function handleAnswer(btn, chosen, correct) {
+  if (state.answered) return;
+  state.answered = true;
+  clearInterval(state.timerInterval);
+  timerBar.style.width = '100%';
+
+  const isCorrect = chosen.name === correct.name;
+  const pts       = scoreForRound();
+
+  if (isCorrect) {
+    state.score += pts;
+    state.streak++;
+    if (state.score > state.best) {
+      state.best = state.score;
+      localStorage.setItem('cm_best', state.best);
+    }
+    btn.classList.add('correct');
+    addChronicle('hit', correct.name);
+    state.history.push('hit');
+    // ── IMPROVEMENT #3: score pop ──
+    spawnScorePop(btn, '+' + pts, true);
+    // ── IMPROVEMENT #6: streak badge ──
+    updateStreakBadge();
+    // haptic on correct
+    if (navigator.vibrate) navigator.vibrate(30);
+
+  } else {
+    state.streak = 0;
+    btn.classList.add('wrong');
+    // Highlight correct
+    colorGrid.querySelectorAll('.color-btn').forEach(b => {
+      const lbl = b.querySelector('.btn-label');
+      if (lbl && lbl.textContent.toLowerCase() === correct.name.toLowerCase()) {
+        b.classList.add('correct');
+      }
+    });
+    addChronicle('miss', chosen.name + '→' + correct.name);
+    state.history.push('miss');
+    // ── IMPROVEMENT #3: score pop (negative) ──
+    spawnScorePop(btn, '✗', false);
+    // ── IMPROVEMENT #6: reset streak badge ──
+    updateStreakBadge();
+    // ── IMPROVEMENT #10: haptic on wrong ──
+    if (navigator.vibrate) navigator.vibrate([60, 40, 60]);
+
+    // ── IMPROVEMENT #9: survival lives ──
+    if (state.mode === 'survival') {
+      state.lives--;
+      renderLives(state.lives);
+      if (state.lives <= 0) {
+        setTimeout(() => { if (state.running) endGame(true); }, 800);
+        updateScoreDisplay();
+        return;
+      }
+    }
+  }
+
+  updateScoreDisplay();
+  updateRoundDot(state.round - 1, isCorrect ? 'correct' : 'wrong');
+
+  setTimeout(() => {
+    if (state.running) nextRound();
+  }, 700);
+}
+
+function handleTimeout() {
+  if (state.answered) return;
+  state.answered = true;
+  state.streak = 0;
+  addChronicle('time', 'Time!');
+  state.history.push('time');
+  updateStreakBadge();
+  // haptic on timeout
+  if (navigator.vibrate) navigator.vibrate([80, 40, 80]);
+
+  if (state.mode === 'survival') {
+    state.lives--;
+    renderLives(state.lives);
+    updateScoreDisplay();
+    if (state.lives <= 0) {
+      setTimeout(() => { if (state.running) endGame(true); }, 600);
+      return;
+    }
+  } else {
+    updateScoreDisplay();
+    updateRoundDot(state.round - 1, 'wrong');
+  }
+
+  setTimeout(() => {
+    if (state.running) nextRound();
+  }, 500);
+}
+
+function scoreForRound() {
+  const bonus = Math.min(state.streak, 5);
+  return 10 + bonus * 2;
+}
+
+/* ════════════════════════════════════════════════════════════
+   TIMER
+═══════════════════════════════════════════════════════════════ */
+function startTimer() {
+  const cfg = DIFF[state.diff];
+  if (!cfg.timeMs) {
+    timerBar.style.width = '100%';
+    return;
+  }
+  state.timerStart = Date.now();
+  clearInterval(state.timerInterval);
+
+  function tick() {
+    const elapsed = Date.now() - state.timerStart;
+    const pct     = Math.max(0, 1 - elapsed / cfg.timeMs);
+    timerBar.style.width = (pct * 100) + '%';
+    timerBar.style.background = pct < 0.3
+      ? 'linear-gradient(90deg, #cc2020, #ff4040)'
+      : 'linear-gradient(90deg, #c8952a, #f0d080)';
+    if (pct <= 0) {
+      clearInterval(state.timerInterval);
+      handleTimeout();
+    }
+  }
+  state.timerInterval = setInterval(tick, 50);
+}
+
+/* ════════════════════════════════════════════════════════════
+   END GAME
+═══════════════════════════════════════════════════════════════ */
+function endGame(survivalDeath) {
+  state.running = false;
+  clearInterval(state.timerInterval);
+  colorGrid.innerHTML = '';
+
+  const hits   = state.history.filter(h => h === 'hit').length;
+  const misses = state.history.filter(h => h !== 'hit').length;
+  const total  = state.history.length || 1;
+  const pct    = Math.round((hits / total) * 100);
+
+  // Save to high score table
+  const entry = {
+    score:    state.score,
+    diff:     DIFF[state.diff].label,
+    mode:     state.mode === 'survival' ? 'Survival' : 'Rounds',
+    accuracy: pct,
+    date:     new Date().toLocaleDateString('en-US', { month:'short', day:'numeric' }),
+  };
+  saveScore(entry);
+  renderHighScores(entry);
+
+  if (survivalDeath) {
+    gameOverTitle.textContent = '💀 Fallen in Battle';
+  } else {
+    gameOverTitle.textContent = '⚜ Round Complete ⚜';
+  }
+
+  const isNewBest = state.score > 0 && state.score >= (loadScores()[0] || {score:0}).score;
+
+  gameOverStats.innerHTML = `
+    Score: <strong style="color:#f0d080">${state.score}</strong> &ensp;|&ensp;
+    Rounds: <strong style="color:#c8a878">${state.round}</strong><br>
+    Correct: <strong style="color:#88d870">${hits}</strong> &ensp;|&ensp;
+    Missed: <strong style="color:#e08080">${misses}</strong><br>
+    Accuracy: <strong style="color:#f0d080">${pct}%</strong>
+    ${isNewBest ? '<br><span style="color:#f0d080;font-size:13px;">✦ New High Score! ✦</span>' : ''}
+  `;
+
+  gameOverPanel.classList.add('visible');
+  diffRow.style.display = '';
+  modeRow.style.display = '';
+  streakBadge.classList.remove('visible');
+
+  if (hits >= Math.ceil(total * 0.7) && !survivalDeath) {
+    triggerVictory();
+  }
+}
+
+/* ════════════════════════════════════════════════════════════
+   IMPROVEMENT #3 — SCORE POP
+═══════════════════════════════════════════════════════════════ */
+function spawnScorePop(btn, text, positive) {
+  const rect = btn.getBoundingClientRect();
+  const el   = document.createElement('div');
+  el.className   = 'score-pop ' + (positive ? 'positive' : 'negative');
+  el.textContent = text;
+  el.style.left  = (rect.left + rect.width / 2 - 20) + 'px';
+  el.style.top   = (rect.top + window.scrollY - 10) + 'px';
+  document.body.appendChild(el);
+  setTimeout(() => el.remove(), 1100);
+}
+
+/* ════════════════════════════════════════════════════════════
+   IMPROVEMENT #6 — STREAK BADGE
+═══════════════════════════════════════════════════════════════ */
+function updateStreakBadge() {
+  if (state.streak >= 2) {
+    streakMult.textContent = state.streak;
+    streakBadge.classList.add('visible');
+  } else {
+    streakBadge.classList.remove('visible');
+  }
+}
+
+/* ════════════════════════════════════════════════════════════
+   IMPROVEMENT #9 — SURVIVAL LIVES
+═══════════════════════════════════════════════════════════════ */
+function renderLives(count) {
+  livesRow.innerHTML = '';
+  for (let i = 0; i < MAX_LIVES; i++) {
+    const span = document.createElement('span');
+    span.className = 'life-icon' + (i >= count ? ' lost' : '');
+    span.textContent = '🔥';
+    livesRow.appendChild(span);
+  }
+}
+
+/* ════════════════════════════════════════════════════════════
+   VICTORY CELEBRATION
+═══════════════════════════════════════════════════════════════ */
+function triggerVictory() {
+  spawnConfetti();
+  const msg = VICTORY_MSGS[Math.floor(Math.random() * VICTORY_MSGS.length)];
+  victoryMsg.textContent = msg;
+  victoryMsg.style.fontSize = 'clamp(16px, 4vw, 26px)';
+  victoryMsg.classList.remove('animating');
+  void victoryMsg.offsetWidth;
+  victoryMsg.classList.add('animating');
+  setTimeout(() => {
+    victoryMsg.classList.remove('animating');
+    victoryMsg.style.width = '0';
+    victoryMsg.style.transform = 'scale(0)';
+  }, 1800);
+}
+
+function spawnConfetti() {
+  const confettiColors = [
+    '#f0d080','#c8952a','#ff6060','#60c060','#6080ff',
+    '#ff60c0','#60d8d8','#ffffff','#ffa040','#a040ff',
+  ];
+  for (let i = 0; i < 90; i++) {
+    setTimeout(() => {
+      const el = document.createElement('div');
+      el.className = 'confetti-piece';
+      el.style.left       = (5 + Math.random() * 90) + 'vw';
+      el.style.top        = (-5 - Math.random() * 10) + 'vh';
+      el.style.background = confettiColors[Math.floor(Math.random() * confettiColors.length)];
+      el.style.width      = (6 + Math.random() * 10) + 'px';
+      el.style.height     = (6 + Math.random() * 14) + 'px';
+      el.style.borderRadius = Math.random() > 0.5 ? '50%' : '2px';
+      el.style.setProperty('--dur',   (1.8 + Math.random() * 1.8) + 's');
+      el.style.setProperty('--delay', (Math.random() * 0.6) + 's');
+      el.style.setProperty('--spin',  (Math.random() > 0.5 ? 1 : -1));
+      document.body.appendChild(el);
+      setTimeout(() => el.remove(), 4000);
+    }, Math.random() * 400);
+  }
+}
+
+/* ════════════════════════════════════════════════════════════
+   UI HELPERS
+═══════════════════════════════════════════════════════════════ */
+function updateScoreDisplay() {
+  scoreEl.textContent  = state.score;
+  streakEl.textContent = state.streak;
+  bestEl.textContent   = state.best;
+}
+
+function buildRoundDots() {
+  if (state.mode === 'survival') { roundDots.innerHTML = ''; return; }
+  const total = DIFF[state.diff].rounds;
+  roundDots.innerHTML = '';
+  for (let i = 0; i < total; i++) {
+    const dot = document.createElement('div');
+    dot.className = 'round-dot';
+    dot.id = 'dot-' + i;
+    roundDots.appendChild(dot);
+  }
+}
+
+function updateRoundDot(index, result) {
+  const dot = document.getElementById('dot-' + index);
+  if (!dot) return;
+  dot.classList.add('done', result);
+}
+
+function addChronicle(type, label) {
+  const el = document.createElement('div');
+  el.className = 'chronicle-entry ' + type;
+  const icons = { hit: '✓', miss: '✗', time: '⏱' };
+  el.textContent = icons[type] + ' ' + label;
+  chronicle.appendChild(el);
+  chronicle.scrollLeft = chronicle.scrollWidth;
+}
+
+/* ════════════════════════════════════════════════════════════
+   COLOR UTILS
+═══════════════════════════════════════════════════════════════ */
+function hexToRgb(hex) {
+  return [parseInt(hex.slice(1,3),16), parseInt(hex.slice(3,5),16), parseInt(hex.slice(5,7),16)];
+}
+function rgbToHex(r,g,b) {
+  return '#' + [r,g,b].map(v => Math.max(0,Math.min(255,Math.round(v))).toString(16).padStart(2,'0')).join('');
+}
+function lighten(hex, pct) {
+  const [r,g,b] = hexToRgb(hex);
+  return rgbToHex(r+(255-r)*pct/100, g+(255-g)*pct/100, b+(255-b)*pct/100);
+}
+function darken(hex, pct) {
+  const [r,g,b] = hexToRgb(hex);
+  return rgbToHex(r*(1-pct/100), g*(1-pct/100), b*(1-pct/100));
+}
+
+/* ════════════════════════════════════════════════════════════
+   ARRAY UTILS
+═══════════════════════════════════════════════════════════════ */
+function pick(arr)   { return arr[Math.floor(Math.random() * arr.length)]; }
+function shuffle(arr) {
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  return arr;
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,1197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>Ski Free · Rising Phoenix Games</title>
+  <link rel="stylesheet" href="shared.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700&family=Cinzel:wght@400;600;700;900&family=IM+Fell+English:ital@0;1&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; }
+    html, body { margin: 0; min-height: 100%; }
+
+    :root {
+      --panel-shadow: 0 10px 34px rgba(0,0,0,0.45);
+      --snow-a: #f1f3f7;
+      --snow-b: #dde6f3;
+      --snow-c: #c5d6ea;
+      --pine-dark: #173425;
+      --pine-mid: #24583b;
+      --pine-light: #3e7f58;
+      --ice: #8ac9ff;
+      --danger: #9f291d;
+      --track: rgba(120, 155, 190, 0.35);
+      --finish: 1500;
+    }
+
+    body {
+      font-family: var(--font-body);
+      color: var(--text);
+      background:
+        radial-gradient(ellipse 90% 55% at 15% 8%, rgba(90,48,12,0.55) 0%, transparent 58%),
+        radial-gradient(ellipse 70% 65% at 85% 90%, rgba(50,25,6,0.60) 0%, transparent 55%),
+        radial-gradient(ellipse 60% 40% at 50% 50%, rgba(30,18,5,0.40) 0%, transparent 70%),
+        linear-gradient(160deg, #1c1106 0%, #0f0c07 45%, #13100a 100%);
+      background-attachment: fixed;
+    }
+
+    #app {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      isolation: isolate;
+    }
+
+    .site-header {
+      padding: 0;
+      background: linear-gradient(180deg, #1e1508 0%, #120e06 100%);
+      border-bottom: 2px solid var(--gold);
+      box-shadow: 0 4px 24px rgba(0,0,0,0.7), 0 1px 0 rgba(200,149,42,0.15) inset;
+      position: relative;
+      overflow: hidden;
+      flex-shrink: 0;
+    }
+    .site-header::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: repeating-linear-gradient(
+        90deg,
+        transparent 0px,
+        transparent 48px,
+        rgba(200,149,42,0.04) 48px,
+        rgba(200,149,42,0.04) 49px
+      );
+      pointer-events: none;
+    }
+    .header-inner { position: relative; padding: 14px 20px 12px; }
+    .header-row { display: flex; align-items: center; margin-bottom: 6px; }
+
+    .rpg-back {
+      display: inline-block;
+      font-family: var(--font-ui);
+      font-size: 0.78rem;
+      letter-spacing: 0.08em;
+      color: var(--gold);
+      text-decoration: none;
+      padding: 0.55rem 1.1rem 0.55rem 2rem;
+      border: 1px solid rgba(200,149,42,0.25);
+      border-radius: 3px;
+      background: linear-gradient(180deg, #2a2010 0%, #1a1508 100%);
+      position: relative;
+      transition: border-color 0.2s, box-shadow 0.2s, color 0.2s;
+      margin: 0;
+      flex: 0 0 auto;
+      z-index: 2;
+    }
+    .rpg-back::before { content: '\2190'; position: absolute; left: 0.7rem; }
+    .rpg-back:hover {
+      border-color: var(--gold-light);
+      box-shadow: 0 0 18px 2px var(--gold-glow);
+      color: var(--gold-light);
+    }
+
+    .header-center {
+      flex: 1 1 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.85rem;
+      min-width: 0;
+    }
+    .header-spacer { visibility: hidden; pointer-events: none; }
+    .phoenix-mark {
+      width: 52px;
+      height: 52px;
+      object-fit: contain;
+      flex-shrink: 0;
+      filter: drop-shadow(0 0 10px rgba(200,149,42,0.5));
+    }
+    .title-block {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      min-width: 0;
+    }
+    .game-title {
+      margin: 0;
+      font-family: var(--font-display);
+      font-size: clamp(1.1rem, 3.7vw, 2rem);
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      line-height: 1.1;
+      background: linear-gradient(135deg, var(--gold-light) 0%, var(--gold) 40%, #a07020 80%, var(--gold-light) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .game-subtitle {
+      margin: 0.2rem 0 0;
+      font-style: italic;
+      color: #c8a878;
+      font-size: 0.82rem;
+      letter-spacing: 0.05em;
+    }
+
+    .main-wrap {
+      width: 100%;
+      max-width: 1180px;
+      margin: 0 auto;
+      padding: 22px 16px 36px;
+      display: grid;
+      grid-template-columns: minmax(320px, 1.2fr) minmax(280px, 0.8fr);
+      gap: 20px;
+      flex: 1;
+    }
+
+    .panel {
+      background: linear-gradient(160deg, var(--surface) 0%, var(--bg-warm) 100%);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      box-shadow: inset 0 0 30px rgba(0,0,0,0.35), var(--panel-shadow);
+      overflow: hidden;
+      position: relative;
+    }
+    .panel-header {
+      padding: 14px 16px 10px;
+      border-bottom: 1px solid rgba(200,149,42,0.14);
+      background: linear-gradient(180deg, rgba(255,255,255,0.03) 0%, rgba(255,255,255,0) 100%);
+    }
+    .panel-label {
+      font-family: var(--font-ui);
+      font-size: 0.7rem;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: var(--gold);
+      margin: 0 0 0.25rem;
+    }
+    .status-bar {
+      margin: 0;
+      min-height: 2.4rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      padding: 8px 16px 8px 28px;
+      background: rgba(0,0,0,0.32);
+      border: 1px solid rgba(200,149,42,0.18);
+      border-radius: 8px;
+      font-family: var(--font-ui);
+      font-size: 0.8rem;
+      letter-spacing: 0.08em;
+      color: var(--gold-light);
+      position: relative;
+      text-align: center;
+    }
+    .status-bar::before {
+      content: '⚜';
+      position: absolute;
+      left: 10px;
+      font-size: 10px;
+      color: var(--gold);
+      opacity: 0.7;
+    }
+
+    .slope-panel {
+      display: flex;
+      flex-direction: column;
+      min-height: 760px;
+    }
+    .slope-stage {
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      flex: 1;
+      position: relative;
+    }
+
+    .hud-row {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 10px;
+    }
+    .badge {
+      padding: 10px 12px;
+      border-radius: 12px;
+      background: linear-gradient(180deg, rgba(255,255,255,0.04) 0%, rgba(0,0,0,0.16) 100%);
+      border: 1px solid rgba(200,149,42,0.18);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.03);
+      text-align: center;
+      min-height: 74px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      gap: 4px;
+    }
+    .badge-label {
+      font-family: var(--font-ui);
+      font-size: 0.62rem;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: var(--gold);
+    }
+    .badge-value {
+      font-family: var(--font-display);
+      color: var(--gold-light);
+      font-size: clamp(1rem, 2.3vw, 1.3rem);
+      line-height: 1;
+    }
+
+    .run-frame {
+      position: relative;
+      flex: 1;
+      min-height: 540px;
+      padding: 14px;
+      border-radius: 18px;
+      background:
+        radial-gradient(circle at 50% 20%, rgba(130,170,210,0.22) 0%, rgba(18,12,5,0.0) 38%),
+        linear-gradient(160deg, #201407 0%, #100b04 100%);
+      border: 1px solid rgba(200,149,42,0.28);
+      box-shadow:
+        inset 0 1px 0 rgba(255,255,255,0.04),
+        inset 0 0 38px rgba(0,0,0,0.35),
+        0 0 0 1px rgba(0,0,0,0.35),
+        0 18px 42px rgba(0,0,0,0.45),
+        0 0 30px rgba(120, 190, 255, 0.08);
+    }
+    .run-frame::before,
+    .run-frame::after {
+      content: '◆';
+      position: absolute;
+      color: rgba(200,149,42,0.45);
+      font-size: 10px;
+      line-height: 1;
+    }
+    .run-frame::before { top: 6px; left: 8px; }
+    .run-frame::after { bottom: 6px; right: 8px; }
+
+    .canvas-wrap {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      min-height: 510px;
+      border-radius: 16px;
+      overflow: hidden;
+      border: 1px solid rgba(210, 230, 255, 0.22);
+      background: linear-gradient(180deg, #dce8f5 0%, #bdd0e4 18%, #dce8f5 100%);
+    }
+
+    canvas#gameCanvas {
+      width: 100%;
+      height: 100%;
+      display: block;
+      touch-action: none;
+      cursor: none;
+    }
+
+    .overlay-note {
+      position: absolute;
+      left: 14px;
+      bottom: 14px;
+      z-index: 4;
+      background: rgba(18, 12, 5, 0.74);
+      border: 1px solid rgba(200,149,42,0.22);
+      color: #dfcfad;
+      padding: 8px 10px;
+      border-radius: 999px;
+      font-family: var(--font-ui);
+      font-size: 0.62rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      pointer-events: none;
+      backdrop-filter: blur(3px);
+    }
+
+    .center-overlay {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      pointer-events: none;
+      z-index: 5;
+      padding: 20px;
+    }
+
+    .victory-banner,
+    .message-banner {
+      width: 10%;
+      max-width: 92%;
+      padding: 16px 18px;
+      border-radius: 18px;
+      text-align: center;
+      opacity: 0;
+      transform: scale(0.18);
+      transform-origin: center center;
+    }
+
+    .victory-banner {
+      border: 1px solid rgba(240,208,128,0.55);
+      background:
+        linear-gradient(180deg, rgba(36,24,10,0.96) 0%, rgba(18,12,5,0.96) 100%),
+        radial-gradient(circle at top, rgba(240,208,128,0.14), transparent 68%);
+      box-shadow: 0 0 0 1px rgba(0,0,0,0.35), 0 0 28px rgba(200,149,42,0.34), inset 0 1px 0 rgba(255,255,255,0.05);
+    }
+
+    .message-banner {
+      width: min(460px, 86%);
+      background: rgba(18,12,5,0.92);
+      border: 1px solid rgba(200,149,42,0.32);
+      box-shadow: 0 0 24px rgba(0,0,0,0.32);
+      transform: scale(1);
+      transition: opacity 0.24s ease;
+    }
+
+    .victory-banner.show {
+      animation: victoryBloom 1.75s ease forwards;
+    }
+
+    .banner-title {
+      margin: 0;
+      font-family: var(--font-display);
+      font-size: clamp(1.15rem, 3.8vw, 2rem);
+      background: linear-gradient(135deg, #fff1b3 0%, var(--gold-light) 50%, var(--gold) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      letter-spacing: 0.04em;
+      line-height: 1.1;
+    }
+    .banner-copy {
+      margin: 8px 0 0;
+      color: #dcc8a3;
+      font-size: 1rem;
+      line-height: 1.45;
+    }
+
+    .side-body {
+      padding: 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+      height: 100%;
+    }
+    .legend-list,
+    .fact-list,
+    .action-stack {
+      display: grid;
+      gap: 10px;
+    }
+    .legend-item,
+    .fact-item {
+      display: grid;
+      grid-template-columns: 34px 1fr;
+      gap: 10px;
+      align-items: center;
+      color: #d7c29a;
+    }
+    .legend-swatch {
+      width: 34px;
+      height: 34px;
+      border-radius: 10px;
+      border: 1px solid rgba(255,255,255,0.15);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.06);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1rem;
+    }
+    .legend-swatch.tree { background: linear-gradient(180deg, #3c8057, #173425); }
+    .legend-swatch.rock { background: linear-gradient(180deg, #a1acb9, #556270); }
+    .legend-swatch.flag { background: linear-gradient(180deg, #f5d07c, #c98b19); }
+
+    .thematic-copy {
+      color: #ceb080;
+      font-size: 1rem;
+      line-height: 1.65;
+    }
+
+    .rpg-btn {
+      min-height: 48px;
+      justify-content: center;
+      width: 100%;
+    }
+
+    .mini-status {
+      color: #cfb68d;
+      background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(200,149,42,0.16);
+      border-radius: 14px;
+      padding: 12px 14px;
+      line-height: 1.55;
+      font-size: 0.98rem;
+    }
+
+    .confetti-canvas {
+      position: fixed;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 20;
+    }
+
+    .rpg-footer {
+      padding: 12px 20px 16px;
+      border-top: 1px solid rgba(200,149,42,0.16);
+      color: var(--text-muted);
+      font-size: 0.82rem;
+      text-align: center;
+      background: rgba(0,0,0,0.18);
+    }
+
+    @keyframes victoryBloom {
+      0% { transform: scale(0.12); width: 12%; opacity: 0; }
+      10% { opacity: 1; }
+      43% { transform: scale(1); width: min(760px, 92%); opacity: 1; }
+      86% { transform: scale(1); width: min(760px, 92%); opacity: 1; }
+      100% { transform: scale(1); width: min(760px, 92%); opacity: 0; }
+    }
+
+    @media (max-width: 980px) {
+      .main-wrap { grid-template-columns: 1fr; }
+      .slope-panel { min-height: auto; }
+    }
+
+    @media (max-width: 720px) {
+      .header-inner { padding: 12px 12px 10px; }
+      .header-row { gap: 8px; }
+      .header-center { gap: 0.55rem; }
+      .phoenix-mark { width: 44px; height: 44px; }
+      .main-wrap { padding: 16px 10px 28px; gap: 14px; }
+      .slope-stage, .side-body { padding: 14px; }
+      .hud-row { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .canvas-wrap { min-height: 440px; }
+      .overlay-note {
+        left: 10px;
+        right: 10px;
+        bottom: 10px;
+        border-radius: 12px;
+        text-align: center;
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+      }
+    }
+  </style>
+</head>
+<body>
+  <canvas class="confetti-canvas" id="confettiCanvas" aria-hidden="true"></canvas>
+  <div id="app">
+    <header class="site-header">
+      <div class="header-inner">
+        <div class="header-row">
+          <a href="index.html" class="rpg-back">Hub</a>
+          <div class="header-center">
+            <img class="phoenix-mark" src="data:image/png;base64,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" alt="Rising Phoenix Games logo">
+            <div class="title-block">
+              <h1 class="game-title">Ski Free</h1>
+              <p class="game-subtitle">Dodge trees and carve a clean line down the mountain</p>
+            </div>
+          </div>
+          <a href="index.html" class="rpg-back header-spacer" tabindex="-1" aria-hidden="true">Hub</a>
+        </div>
+      </div>
+    </header>
+
+    <main class="main-wrap">
+      <section class="panel slope-panel" aria-label="Ski slope game board">
+        <div class="panel-header">
+          <div class="panel-label">Downhill Run</div>
+          <div class="status-bar" id="statusBar">Steer left and right. Dodge trees and rocks for as long as you can.</div>
+        </div>
+
+        <div class="slope-stage">
+          <div class="hud-row">
+            <div class="badge">
+              <div class="badge-label">Distance</div>
+              <div class="badge-value"><span id="distanceReadout">0</span> m</div>
+            </div>
+            <div class="badge">
+              <div class="badge-label">Best Run</div>
+              <div class="badge-value"><span id="bestReadout">0</span> m</div>
+            </div>
+            <div class="badge">
+              <div class="badge-label">Speed</div>
+              <div class="badge-value"><span id="speedReadout">1.0</span>x</div>
+            </div>
+            <div class="badge">
+              <div class="badge-label">Crashes Left</div>
+              <div class="badge-value" id="winsReadout">3</div>
+            </div>
+          </div>
+
+          <div class="run-frame">
+            <div class="canvas-wrap">
+              <canvas id="gameCanvas" width="900" height="1200" aria-label="Ski slope"></canvas>
+              <div class="center-overlay" aria-live="polite">
+                <div class="message-banner" id="messageBanner">
+                  <h2 class="banner-title" id="messageTitle">Ready</h2>
+                  <p class="banner-copy" id="messageCopy">Press Start Run to begin the descent.</p>
+                </div>
+                <div class="victory-banner" id="victoryBanner" aria-hidden="true">
+                  <h2 class="banner-title">Phoenix Descent Complete</h2>
+                  <p class="banner-copy" id="victoryCopy">Three crashes per session. Speed rises by 0.25x every 1000 meters.</p>
+                </div>
+              </div>
+              <div class="overlay-note">Keyboard: ← → or A D · Touch: drag skier</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <aside class="panel" aria-label="Controls and rules">
+        <div class="panel-header">
+          <div class="panel-label">Field Guide</div>
+          <div class="status-bar">A clean line matters more than reckless speed.</div>
+        </div>
+        <div class="side-body">
+          <div>
+            <div class="panel-label">What to Avoid</div>
+            <div class="legend-list">
+              <div class="legend-item">
+                <div class="legend-swatch tree">🌲</div>
+                <div>Trees are lethal obstacles. Any solid collision ends the run instantly.</div>
+              </div>
+              <div class="legend-item">
+                <div class="legend-swatch rock">🪨</div>
+                <div>Rocks are narrower but less forgiving when they appear inside a tight lane.</div>
+              </div>
+              <div class="legend-item">
+                <div class="legend-swatch flag">⚑</div>
+                <div>There is no finish gate. Survive until you crash, then continue until all three crashes are spent.</div>
+              </div>
+            </div>
+          </div>
+
+          <div>
+            <div class="panel-label">How It Works</div>
+            <div class="thematic-copy">
+              The slope scrolls continuously while your skier carves left and right. There is <strong>no maximum point total</strong> and no finish distance. You have three crashes per session, and the course speed increases by <strong>0.25x every 1000 meters</strong>. Your best single-run distance is stored locally on this device.
+            </div>
+          </div>
+
+          <div class="action-stack">
+            <button class="rpg-btn" id="startBtn" type="button">Start Run</button>
+            <button class="rpg-btn" id="restartBtn" type="button">Restart Session</button>
+          </div>
+
+          <div class="mini-status" id="tipsBox">
+            Stay near the center until you read the lane pattern. Wide horizontal swings create unnecessary risk because the course keeps accelerating every 1000 meters.
+          </div>
+        </div>
+      </aside>
+    </main>
+
+    <footer class="rpg-footer">© <span id="year"></span> Rising Phoenix Gallery · Michigan City, IN · Crafted by John Ryszka II</footer>
+  </div>
+
+  <script>
+    document.getElementById('year').textContent = new Date().getFullYear();
+
+    const STORAGE_KEY = 'rpg-ski-free-stats-v2';
+    const SESSION_CRASHES = 3;
+    const SPEED_STEP_DISTANCE = 1000;
+    const canvas = document.getElementById('gameCanvas');
+    const ctx = canvas.getContext('2d');
+    const confettiCanvas = document.getElementById('confettiCanvas');
+    const confettiCtx = confettiCanvas.getContext('2d');
+
+    const statusBar = document.getElementById('statusBar');
+    const distanceReadout = document.getElementById('distanceReadout');
+    const bestReadout = document.getElementById('bestReadout');
+    const speedReadout = document.getElementById('speedReadout');
+    const winsReadout = document.getElementById('winsReadout');
+    const messageBanner = document.getElementById('messageBanner');
+    const messageTitle = document.getElementById('messageTitle');
+    const messageCopy = document.getElementById('messageCopy');
+    const victoryBanner = document.getElementById('victoryBanner');
+    const victoryCopy = document.getElementById('victoryCopy');
+    const startBtn = document.getElementById('startBtn');
+    const restartBtn = document.getElementById('restartBtn');
+    const tipsBox = document.getElementById('tipsBox');
+
+    let stats = loadStats();
+    let confetti = [];
+    let animationHandle = 0;
+    let lastTime = 0;
+    let spawnAccumulator = 0;
+    let particleSeed = 0;
+    let dragActive = false;
+    let dragOffsetX = 0;
+
+    const game = {
+      state: 'ready',
+      distance: 0,
+      bestDistance: stats.bestDistance || 0,
+      crashesLeft: stats.crashesLeft || SESSION_CRASHES,
+      baseSpeed: 360,
+      currentSpeed: 360,
+      targetLaneX: canvas.width * 0.5,
+      horizonOffset: 0,
+      obstacles: [],
+      skier: {
+        x: canvas.width * 0.5,
+        y: canvas.height * 0.8,
+        width: 54,
+        height: 78,
+        lean: 0,
+      },
+      crashPulse: 0,
+      victoryLocked: false
+    };
+
+    const controls = { left: false, right: false };
+
+    function loadStats() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (!raw) return { bestDistance: 0, crashesLeft: SESSION_CRASHES };
+        const parsed = JSON.parse(raw);
+        return {
+          bestDistance: Number(parsed.bestDistance) || 0,
+          crashesLeft: Number(parsed.crashesLeft) || SESSION_CRASHES
+        };
+      } catch (error) {
+        return { bestDistance: 0, crashesLeft: SESSION_CRASHES };
+      }
+    }
+
+    function saveStats() {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify({
+        bestDistance: game.bestDistance,
+        crashesLeft: game.crashesLeft
+      }));
+    }
+
+    function resizeConfettiCanvas() {
+      confettiCanvas.width = window.innerWidth * window.devicePixelRatio;
+      confettiCanvas.height = window.innerHeight * window.devicePixelRatio;
+      confettiCanvas.style.width = window.innerWidth + 'px';
+      confettiCanvas.style.height = window.innerHeight + 'px';
+      confettiCtx.setTransform(window.devicePixelRatio, 0, 0, window.devicePixelRatio, 0, 0);
+    }
+
+    function resetRun() {
+      game.state = 'ready';
+      game.distance = 0;
+      game.currentSpeed = game.baseSpeed;
+      game.targetLaneX = canvas.width * 0.5;
+      game.horizonOffset = 0;
+      game.obstacles = [];
+      game.skier.x = canvas.width * 0.5;
+      game.skier.lean = 0;
+      spawnAccumulator = 0;
+      game.crashPulse = 0;
+      game.victoryLocked = false;
+      hideVictory();
+      showMessage('Ready for the Descent', 'Press Start Run to begin. You have three crashes before the session resets.');
+      setStatus('Steer left and right. Dodge trees and rocks for as long as you can.');
+      syncHud();
+      draw();
+    }
+
+    function startRun() {
+      if (game.state === 'running') return;
+      if (game.state === 'session-over' || game.state === 'ready') {
+        game.crashesLeft = SESSION_CRASHES;
+        resetRun();
+      } else if (game.state === 'crashed') {
+        resetRun();
+      }
+      hideMessage();
+      game.state = 'running';
+      setStatus('The slope is live. Hold your line and read the lanes ahead.');
+      tipsBox.textContent = 'Early in the course, stay loose and centered. The safest openings usually appear one beat ahead of the obvious gap.';
+    }
+
+    function crashRun(obstacleType) {
+      game.state = 'crashed';
+      game.bestDistance = Math.max(game.bestDistance, Math.round(game.distance));
+      game.crashesLeft = Math.max(0, game.crashesLeft - 1);
+      saveStats();
+      syncHud();
+      const thing = obstacleType === 'rock' ? 'rock' : 'tree';
+      setStatus('Crash. You clipped a ' + thing + ' at ' + Math.round(game.distance) + ' meters.');
+      tipsBox.textContent = 'The mistake happened because the lane closed faster than your correction. Re-center sooner and make smaller steering inputs.';
+      if (game.crashesLeft > 0) {
+        showMessage('Run Broken', 'You made it ' + Math.round(game.distance) + ' meters before striking a ' + thing + '. Press Start Run to continue with ' + game.crashesLeft + ' crash' + (game.crashesLeft === 1 ? '' : 'es') + ' left.');
+      } else {
+        game.state = 'session-over';
+        showMessage('Session Reset', 'You made it ' + Math.round(game.distance) + ' meters before striking a ' + thing + '. Press Start Run to begin a fresh three-crash session.');
+      }
+      game.crashPulse = 1;
+    }
+
+    function setStatus(text) {
+      statusBar.textContent = text;
+    }
+
+    function showMessage(title, copy) {
+      messageTitle.textContent = title;
+      messageCopy.textContent = copy;
+      messageBanner.style.opacity = '1';
+    }
+
+    function hideMessage() {
+      messageBanner.style.opacity = '0';
+    }
+
+    function showVictory() {
+      victoryBanner.classList.remove('show');
+      void victoryBanner.offsetWidth;
+      victoryBanner.classList.add('show');
+      setTimeout(hideVictory, 1900);
+    }
+
+    function hideVictory() {
+      victoryBanner.classList.remove('show');
+    }
+
+    function syncHud() {
+      distanceReadout.textContent = Math.round(game.distance);
+      bestReadout.textContent = Math.round(game.bestDistance);
+      speedReadout.textContent = (game.currentSpeed / game.baseSpeed).toFixed(1);
+      winsReadout.textContent = String(game.crashesLeft);
+    }
+
+    function spawnObstacle() {
+      const margin = 72;
+      const speedTier = Math.floor(game.distance / SPEED_STEP_DISTANCE);
+      const type = Math.random() < Math.max(0.42, 0.72 - speedTier * 0.03) ? 'tree' : 'rock';
+      const x = margin + Math.random() * (canvas.width - margin * 2);
+      const scale = type === 'tree' ? 0.82 + Math.random() * 0.55 : 0.75 + Math.random() * 0.45;
+      const width = type === 'tree' ? 62 * scale : 44 * scale;
+      const height = type === 'tree' ? 92 * scale : 32 * scale;
+      game.obstacles.push({
+        type,
+        x,
+        y: -height - 40,
+        width,
+        height,
+        trunkWidth: width * 0.22,
+        trunkHeight: height * 0.22,
+        shade: Math.random(),
+        drift: (Math.random() - 0.5) * 14
+      });
+    }
+
+    function update(delta) {
+      if (game.state !== 'running') {
+        if (game.crashPulse > 0) game.crashPulse = Math.max(0, game.crashPulse - delta * 1.6);
+        updateConfetti(delta);
+        draw();
+        return;
+      }
+
+      const speedTier = Math.floor(game.distance / SPEED_STEP_DISTANCE);
+      game.currentSpeed = game.baseSpeed * (1 + speedTier * 0.25);
+      game.distance += game.currentSpeed * delta * 0.24;
+
+      spawnAccumulator += delta * (1.8 + speedTier * 0.18);
+      while (spawnAccumulator >= 1) {
+        spawnAccumulator -= 1;
+        spawnObstacle();
+      }
+
+      const steering = (controls.right ? 1 : 0) - (controls.left ? 1 : 0);
+      const steeringSpeed = 310 + speedTier * 14;
+      if (steering !== 0) {
+        game.targetLaneX += steering * steeringSpeed * delta;
+      }
+      game.targetLaneX = clamp(game.targetLaneX, 50, canvas.width - 50);
+
+      const smoothing = 1 - Math.pow(0.0001, delta * 1.6);
+      const dx = game.targetLaneX - game.skier.x;
+      game.skier.x += dx * smoothing;
+      game.skier.lean = clamp(dx / 55, -1, 1);
+
+      const scroll = game.currentSpeed * delta;
+      game.horizonOffset = (game.horizonOffset + scroll * 0.22) % 70;
+
+      for (const obstacle of game.obstacles) {
+        obstacle.y += scroll;
+        obstacle.x += obstacle.drift * delta;
+      }
+      game.obstacles = game.obstacles.filter(obstacle => obstacle.y < canvas.height + obstacle.height + 40);
+
+      if (detectCollision()) {
+        crashRun(lastCollisionType());
+      }
+
+      syncHud();
+      updateConfetti(delta);
+      draw();
+    }
+
+    function detectCollision() {
+      const skierBox = {
+        left: game.skier.x - 20,
+        right: game.skier.x + 20,
+        top: game.skier.y - 16,
+        bottom: game.skier.y + 30
+      };
+      for (const obstacle of game.obstacles) {
+        const hitbox = obstacle.type === 'tree'
+          ? {
+              left: obstacle.x - obstacle.width * 0.26,
+              right: obstacle.x + obstacle.width * 0.26,
+              top: obstacle.y + obstacle.height * 0.2,
+              bottom: obstacle.y + obstacle.height
+            }
+          : {
+              left: obstacle.x - obstacle.width * 0.5,
+              right: obstacle.x + obstacle.width * 0.5,
+              top: obstacle.y + obstacle.height * 0.15,
+              bottom: obstacle.y + obstacle.height * 0.95
+            };
+        if (
+          skierBox.right > hitbox.left &&
+          skierBox.left < hitbox.right &&
+          skierBox.bottom > hitbox.top &&
+          skierBox.top < hitbox.bottom
+        ) {
+          game._lastCollision = obstacle.type;
+          return true;
+        }
+      }
+      return false;
+    }
+
+    function lastCollisionType() {
+      return game._lastCollision || 'tree';
+    }
+
+    function drawBackground() {
+      const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
+      gradient.addColorStop(0, '#eef4fb');
+      gradient.addColorStop(0.18, '#d3e0ef');
+      gradient.addColorStop(0.65, '#e6edf7');
+      gradient.addColorStop(1, '#c8d8ea');
+      ctx.fillStyle = gradient;
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      ctx.fillStyle = 'rgba(255,255,255,0.45)';
+      for (let i = 0; i < 10; i += 1) {
+        const y = (i * 130 + game.horizonOffset * 2.2) % (canvas.height + 130) - 130;
+        ctx.beginPath();
+        ctx.moveTo(0, y + 80);
+        ctx.quadraticCurveTo(canvas.width * 0.3, y + 20, canvas.width, y + 105);
+        ctx.lineWidth = 1;
+        ctx.strokeStyle = 'rgba(255,255,255,0.22)';
+        ctx.stroke();
+      }
+
+      const vignette = ctx.createRadialGradient(
+        canvas.width / 2,
+        canvas.height / 2,
+        canvas.height * 0.2,
+        canvas.width / 2,
+        canvas.height / 2,
+        canvas.height * 0.8
+      );
+      vignette.addColorStop(0, 'rgba(255,255,255,0)');
+      vignette.addColorStop(1, 'rgba(74,97,130,0.12)');
+      ctx.fillStyle = vignette;
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+    }
+
+    function drawObstacle(obstacle) {
+      if (obstacle.type === 'tree') {
+        const x = obstacle.x;
+        const y = obstacle.y;
+        const w = obstacle.width;
+        const h = obstacle.height;
+        const cone1 = h * 0.36;
+        const cone2 = h * 0.3;
+        const cone3 = h * 0.24;
+
+        ctx.fillStyle = '#6d4d2d';
+        ctx.fillRect(x - obstacle.trunkWidth * 0.5, y + h * 0.76, obstacle.trunkWidth, obstacle.trunkHeight);
+
+        const shadeA = obstacle.shade > 0.5 ? '#3e7f58' : '#356f4d';
+        const shadeB = obstacle.shade > 0.5 ? '#24583b' : '#1f4c34';
+        const shadeC = obstacle.shade > 0.5 ? '#173425' : '#1a3829';
+
+        drawTriangle(x, y + h * 0.18, w * 0.96, cone1, shadeA);
+        drawTriangle(x, y + h * 0.36, w * 0.78, cone2, shadeB);
+        drawTriangle(x, y + h * 0.54, w * 0.58, cone3, shadeC);
+
+        ctx.strokeStyle = 'rgba(255,255,255,0.10)';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(x, y + h * 0.08);
+        ctx.lineTo(x - w * 0.12, y + h * 0.2);
+        ctx.stroke();
+      } else {
+        const x = obstacle.x;
+        const y = obstacle.y;
+        const w = obstacle.width;
+        const h = obstacle.height;
+        const rockGrad = ctx.createLinearGradient(x - w * 0.5, y, x + w * 0.5, y + h);
+        rockGrad.addColorStop(0, '#bcc6d1');
+        rockGrad.addColorStop(0.5, '#8793a0');
+        rockGrad.addColorStop(1, '#596472');
+        ctx.fillStyle = rockGrad;
+        ctx.beginPath();
+        ctx.moveTo(x - w * 0.5, y + h * 0.9);
+        ctx.lineTo(x - w * 0.28, y + h * 0.18);
+        ctx.lineTo(x + w * 0.1, y);
+        ctx.lineTo(x + w * 0.5, y + h * 0.55);
+        ctx.lineTo(x + w * 0.24, y + h);
+        ctx.closePath();
+        ctx.fill();
+        ctx.strokeStyle = 'rgba(255,255,255,0.15)';
+        ctx.lineWidth = 2;
+        ctx.stroke();
+      }
+    }
+
+    function drawTriangle(cx, topY, width, height, fill) {
+      ctx.fillStyle = fill;
+      ctx.beginPath();
+      ctx.moveTo(cx, topY);
+      ctx.lineTo(cx - width * 0.5, topY + height);
+      ctx.lineTo(cx + width * 0.5, topY + height);
+      ctx.closePath();
+      ctx.fill();
+    }
+
+    function drawSkier() {
+      const x = game.skier.x;
+      const y = game.skier.y;
+      const lean = game.skier.lean;
+      ctx.save();
+      ctx.translate(x, y);
+      ctx.rotate(lean * 0.22);
+
+      ctx.strokeStyle = '#7da0c4';
+      ctx.lineWidth = 4;
+      ctx.lineCap = 'round';
+      ctx.beginPath();
+      ctx.moveTo(-22, 28);
+      ctx.lineTo(-6, 34);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(6, 34);
+      ctx.lineTo(22, 28);
+      ctx.stroke();
+
+      ctx.fillStyle = '#8b1a1a';
+      ctx.fillRect(-14, -10, 28, 26);
+      ctx.fillStyle = '#2d3f5f';
+      ctx.fillRect(-10, 12, 8, 18);
+      ctx.fillRect(2, 12, 8, 18);
+
+      ctx.strokeStyle = '#2d3f5f';
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      ctx.moveTo(-18, 4);
+      ctx.lineTo(-30, 20);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(18, 4);
+      ctx.lineTo(30, 20);
+      ctx.stroke();
+
+      ctx.fillStyle = '#f0d080';
+      ctx.beginPath();
+      ctx.arc(0, -20, 11, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = '#264f83';
+      ctx.fillRect(-14, -33, 28, 9);
+      ctx.fillStyle = '#dfe9f7';
+      ctx.fillRect(-10, -22, 20, 5);
+
+      ctx.restore();
+    }
+
+    function drawProgressMarker() {
+      const nextStep = (Math.floor(game.distance / SPEED_STEP_DISTANCE) + 1) * SPEED_STEP_DISTANCE;
+      const progressToNext = (game.distance % SPEED_STEP_DISTANCE) / SPEED_STEP_DISTANCE;
+      const barWidth = canvas.width - 50;
+      const x = 25;
+      const y = 24;
+      ctx.fillStyle = 'rgba(18,12,5,0.36)';
+      roundRect(ctx, x, y, barWidth, 16, 8, true, false);
+      ctx.fillStyle = 'rgba(240,208,128,0.18)';
+      roundRect(ctx, x + 2, y + 2, (barWidth - 4) * progressToNext, 12, 6, true, false);
+      ctx.strokeStyle = 'rgba(255,255,255,0.28)';
+      ctx.stroke();
+      ctx.fillStyle = '#3e7f58';
+      ctx.beginPath();
+      ctx.arc(x + 8 + (barWidth - 16) * progressToNext, y + 8, 5, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = '#3d2a11';
+      ctx.font = '600 16px Cinzel, serif';
+      ctx.textAlign = 'center';
+      ctx.fillText(Math.round(game.distance) + ' m · next +0.25x at ' + nextStep + ' m', x + barWidth * 0.5, y + 44);
+    }
+
+    function drawCrashWash() {
+      if (game.crashPulse <= 0) return;
+      ctx.fillStyle = 'rgba(159,41,29,' + (game.crashPulse * 0.24).toFixed(3) + ')';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+    }
+
+    function roundRect(context, x, y, width, height, radius, fill, stroke) {
+      if (width <= 0 || height <= 0) return;
+      context.beginPath();
+      context.moveTo(x + radius, y);
+      context.arcTo(x + width, y, x + width, y + height, radius);
+      context.arcTo(x + width, y + height, x, y + height, radius);
+      context.arcTo(x, y + height, x, y, radius);
+      context.arcTo(x, y, x + width, y, radius);
+      context.closePath();
+      if (fill) context.fill();
+      if (stroke) context.stroke();
+    }
+
+    function burstConfetti() {
+      const bursts = 12;
+      const width = window.innerWidth;
+      const height = window.innerHeight;
+      for (let i = 0; i < bursts; i += 1) {
+        const originX = width * (0.08 + 0.84 * (i / Math.max(1, bursts - 1)));
+        const originY = height * (0.25 + 0.2 * Math.sin(i * 0.7));
+        for (let j = 0; j < 22; j += 1) {
+          const angle = Math.random() * Math.PI * 2;
+          const speed = 110 + Math.random() * 190;
+          confetti.push({
+            x: originX,
+            y: originY,
+            vx: Math.cos(angle) * speed,
+            vy: Math.sin(angle) * speed - 40,
+            size: 4 + Math.random() * 7,
+            rotation: Math.random() * Math.PI * 2,
+            vr: (Math.random() - 0.5) * 8,
+            life: 1.15 + Math.random() * 0.9,
+            maxLife: 1.15 + Math.random() * 0.9,
+            color: confettiColor(i + j)
+          });
+        }
+      }
+    }
+
+    function confettiColor(seed) {
+      const palette = ['#f0d080', '#c8952a', '#8ac9ff', '#ffffff', '#7aaa5a', '#c04040'];
+      particleSeed += 1;
+      return palette[(seed + particleSeed) % palette.length];
+    }
+
+    function updateConfetti(delta) {
+      confettiCtx.clearRect(0, 0, window.innerWidth, window.innerHeight);
+      const gravity = 280;
+      confetti = confetti.filter(piece => piece.life > 0);
+      for (const piece of confetti) {
+        piece.life -= delta;
+        piece.vy += gravity * delta;
+        piece.x += piece.vx * delta;
+        piece.y += piece.vy * delta;
+        piece.rotation += piece.vr * delta;
+
+        const alpha = Math.max(piece.life / piece.maxLife, 0);
+        confettiCtx.save();
+        confettiCtx.translate(piece.x, piece.y);
+        confettiCtx.rotate(piece.rotation);
+        confettiCtx.globalAlpha = alpha;
+        confettiCtx.fillStyle = piece.color;
+        confettiCtx.fillRect(-piece.size * 0.5, -piece.size * 0.3, piece.size, piece.size * 0.6);
+        confettiCtx.restore();
+      }
+    }
+
+    function draw() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      drawBackground();
+      for (const obstacle of game.obstacles) drawObstacle(obstacle);
+      drawSkier();
+      drawProgressMarker();
+      drawCrashWash();
+    }
+
+    function loop(timestamp) {
+      if (!lastTime) lastTime = timestamp;
+      const delta = Math.min((timestamp - lastTime) / 1000, 0.032);
+      lastTime = timestamp;
+      update(delta);
+      animationHandle = requestAnimationFrame(loop);
+    }
+
+    function clamp(value, min, max) {
+      return Math.max(min, Math.min(max, value));
+    }
+
+    function pointerToCanvasX(event) {
+      const rect = canvas.getBoundingClientRect();
+      const clientX = event.touches ? event.touches[0].clientX : event.clientX;
+      const x = ((clientX - rect.left) / rect.width) * canvas.width;
+      return clamp(x, 36, canvas.width - 36);
+    }
+
+    window.addEventListener('keydown', event => {
+      if (event.key === 'ArrowLeft' || event.key.toLowerCase() === 'a') {
+        controls.left = true;
+        event.preventDefault();
+      }
+      if (event.key === 'ArrowRight' || event.key.toLowerCase() === 'd') {
+        controls.right = true;
+        event.preventDefault();
+      }
+      if (event.key === ' ' || event.key === 'Enter') {
+        if (game.state !== 'running') startRun();
+        event.preventDefault();
+      }
+    });
+
+    window.addEventListener('keyup', event => {
+      if (event.key === 'ArrowLeft' || event.key.toLowerCase() === 'a') controls.left = false;
+      if (event.key === 'ArrowRight' || event.key.toLowerCase() === 'd') controls.right = false;
+    });
+
+    canvas.addEventListener('pointerdown', event => {
+      dragActive = true;
+      dragOffsetX = pointerToCanvasX(event) - game.skier.x;
+      game.targetLaneX = pointerToCanvasX(event) - dragOffsetX;
+      canvas.setPointerCapture(event.pointerId);
+      if (game.state !== 'running') startRun();
+    });
+
+    canvas.addEventListener('pointermove', event => {
+      if (!dragActive) return;
+      game.targetLaneX = pointerToCanvasX(event) - dragOffsetX;
+    });
+
+    canvas.addEventListener('pointerup', event => {
+      dragActive = false;
+      try { canvas.releasePointerCapture(event.pointerId); } catch (error) {}
+    });
+    canvas.addEventListener('pointercancel', () => {
+      dragActive = false;
+    });
+
+    startBtn.addEventListener('click', startRun);
+    restartBtn.addEventListener('click', () => {
+      resetRun();
+      startRun();
+    });
+
+    window.addEventListener('resize', resizeConfettiCanvas);
+
+    resizeConfettiCanvas();
+    resetRun();
+    animationHandle = requestAnimationFrame(loop);
+  </script>
+</body>
+</html>
