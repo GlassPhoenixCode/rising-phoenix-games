@@ -84,7 +84,21 @@
     .about-panel strong { color: var(--gold-light); font-style: normal; }
     .hub-footer { padding: 10px 24px 16px; border-top: 1px solid rgba(200,149,42,0.15); font-family: var(--font-body); font-style: italic; font-size: 11px; color: rgba(180,150,90,0.65); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; flex-shrink: 0; }
     .hub-footer a { color: var(--gold); text-decoration: none; }
-    @media (max-width: 600px) { .hub-main { padding: 16px; } .game-grid { grid-template-columns: 1fr; gap: 14px; } .hub-branding { gap: 12px; } h1.hub-title { font-size: 20px; } }
+    
+    .controls-panel { background: linear-gradient(160deg, var(--surface) 0%, var(--bg-warm) 100%); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 18px 20px; margin-bottom: 24px; }
+    .controls-row { display: flex; flex-wrap: wrap; gap: 14px; align-items: end; }
+    .control-group { display: flex; flex-direction: column; gap: 6px; min-width: 180px; flex: 1 1 180px; }
+    .control-label { font-family: var(--font-ui); font-size: 10px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--gold-light); }
+    .control-input, .control-select { background: rgba(0,0,0,0.28); color: var(--text); border: 1px solid var(--border); border-radius: 8px; padding: 10px 12px; font-family: var(--font-ui); font-size: 13px; }
+    .control-input:focus, .control-select:focus { outline: none; border-color: var(--border-bright); box-shadow: 0 0 0 2px rgba(200,149,42,0.15); }
+    .chip-row { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+    .filter-chip { font-family: var(--font-ui); font-size: 10px; letter-spacing: 1.2px; text-transform: uppercase; padding: 7px 10px; border-radius: 999px; border: 1px solid rgba(200,149,42,0.25); background: rgba(200,149,42,0.08); color: #c8a878; cursor: pointer; }
+    .filter-chip.active { background: rgba(200,149,42,0.18); border-color: rgba(240,208,128,0.55); color: var(--gold-light); box-shadow: 0 0 12px rgba(200,149,42,0.18); }
+    .controls-meta { display: flex; justify-content: space-between; gap: 12px; align-items: center; flex-wrap: wrap; margin-top: 12px; color: #c8a878; font-family: var(--font-body); font-style: italic; font-size: 14px; }
+    .reset-btn { font-family: var(--font-ui); font-size: 10px; letter-spacing: 1.3px; text-transform: uppercase; color: #f0d080; background: linear-gradient(180deg, #382a14 0%, #221808 100%); border: 1px solid #c8952a; border-radius: 999px; padding: 7px 12px; cursor: pointer; }
+    .game-card.is-hidden { display: none !important; }
+
+    @media (max-width: 600px) { .hub-main { padding: 16px; } .game-grid { grid-template-columns: 1fr; gap: 14px; } .hub-branding { gap: 12px; } h1.hub-title { font-size: 20px; } .controls-row { flex-direction: column; align-items: stretch; } }
   </style>
 </head>
 <body class="rpg-bg">
@@ -98,7 +112,7 @@
           <p class="hub-tagline">Every HTML game file in the project, linked and ready for the repository.</p>
           <div class="hub-meta">
             <span class="hub-badge live">Live Hub</span>
-            <span class="hub-badge">54 Linked HTML Files</span>
+            <span class="hub-badge">59 Linked HTML Files</span>
           </div>
         </div>
       </div>
@@ -114,8 +128,40 @@
     </div>
 
     <h2 class="section-label">Project Files</h2>
-        <div class="game-grid">
-<a class="game-card" href="2048.html">
+
+    <div class="controls-panel">
+      <div class="controls-row">
+        <div class="control-group">
+          <label class="control-label" for="gameSearch">Search games</label>
+          <input class="control-input" id="gameSearch" type="search" placeholder="Search by title or filename" />
+        </div>
+        <div class="control-group">
+          <label class="control-label" for="sortGames">Sort order</label>
+          <select class="control-select" id="sortGames">
+            <option value="az">Alphabetical: A → Z</option>
+            <option value="za">Alphabetical: Z → A</option>
+            <option value="file">Filename</option>
+          </select>
+        </div>
+      </div>
+      <div class="chip-row" id="filterChips">
+        <button class="filter-chip active" type="button" data-filter="all">All</button>
+        <button class="filter-chip" type="button" data-filter="solo">One Player / Solo</button>
+        <button class="filter-chip" type="button" data-filter="group">2 Player / Party</button>
+        <button class="filter-chip" type="button" data-filter="utility">Tool / Utility</button>
+        <button class="filter-chip" type="button" data-filter="puzzle">Puzzle</button>
+        <button class="filter-chip" type="button" data-filter="strategy">Strategy / Logic</button>
+        <button class="filter-chip" type="button" data-filter="arcade">Arcade</button>
+        <button class="filter-chip" type="button" data-filter="classic">Classic</button>
+      </div>
+      <div class="controls-meta">
+        <span id="resultsCount"></span>
+        <button class="reset-btn" id="resetFilters" type="button">Reset Filters</button>
+      </div>
+    </div>
+
+    <div class="game-grid" id="gameGrid">
+<a class="game-card" href="2048.html" data-title="2048" data-href="2048.html" data-categories="classic puzzle">
         <div class="card-thumb thumb-upcoming">
           <div class="thumb-art"><span class="thumb-emoji">🔢</span></div>
           <span class="thumb-label">2048.html</span>
@@ -130,7 +176,7 @@
           <span class="play-pill">Open →</span>
         </div>
       </a>
-      <a class="game-card" href="alquerque-draughts.html">
+      <a class="game-card" href="alquerque-draughts.html" data-title="Alquerque / Draughts" data-href="alquerque-draughts.html" data-categories="classic strategy">
         <div class="card-thumb thumb-upcoming">
           <div class="thumb-art"><span class="thumb-emoji">♟️</span></div>
           <span class="thumb-label">alquerque-draughts.html</span>
@@ -145,7 +191,7 @@
           <span class="play-pill">Open →</span>
         </div>
       </a>
-<a class="game-card" href="blackjack.html">
+<a class="game-card" href="blackjack.html" data-title="Blackjack" data-href="blackjack.html" data-categories="classic">
         <div class="card-thumb thumb-upcoming">
           <div class="thumb-art"><span class="thumb-emoji">🂡</span></div>
           <span class="thumb-label">blackjack.html</span>
@@ -160,7 +206,7 @@
           <span class="play-pill">Open →</span>
         </div>
       </a>
-      <a class="game-card" href="boggle-style.html">
+      <a class="game-card" href="boggle-style.html" data-title="Boggle-Style" data-href="boggle-style.html" data-categories="classic puzzle">
         <div class="card-thumb thumb-upcoming">
           <div class="thumb-art"><span class="thumb-emoji">🔤</span></div>
           <span class="thumb-label">boggle-style.html</span>
@@ -175,7 +221,7 @@
           <span class="play-pill">Open →</span>
         </div>
       </a>
-      <a class="game-card" href="breakout.html">
+      <a class="game-card" href="breakout.html" data-title="Breakout" data-href="breakout.html" data-categories="arcade classic strategy">
         <div class="card-thumb thumb-upcoming">
           <div class="thumb-art"><span class="thumb-emoji">🏓</span></div>
           <span class="thumb-label">breakout.html</span>
@@ -190,7 +236,7 @@
           <span class="play-pill">Open →</span>
         </div>
       </a>
-      <a class="game-card" href="brick-runner.html">
+      <a class="game-card" href="brick-runner.html" data-title="Brick Runner" data-href="brick-runner.html" data-categories="arcade classic strategy">
         <div class="card-thumb thumb-upcoming">
           <div class="thumb-art"><span class="thumb-emoji">🧱</span></div>
           <span class="thumb-label">brick-runner.html</span>
@@ -205,7 +251,7 @@
           <span class="play-pill">Open →</span>
         </div>
       </a>
-      <a class="game-card" href="bust-a-move.html">
+      <a class="game-card" href="bust-a-move.html" data-title="Bust-a-Move" data-href="bust-a-move.html" data-categories="arcade classic puzzle">
         <div class="card-thumb thumb-upcoming">
           <div class="thumb-art"><span class="thumb-emoji">🫧</span></div>
           <span class="thumb-label">bust-a-move.html</span>
@@ -220,7 +266,7 @@
           <span class="play-pill">Open →</span>
         </div>
       </a>
-      <a class="game-card" href="candy-crush.html">
+      <a class="game-card" href="candy-crush.html" data-title="Candy Crush" data-href="candy-crush.html" data-categories="classic party puzzle">
         <div class="card-thumb thumb-upcoming">
           <div class="thumb-art"><span class="thumb-emoji">🍬</span></div>
           <span class="thumb-label">candy-crush.html</span>
@@ -235,7 +281,7 @@
           <span class="play-pill">Open →</span>
         </div>
       </a>
-      <a class="game-card" href="checkers.html">
+      <a class="game-card" href="checkers.html" data-title="Checkers" data-href="checkers.html" data-categories="classic strategy">
         <div class="card-thumb thumb-upcoming">
           <div class="thumb-art"><span class="thumb-emoji">⚫</span></div>
           <span class="thumb-label">checkers.html</span>
@@ -250,7 +296,7 @@
           <span class="play-pill">Open →</span>
         </div>
       </a>
-      <a class="game-card" href="color-flood.html">
+      <a class="game-card" href="color-flood.html" data-title="Color Flood" data-href="color-flood.html" data-categories="classic party puzzle">
         <div class="card-thumb thumb-upcoming">
           <div class="thumb-art"><span class="thumb-emoji">🎨</span></div>
           <span class="thumb-label">color-flood.html</span>
@@ -265,7 +311,22 @@
           <span class="play-pill">Open →</span>
         </div>
       </a>
-      <a class="game-card" href="connect-four.html">
+            <a class="game-card" href="color-match.html" data-title="Color Match" data-href="color-match.html" data-categories="classic party puzzle">
+        <div class="card-thumb thumb-upcoming">
+          <div class="thumb-art"><span class="thumb-emoji">🟣</span></div>
+          <span class="thumb-label">color-match.html</span>
+        </div>
+        <div class="card-body">
+          <h3 class="card-title">Color Match</h3>
+          <p class="card-desc">Match colors quickly and accurately in a fast visual test of perception and timing.</p>
+          <div class="card-tags"><span class="tag puzzle">Puzzle</span><span class="tag party">Color</span><span class="tag classic">color-match.html</span></div>
+        </div>
+        <div class="card-foot">
+          <span class="card-status ready">● Linked File</span>
+          <span class="play-pill">Open →</span>
+        </div>
+      </a>
+<a class="game-card" href="connect-four.html" data-title="Connect Four" data-href="connect-four.html" data-categories="classic strategy">
         <div class="card-thumb thumb-upcoming">
           <div class="thumb-art"><span class="thumb-emoji">🟡</span></div>
           <span class="thumb-label">connect-four.html</span>
@@ -280,7 +341,7 @@
           <span class="play-pill">Open →</span>
         </div>
       </a>
-      <a class="game-card" href="dominoes.html">
+      <a class="game-card" href="dominoes.html" data-title="Dominoes" data-href="dominoes.html" data-categories="classic">
         <div class="card-thumb thumb-upcoming">
           <div class="thumb-art"><span class="thumb-emoji">🁣</span></div>
           <span class="thumb-label">dominoes.html</span>
@@ -295,7 +356,7 @@
           <span class="play-pill">Open →</span>
         </div>
       </a>
-      <a class="game-card" href="dots-and-boxes.html">
+      <a class="game-card" href="dots-and-boxes.html" data-title="Dots and Boxes" data-href="dots-and-boxes.html" data-categories="classic strategy">
         <div class="card-thumb thumb-upcoming">
           <div class="thumb-art"><span class="thumb-emoji">🔲</span></div>
           <span class="thumb-label">dots-and-boxes.html</span>
@@ -310,7 +371,7 @@
           <span class="play-pill">Open →</span>
         </div>
       </a>
-      <a class="game-card" href="flappy-bird.html">
+      <a class="game-card" href="flappy-bird.html" data-title="Flappy Bird" data-href="flappy-bird.html" data-categories="arcade classic strategy">
         <div class="card-thumb thumb-upcoming">
           <div class="thumb-art"><span class="thumb-emoji">🐦</span></div>
           <span class="thumb-label">flappy-bird.html</span>
@@ -325,7 +386,7 @@
           <span class="play-pill">Open →</span>
         </div>
       </a>
-      <a class="game-card" href="fox-geese.html">
+      <a class="game-card" href="fox-geese.html" data-title="Fox &amp; Geese" data-href="fox-geese.html" data-categories="classic strategy">
         <div class="card-thumb thumb-upcoming">
           <div class="thumb-art"><span class="thumb-emoji">🦊</span></div>
           <span class="thumb-label">fox-geese.html</span>
@@ -340,7 +401,7 @@
           <span class="play-pill">Open →</span>
         </div>
       </a>
-      <a class="game-card" href="frogger.html">
+      <a class="game-card" href="frogger.html" data-title="Frogger" data-href="frogger.html" data-categories="arcade classic strategy">
         <div class="card-thumb thumb-upcoming">
           <div class="thumb-art"><span class="thumb-emoji">🐸</span></div>
           <span class="thumb-label">frogger.html</span>
@@ -355,7 +416,7 @@
           <span class="play-pill">Open →</span>
         </div>
       </a>
-      <a class="game-card" href="sliding-puzzle.html">
+      <a class="game-card" href="sliding-puzzle.html" data-title="Glass Puzzle" data-href="sliding-puzzle.html" data-categories="classic puzzle">
         <div class="card-thumb thumb-upcoming">
           <div class="thumb-art"><span class="thumb-emoji">🧩</span></div>
           <span class="thumb-label">sliding-puzzle.html</span>
@@ -370,7 +431,7 @@
           <span class="play-pill">Open →</span>
         </div>
       </a>
-      <a class="game-card" href="hangman.html">
+      <a class="game-card" href="hangman.html" data-title="Hangman" data-href="hangman.html" data-categories="classic puzzle">
         <div class="card-thumb thumb-upcoming">
           <div class="thumb-art"><span class="thumb-emoji">🪢</span></div>
           <span class="thumb-label">hangman.html</span>
@@ -385,7 +446,7 @@
           <span class="play-pill">Open →</span>
         </div>
       </a>
-      <a class="game-card" href="hex.html">
+      <a class="game-card" href="hex.html" data-title="Hex" data-href="hex.html" data-categories="classic strategy">
         <div class="card-thumb thumb-upcoming">
           <div class="thumb-art"><span class="thumb-emoji">⬡</span></div>
           <span class="thumb-label">hex.html</span>
@@ -400,7 +461,7 @@
           <span class="play-pill">Open →</span>
         </div>
       </a>
-      <a class="game-card" href="hues-cues.html">
+      <a class="game-card" href="hues-cues.html" data-title="Hues &amp; Cues" data-href="hues-cues.html" data-categories="classic party">
         <div class="card-thumb thumb-upcoming">
           <div class="thumb-art"><span class="thumb-emoji">🎨</span></div>
           <span class="thumb-label">hues-cues.html</span>
@@ -415,7 +476,7 @@
           <span class="play-pill">Open →</span>
         </div>
       </a>
-      <a class="game-card" href="kakuro.html">
+      <a class="game-card" href="kakuro.html" data-title="Kakuro" data-href="kakuro.html" data-categories="classic puzzle">
         <div class="card-thumb thumb-upcoming">
           <div class="thumb-art"><span class="thumb-emoji">➗</span></div>
           <span class="thumb-label">kakuro.html</span>
@@ -430,7 +491,22 @@
           <span class="play-pill">Open →</span>
         </div>
       </a>
-      <a class="game-card" href="lights-out.html">
+            <a class="game-card" href="light-cycles.html" data-title="Light Cycles" data-href="light-cycles.html" data-categories="arcade classic strategy">
+        <div class="card-thumb thumb-upcoming">
+          <div class="thumb-art"><span class="thumb-emoji">🏍️</span></div>
+          <span class="thumb-label">light-cycles.html</span>
+        </div>
+        <div class="card-body">
+          <h3 class="card-title">Light Cycles</h3>
+          <p class="card-desc">Outmaneuver the opposing trail in a fast arena duel where every turn closes space.</p>
+          <div class="card-tags"><span class="tag arcade">Arcade</span><span class="tag strategy">2 Players</span><span class="tag classic">light-cycles.html</span></div>
+        </div>
+        <div class="card-foot">
+          <span class="card-status ready">● Linked File</span>
+          <span class="play-pill">Open →</span>
+        </div>
+      </a>
+<a class="game-card" href="lights-out.html" data-title="Lights Out" data-href="lights-out.html" data-categories="classic puzzle">
         <div class="card-thumb thumb-upcoming">
           <div class="thumb-art"><span class="thumb-emoji">💡</span></div>
           <span class="thumb-label">lights-out.html</span>
@@ -445,7 +521,7 @@
           <span class="play-pill">Open →</span>
         </div>
       </a>
-      <a class="game-card" href="lode-runner.html">
+      <a class="game-card" href="lode-runner.html" data-title="Lode Runner" data-href="lode-runner.html" data-categories="arcade classic strategy">
         <div class="card-thumb thumb-upcoming">
           <div class="thumb-art"><span class="thumb-emoji">⛏️</span></div>
           <span class="thumb-label">lode-runner.html</span>
@@ -460,7 +536,7 @@
           <span class="play-pill">Open →</span>
         </div>
       </a>
-      <a class="game-card" href="ludo.html">
+      <a class="game-card" href="ludo.html" data-title="Ludo" data-href="ludo.html" data-categories="classic">
         <div class="card-thumb thumb-upcoming">
           <div class="thumb-art"><span class="thumb-emoji">🎲</span></div>
           <span class="thumb-label">ludo.html</span>
@@ -475,7 +551,7 @@
           <span class="play-pill">Open →</span>
         </div>
       </a>
-      <a class="game-card" href="mahjong.html">
+      <a class="game-card" href="mahjong.html" data-title="Mahjong" data-href="mahjong.html" data-categories="classic puzzle">
         <div class="card-thumb thumb-upcoming">
           <div class="thumb-art"><span class="thumb-emoji">🀄</span></div>
           <span class="thumb-label">mahjong.html</span>
@@ -490,7 +566,7 @@
           <span class="play-pill">Open →</span>
         </div>
       </a>
-      <a class="game-card" href="mancala.html">
+      <a class="game-card" href="mancala.html" data-title="Mancala" data-href="mancala.html" data-categories="classic strategy">
         <div class="card-thumb thumb-upcoming">
           <div class="thumb-art"><span class="thumb-emoji">🪨</span></div>
           <span class="thumb-label">mancala.html</span>
@@ -505,7 +581,7 @@
           <span class="play-pill">Open →</span>
         </div>
       </a>
-      <a class="game-card" href="mancala (1).html">
+      <a class="game-card" href="mancala (1).html" data-title="Mancala (1)" data-href="mancala (1).html" data-categories="classic">
         <div class="card-thumb thumb-upcoming">
           <div class="thumb-art"><span class="thumb-emoji">🪨</span></div>
           <span class="thumb-label">mancala (1).html</span>
@@ -520,7 +596,7 @@
           <span class="play-pill">Open →</span>
         </div>
       </a>
-      <a class="game-card" href="mastermind.html">
+      <a class="game-card" href="mastermind.html" data-title="Mastermind" data-href="mastermind.html" data-categories="classic puzzle">
         <div class="card-thumb thumb-upcoming">
           <div class="thumb-art"><span class="thumb-emoji">🧠</span></div>
           <span class="thumb-label">mastermind.html</span>
@@ -535,7 +611,7 @@
           <span class="play-pill">Open →</span>
         </div>
       </a>
-      <a class="game-card" href="maze-generator.html">
+      <a class="game-card" href="maze-generator.html" data-title="Maze Generator" data-href="maze-generator.html" data-categories="classic puzzle">
         <div class="card-thumb thumb-upcoming">
           <div class="thumb-art"><span class="thumb-emoji">🧩</span></div>
           <span class="thumb-label">maze-generator.html</span>
@@ -550,7 +626,7 @@
           <span class="play-pill">Open →</span>
         </div>
       </a>
-      <a class="game-card" href="memory-card-matching.html">
+      <a class="game-card" href="memory-card-matching.html" data-title="Memory Card Matching" data-href="memory-card-matching.html" data-categories="classic puzzle">
         <div class="card-thumb thumb-upcoming">
           <div class="thumb-art"><span class="thumb-emoji">🃏</span></div>
           <span class="thumb-label">memory-card-matching.html</span>
@@ -565,7 +641,7 @@
           <span class="play-pill">Open →</span>
         </div>
       </a>
-      <a class="game-card" href="minesweeper.html">
+      <a class="game-card" href="minesweeper.html" data-title="Minesweeper" data-href="minesweeper.html" data-categories="classic puzzle">
         <div class="card-thumb thumb-upcoming">
           <div class="thumb-art"><span class="thumb-emoji">💣</span></div>
           <span class="thumb-label">minesweeper.html</span>
@@ -580,7 +656,7 @@
           <span class="play-pill">Open →</span>
         </div>
       </a>
-      <a class="game-card" href="nim.html">
+      <a class="game-card" href="nim.html" data-title="Nim" data-href="nim.html" data-categories="classic strategy">
         <div class="card-thumb thumb-upcoming">
           <div class="thumb-art"><span class="thumb-emoji">🔥</span></div>
           <span class="thumb-label">nim.html</span>
@@ -595,7 +671,7 @@
           <span class="play-pill">Open →</span>
         </div>
       </a>
-      <a class="game-card" href="nimble-lines.html">
+      <a class="game-card" href="nimble-lines.html" data-title="Nimble Lines" data-href="nimble-lines.html" data-categories="classic puzzle">
         <div class="card-thumb thumb-upcoming">
           <div class="thumb-art"><span class="thumb-emoji">➖</span></div>
           <span class="thumb-label">nimble-lines.html</span>
@@ -610,7 +686,7 @@
           <span class="play-pill">Open →</span>
         </div>
       </a>
-      <a class="game-card" href="nine-mens-morris.html">
+      <a class="game-card" href="nine-mens-morris.html" data-title="Nine Men’s Morris" data-href="nine-mens-morris.html" data-categories="classic strategy">
         <div class="card-thumb thumb-upcoming">
           <div class="thumb-art"><span class="thumb-emoji">⚪</span></div>
           <span class="thumb-label">nine-mens-morris.html</span>
@@ -625,7 +701,7 @@
           <span class="play-pill">Open →</span>
         </div>
       </a>
-      <a class="game-card" href="nonogram-picross.html">
+      <a class="game-card" href="nonogram-picross.html" data-title="Nonogram / Picross" data-href="nonogram-picross.html" data-categories="classic puzzle strategy">
         <div class="card-thumb thumb-upcoming">
           <div class="thumb-art"><span class="thumb-emoji">⬛</span></div>
           <span class="thumb-label">nonogram-picross.html</span>
@@ -640,7 +716,7 @@
           <span class="play-pill">Open →</span>
         </div>
       </a>
-      <a class="game-card" href="pac-man.html">
+      <a class="game-card" href="pac-man.html" data-title="Pac-Man" data-href="pac-man.html" data-categories="arcade classic strategy">
         <div class="card-thumb thumb-upcoming">
           <div class="thumb-art"><span class="thumb-emoji">🟡</span></div>
           <span class="thumb-label">pac-man.html</span>
@@ -655,7 +731,7 @@
           <span class="play-pill">Open →</span>
         </div>
       </a>
-      <a class="game-card" href="peg-solitaire.html">
+      <a class="game-card" href="peg-solitaire.html" data-title="Peg Solitaire" data-href="peg-solitaire.html" data-categories="classic puzzle">
         <div class="card-thumb thumb-upcoming">
           <div class="thumb-art"><span class="thumb-emoji">📍</span></div>
           <span class="thumb-label">peg-solitaire.html</span>
@@ -670,7 +746,7 @@
           <span class="play-pill">Open →</span>
         </div>
       </a>
-            <a class="game-card" href="pixel-painter.html">
+            <a class="game-card" href="pixel-painter.html" data-title="Pixel Painter" data-href="pixel-painter.html" data-categories="classic party utility">
         <div class="card-thumb thumb-upcoming">
           <div class="thumb-art"><span class="thumb-emoji">🎨</span></div>
           <span class="thumb-label">pixel-painter.html</span>
@@ -685,7 +761,7 @@
           <span class="play-pill">Open →</span>
         </div>
       </a>
-<a class="game-card" href="pong.html">
+<a class="game-card" href="pong.html" data-title="Pong" data-href="pong.html" data-categories="arcade classic strategy">
         <div class="card-thumb thumb-upcoming">
           <div class="thumb-art"><span class="thumb-emoji">🏓</span></div>
           <span class="thumb-label">pong.html</span>
@@ -700,7 +776,7 @@
           <span class="play-pill">Open →</span>
         </div>
       </a>
-      <a class="game-card" href="reversi-othello.html">
+      <a class="game-card" href="reversi-othello.html" data-title="Reversi / Othello" data-href="reversi-othello.html" data-categories="classic strategy">
         <div class="card-thumb thumb-upcoming">
           <div class="thumb-art"><span class="thumb-emoji">⚪</span></div>
           <span class="thumb-label">reversi-othello.html</span>
@@ -715,7 +791,22 @@
           <span class="play-pill">Open →</span>
         </div>
       </a>
-      <a class="game-card" href="shut-the-box.html">
+            <a class="game-card" href="sand-simulator.html" data-title="Sand Simulator" data-href="sand-simulator.html" data-categories="arcade classic utility">
+        <div class="card-thumb thumb-upcoming">
+          <div class="thumb-art"><span class="thumb-emoji">⏳</span></div>
+          <span class="thumb-label">sand-simulator.html</span>
+        </div>
+        <div class="card-body">
+          <h3 class="card-title">Sand Simulator</h3>
+          <p class="card-desc">Pour, pile, and play with shifting granular particles in a tactile sandbox experiment.</p>
+          <div class="card-tags"><span class="tag arcade">Sandbox</span><span class="tag utility">Simulation</span><span class="tag classic">sand-simulator.html</span></div>
+        </div>
+        <div class="card-foot">
+          <span class="card-status ready">● Linked File</span>
+          <span class="play-pill">Open →</span>
+        </div>
+      </a>
+<a class="game-card" href="shut-the-box.html" data-title="Shut the Box" data-href="shut-the-box.html" data-categories="classic">
         <div class="card-thumb thumb-upcoming">
           <div class="thumb-art"><span class="thumb-emoji">📦</span></div>
           <span class="thumb-label">shut-the-box.html</span>
@@ -730,7 +821,7 @@
           <span class="play-pill">Open →</span>
         </div>
       </a>
-      <a class="game-card" href="simon-says.html">
+      <a class="game-card" href="simon-says.html" data-title="Simon Says" data-href="simon-says.html" data-categories="classic puzzle">
         <div class="card-thumb thumb-upcoming">
           <div class="thumb-art"><span class="thumb-emoji">🟢</span></div>
           <span class="thumb-label">simon-says.html</span>
@@ -745,7 +836,22 @@
           <span class="play-pill">Open →</span>
         </div>
       </a>
-      <a class="game-card" href="snake.html">
+            <a class="game-card" href="ski.html" data-title="Ski" data-href="ski.html" data-categories="arcade classic strategy">
+        <div class="card-thumb thumb-upcoming">
+          <div class="thumb-art"><span class="thumb-emoji">🎿</span></div>
+          <span class="thumb-label">ski.html</span>
+        </div>
+        <div class="card-body">
+          <h3 class="card-title">Ski</h3>
+          <p class="card-desc">Carve down the slope, dodge hazards, and stay upright as speed steadily increases.</p>
+          <div class="card-tags"><span class="tag arcade">Arcade</span><span class="tag strategy">Reflex</span><span class="tag classic">ski.html</span></div>
+        </div>
+        <div class="card-foot">
+          <span class="card-status ready">● Linked File</span>
+          <span class="play-pill">Open →</span>
+        </div>
+      </a>
+<a class="game-card" href="snake.html" data-title="Snake" data-href="snake.html" data-categories="arcade classic puzzle">
         <div class="card-thumb thumb-upcoming">
           <div class="thumb-art"><span class="thumb-emoji">🐍</span></div>
           <span class="thumb-label">snake.html</span>
@@ -760,7 +866,22 @@
           <span class="play-pill">Open →</span>
         </div>
       </a>
-      <a class="game-card" href="solitaire-klondike (1).html">
+            <a class="game-card" href="sokoban.html" data-title="Sokoban" data-href="sokoban.html" data-categories="classic puzzle strategy">
+        <div class="card-thumb thumb-upcoming">
+          <div class="thumb-art"><span class="thumb-emoji">📦</span></div>
+          <span class="thumb-label">sokoban.html</span>
+        </div>
+        <div class="card-body">
+          <h3 class="card-title">Sokoban</h3>
+          <p class="card-desc">Push crates into place through tightly constrained spaces where every move matters.</p>
+          <div class="card-tags"><span class="tag puzzle">Puzzle</span><span class="tag strategy">Logic</span><span class="tag classic">sokoban.html</span></div>
+        </div>
+        <div class="card-foot">
+          <span class="card-status ready">● Linked File</span>
+          <span class="play-pill">Open →</span>
+        </div>
+      </a>
+<a class="game-card" href="solitaire-klondike (1).html" data-title="Solitaire / Klondike (1)" data-href="solitaire-klondike (1).html" data-categories="classic puzzle">
         <div class="card-thumb thumb-upcoming">
           <div class="thumb-art"><span class="thumb-emoji">🂮</span></div>
           <span class="thumb-label">solitaire-klondike (1).html</span>
@@ -775,7 +896,7 @@
           <span class="play-pill">Open →</span>
         </div>
       </a>
-      <a class="game-card" href="sorry.html">
+      <a class="game-card" href="sorry.html" data-title="Sorry!" data-href="sorry.html" data-categories="classic">
         <div class="card-thumb thumb-upcoming">
           <div class="thumb-art"><span class="thumb-emoji">😈</span></div>
           <span class="thumb-label">sorry.html</span>
@@ -790,7 +911,7 @@
           <span class="play-pill">Open →</span>
         </div>
       </a>
-      <a class="game-card" href="space-invaders.html">
+      <a class="game-card" href="space-invaders.html" data-title="Space Invaders" data-href="space-invaders.html" data-categories="arcade classic strategy">
         <div class="card-thumb thumb-upcoming">
           <div class="thumb-art"><span class="thumb-emoji">👾</span></div>
           <span class="thumb-label">space-invaders.html</span>
@@ -805,7 +926,7 @@
           <span class="play-pill">Open →</span>
         </div>
       </a>
-      <a class="game-card" href="sudoku.html">
+      <a class="game-card" href="sudoku.html" data-title="Sudoku" data-href="sudoku.html" data-categories="classic puzzle">
         <div class="card-thumb thumb-upcoming">
           <div class="thumb-art"><span class="thumb-emoji">🔢</span></div>
           <span class="thumb-label">sudoku.html</span>
@@ -820,7 +941,7 @@
           <span class="play-pill">Open →</span>
         </div>
       </a>
-      <a class="game-card" href="tetris.html">
+      <a class="game-card" href="tetris.html" data-title="Tetris" data-href="tetris.html" data-categories="arcade classic puzzle">
         <div class="card-thumb thumb-upcoming">
           <div class="thumb-art"><span class="thumb-emoji">🧱</span></div>
           <span class="thumb-label">tetris.html</span>
@@ -835,7 +956,7 @@
           <span class="play-pill">Open →</span>
         </div>
       </a>
-      <a class="game-card" href="color-picker.html">
+      <a class="game-card" href="color-picker.html" data-title="The Alchemist’s Palette" data-href="color-picker.html" data-categories="classic party utility">
         <div class="card-thumb thumb-upcoming">
           <div class="thumb-art"><span class="thumb-emoji">🌈</span></div>
           <span class="thumb-label">color-picker.html</span>
@@ -850,7 +971,7 @@
           <span class="play-pill">Open →</span>
         </div>
       </a>
-      <a class="game-card" href="tictactoe.html">
+      <a class="game-card" href="tictactoe.html" data-title="Tic-Tac-Toe" data-href="tictactoe.html" data-categories="classic strategy">
         <div class="card-thumb thumb-upcoming">
           <div class="thumb-art"><span class="thumb-emoji">✕</span></div>
           <span class="thumb-label">tictactoe.html</span>
@@ -865,7 +986,7 @@
           <span class="play-pill">Open →</span>
         </div>
       </a>
-      <a class="game-card" href="tower-of-hanoi.html">
+      <a class="game-card" href="tower-of-hanoi.html" data-title="Tower of Hanoi" data-href="tower-of-hanoi.html" data-categories="classic puzzle">
         <div class="card-thumb thumb-upcoming">
           <div class="thumb-art"><span class="thumb-emoji">🗼</span></div>
           <span class="thumb-label">tower-of-hanoi.html</span>
@@ -880,7 +1001,7 @@
           <span class="play-pill">Open →</span>
         </div>
       </a>
-      <a class="game-card" href="water-sort.html">
+      <a class="game-card" href="water-sort.html" data-title="Water Sort" data-href="water-sort.html" data-categories="classic puzzle">
         <div class="card-thumb thumb-upcoming">
           <div class="thumb-art"><span class="thumb-emoji">🧪</span></div>
           <span class="thumb-label">water-sort.html</span>
@@ -895,7 +1016,7 @@
           <span class="play-pill">Open →</span>
         </div>
       </a>
-      <a class="game-card" href="wordle.html">
+      <a class="game-card" href="wordle.html" data-title="Wordle" data-href="wordle.html" data-categories="classic puzzle">
         <div class="card-thumb thumb-upcoming">
           <div class="thumb-art"><span class="thumb-emoji">⌨️</span></div>
           <span class="thumb-label">wordle.html</span>
@@ -910,7 +1031,7 @@
           <span class="play-pill">Open →</span>
         </div>
       </a>
-      <a class="game-card" href="yahtzee.html">
+      <a class="game-card" href="yahtzee.html" data-title="Yahtzee" data-href="yahtzee.html" data-categories="classic">
         <div class="card-thumb thumb-upcoming">
           <div class="thumb-art"><span class="thumb-emoji">🎲</span></div>
           <span class="thumb-label">yahtzee.html</span>
@@ -934,6 +1055,82 @@
     <span>Crafted by John Ryszka II · <a href="https://www.risingphxgallery.com">RisingPhxGallery.com</a></span>
   </footer>
 </div>
-<script>document.getElementById('year').textContent = new Date().getFullYear();</script>
+
+<script>
+document.getElementById('year').textContent = new Date().getFullYear();
+
+(function () {
+  const grid = document.getElementById('gameGrid');
+  const cards = Array.from(grid.querySelectorAll('.game-card'));
+  const search = document.getElementById('gameSearch');
+  const sort = document.getElementById('sortGames');
+  const chips = Array.from(document.querySelectorAll('.filter-chip'));
+  const reset = document.getElementById('resetFilters');
+  const results = document.getElementById('resultsCount');
+
+  function classify(card, mode) {
+    const cats = (card.dataset.categories || '').toLowerCase().split(/\s+/).filter(Boolean);
+    const text = card.textContent;
+    if (mode === 'all') return true;
+    if (mode === 'utility') return cats.includes('utility');
+    if (mode === 'puzzle') return cats.includes('puzzle');
+    if (mode === 'strategy') return cats.includes('strategy') || /Logic/i.test(text);
+    if (mode === 'arcade') return cats.includes('arcade') || /Arcade/i.test(text);
+    if (mode === 'classic') return cats.includes('classic');
+    if (mode === 'group') return cats.includes('party') || /2 Players|1–4 Players|Party/i.test(text);
+    if (mode === 'solo') return cats.includes('puzzle') || /Solo|One Player|1 Player/i.test(text);
+    return true;
+  }
+
+  function apply() {
+    const q = (search.value || '').trim().toLowerCase();
+    const activeChip = document.querySelector('.filter-chip.active');
+    const filter = activeChip ? activeChip.dataset.filter : 'all';
+
+    cards.forEach(card => {
+      const haystack = ((card.dataset.title || '') + ' ' + (card.dataset.href || '') + ' ' + card.textContent).toLowerCase();
+      const matchesSearch = !q || haystack.includes(q);
+      const matchesFilter = classify(card, filter);
+      card.classList.toggle('is-hidden', !(matchesSearch && matchesFilter));
+    });
+
+    const visible = cards.filter(card => !card.classList.contains('is-hidden'));
+    const hidden = cards.filter(card => card.classList.contains('is-hidden'));
+
+    visible.sort((a, b) => {
+      const ta = (a.dataset.title || '').toLowerCase();
+      const tb = (b.dataset.title || '').toLowerCase();
+      const fa = (a.dataset.href || '').toLowerCase();
+      const fb = (b.dataset.href || '').toLowerCase();
+      if (sort.value === 'za') return tb.localeCompare(ta);
+      if (sort.value === 'file') return fa.localeCompare(fb);
+      return ta.localeCompare(tb);
+    });
+
+    visible.forEach(card => grid.appendChild(card));
+    hidden.forEach(card => grid.appendChild(card));
+    results.textContent = `${visible.length} of ${cards.length} games shown`;
+  }
+
+  search.addEventListener('input', apply);
+  sort.addEventListener('change', apply);
+  chips.forEach(chip => chip.addEventListener('click', function () {
+    chips.forEach(c => c.classList.remove('active'));
+    chip.classList.add('active');
+    apply();
+  }));
+  reset.addEventListener('click', function () {
+    search.value = '';
+    sort.value = 'az';
+    chips.forEach(c => c.classList.remove('active'));
+    const all = document.querySelector('.filter-chip[data-filter="all"]');
+    if (all) all.classList.add('active');
+    apply();
+  });
+
+  apply();
+})();
+</script>
+
 </body>
 </html>
